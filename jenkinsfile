@@ -1,11 +1,19 @@
+import java.text.SimpleDateFormat
+
+def dateFormat = new SimpleDateFormat("yyyy:MM:dd:HH:mm:ss")
+def date = new Date()
+def timestamp = dateFormat.format(date)
+println "Timestamp is: ${timeStamp}"
+env.BUILD_TIMESTAMP = timeStamp
+
 def getday = env.BUILD_TIMESTAMP
-getday = getday .split(" ")
+getday = getday .split(":")
 // Extract current day
 getday = getday [3]
 def gethour = env.BUILD_TIMESTAMP
-gethour = gethour .split(" ")
+gethour = gethour .split(":")
 // Extract current day
-gethour = gethour [1]
+gethour = gethour [4]
 
 pipeline 
 {
