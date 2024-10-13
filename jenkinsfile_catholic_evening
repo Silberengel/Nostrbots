@@ -13,8 +13,6 @@ pipeline
             steps {
                     // Make sure dependencies are installed
                     sh 'composer install'
-                    echo "NOSTR_BOT_KEY2: ${NOSTR_BOT_KEY2}"
-                    echo "NOSTR_BOT_KEY3: ${NOSTR_BOT_KEY3}"
                 }
             }
 
