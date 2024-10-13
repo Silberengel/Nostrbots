@@ -55,11 +55,13 @@ pipeline
     
         stage('build') {
             steps {
-                // Make sure dependencies are installed
-                sh 'composer install'
-                echo 'NOSTR_BOT_KEY1'
-                echo 'NOSTR_BOT_KEY2'
-                echo 'NOSTR_BOT_KEY3'
+                script {
+                    // Make sure dependencies are installed
+                    sh 'composer install'
+                    echo 'NOSTR_BOT_KEY1'
+                    echo 'NOSTR_BOT_KEY2'
+                    echo 'NOSTR_BOT_KEY3'
+                }
             }
         }
 
