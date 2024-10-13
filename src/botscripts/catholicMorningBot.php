@@ -9,8 +9,5 @@ test_keys('NOSTR_BOT_KEY2', "npub1dy6trdf8pvgt72h2xap9xsu79l0792urjulwktlnfhq4ka
 // test-run the relay list.
 
 // write completetion notice to log
-file_put_contents("log.txt", 
-     'The catholic morning bot has run successfully on npub1dy6trd...'.PHP_EOL, 
-     FILE_APPEND);
-
+echo "The catholic morning bot has run successfully on npub1dy6trd...".PHP_EOL;
 return;
