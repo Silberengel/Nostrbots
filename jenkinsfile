@@ -1,6 +1,6 @@
 import java.text.SimpleDateFormat
 
-def timeStamp = Calendar.getInstance().getTime().format('YYYYMMdd-hhmmss',TimeZone.getTimeZone('CET'))
+def timeStamp = Calendar.getInstance().getTime().format('YYYY:MM:dd:hh:mm:ss',TimeZone.getTimeZone('CET'))
 println "Timestamp is: ${timeStamp}"
 env.BUILD_TIMESTAMP = timeStamp
 
