@@ -1,22 +1,25 @@
 import java.text.SimpleDateFormat
 
+// Get the calendar date-time for Berlin time zone
 def timeStamp = Calendar.getInstance().getTime().format('YYYY:MM:dd:hh:mm:ss',TimeZone.getTimeZone('CET'))
 println "Timestamp is: ${timeStamp}"
 env.BUILD_TIMESTAMP = timeStamp
 
-def getday = env.BUILD_TIMESTAMP
-getday = getday .split(":")
 // Extract current day
-getday = getday [3]
-def gethour = env.BUILD_TIMESTAMP
-gethour = gethour .split(":")
-// Extract current day
-gethour = gethour [4]
+def thisWeekday = env.BUILD_TIMESTAMP
+thisWeekday = thisWeekday .split(":")
+thisWeekday = thisWeekday [3]
+println "Timestamp day is ${thisWeekday}"
+
+// Extract current hour
+def thisHour = env.BUILD_TIMESTAMP
+thisHour = thisHour .split(":")
+thisHour = thisHour [4]
+println "Timestamp day is ${thisHour}"
 
 pipeline 
 {
     agent any
-    options { timestamps () }
     
     stages {
     
@@ -35,12 +38,12 @@ pipeline
                     // Note: You can change condition as per your need
                     // Stage will run only when the day is Mon 
                     expression {
-                        getday == "Mon"
+                        thisWeekday == "Mon"
                     }
                 }
             steps {
                     // post some financial data
-                    echo getday
+                    echo thisWeekday
                 }
         }
 
@@ -50,12 +53,12 @@ pipeline
                     // Note: You can change condition as per your need
                     // Stage will run only when the hour is 5 am 
                     expression {
-                        gethour == "05"
+                        thisHour == "05"
                     }
                 }
             steps {
                     // post morning readings
-                    echo gethour
+                    echo thisHour
                 }
         }
 
@@ -65,12 +68,12 @@ pipeline
                     // Note: You can change condition as per your need
                     // Stage will run only when the hour is 5 pm
                     expression {
-                        gethour == "17"
+                        thisHour == "17"
                     }
                 }
             steps {
                     // post evening readings
-                    echo gethour
+                    echo thisHour
                 }
         }
     }
