@@ -49,6 +49,12 @@ pipeline
             steps {
                 // Make sure dependencies are installed
                 sh 'composer install'
+
+                sh '''
+                    source /etc/environment
+                    chmod +x ./build.sh
+                    ./build.sh
+                    '''
             }
         }
 
