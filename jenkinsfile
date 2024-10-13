@@ -53,11 +53,13 @@ pipeline
                     }
                 }
             steps {
+                script {
                     println "Step running because day is ${thisWeekday} and hour is ${thisHour}."
                     // post some financial data
                     def output = sh(returnStdout: true, script: 'php src/botscripts/mondayFinanceBot.php')
                     echo "Output: ${output}"
                 }
+            }
         }
 
         stage('catholic morning bot') {
@@ -68,6 +70,7 @@ pipeline
                     }
                 }
             steps {
+                script {
                     println "Step running because time is ${thisHour}."
                     // post morning readings
                     def output = sh(returnStdout: true, script: 'php src/botscripts/catholicMorningBot.php')
@@ -75,6 +78,7 @@ pipeline
                     def output2 = sh(returnStdout: true, script: 'php src/botscripts/katholischMorningBot.php')
                     echo "Output: ${output2}"
                 }
+            }
         }
 
         stage('catholic evening bot') {
@@ -85,6 +89,7 @@ pipeline
                     }
                 }
             steps {
+                script {
                     println "Step running because time is ${thisHour}."
                     // post evening readings
                     def output = sh(returnStdout: true, script: 'php src/botscripts/catholicEveningBot.php')
@@ -92,6 +97,7 @@ pipeline
                     def output2 = sh(returnStdout: true, script: 'php src/botscripts/katholischEveningBot.php')
                     echo "Output: ${output2}"
                 }
+            }
         }
     }
 }
