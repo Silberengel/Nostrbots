@@ -44,10 +44,12 @@ pipeline
     agent any
     
     environment {
-        NOSTR_BOT_KEY1 = credentials('financial-bot-key')
-        NOSTR_BOT_KEY2 = credentials('catholic-bot-key')
-        NOSTR_BOT_KEY3 = credentials('katholisch-bot-key')
+        NOSTR_BOT_KEY1 = credentials('NOSTR_BOT_KEY1')
+        NOSTR_BOT_KEY2 = credentials('NOSTR_BOT_KEY2')
+        NOSTR_BOT_KEY3 = credentials('NOSTR_BOT_KEY3')
     }
+
+    echo 
 
     stages {
     
@@ -55,6 +57,9 @@ pipeline
             steps {
                 // Make sure dependencies are installed
                 sh 'composer install'
+                echo 'NOSTR_BOT_KEY1'
+                echo 'NOSTR_BOT_KEY2'
+                echo 'NOSTR_BOT_KEY3'
             }
         }
 
