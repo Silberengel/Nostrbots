@@ -65,7 +65,7 @@ pipeline
                 }
             steps {
                     // post some financial data
-                    println "Step running because day is: ${thisWeekday}"
+                    println "Step running because day is ${thisWeekday} and hour is ${thisHour}."
                 }
         }
 
@@ -80,7 +80,7 @@ pipeline
                 }
             steps {
                     // post morning readings
-                    println "Step running because time is: ${thisHour}"
+                    println "Step running because time is ${thisHour}."
                 }
         }
 
@@ -95,7 +95,7 @@ pipeline
                 }
             steps {
                     // post evening readings
-                    println "Step running because time is: ${thisHour}"
+                    println "Step running because time is ${thisHour}."
                 }
         }
     }
