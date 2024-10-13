@@ -1,5 +1,7 @@
 <?php
 
+namespace nostrbots\botscripts\setup;
+
 require_once __DIR__ . '/../bootstrap.php';
 use function nostrbots\utilities\check_var_set;
 use function nostrbots\utilities\get_key_set;
