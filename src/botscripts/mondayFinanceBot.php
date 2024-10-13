@@ -8,5 +8,9 @@ test_keys('NOSTR_BOT_KEY1', 'npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u
 
 // test-run the relay list.
 
-fwrite(STDOUT, 'The Monday morning finance bot has run successfully on npub1r0r9c...'.PHP_EOL);
+// write completetion notice to log
+file_put_contents("log.txt", 
+     'The Monday morning finance bot has run successfully on npub1r0r9c...'.PHP_EOL, 
+     FILE_APPEND);
+
 return;
