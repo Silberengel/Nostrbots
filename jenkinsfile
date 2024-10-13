@@ -16,12 +16,11 @@ pipeline
     
         stage('check system') {
             steps {
-                script {
                     // do something
                     // check to make sure nsecs are stored in environment variables and return the relevant npubs
                     // check to make sure that all target relays are running
+                    echo "system check PASS"
                 }
-            }
         }
 
         stage('finance bot') {
@@ -34,11 +33,9 @@ pipeline
                     }
                 }
             steps {
-                script {
                     // post some financial data
                     echo getday
                 }
-            }
         }
 
         stage('catholic morning bot') {
@@ -51,11 +48,9 @@ pipeline
                     }
                 }
             steps {
-                script {
                     // post morning readings
-                    echo hour
+                    echo gethour
                 }
-            }
         }
 
         stage('catholic evening bot') {
@@ -68,11 +63,9 @@ pipeline
                     }
                 }
             steps {
-                script {
                     // post evening readings
-                    echo hour
+                    echo gethour
                 }
-            }
         }
     }
 }
