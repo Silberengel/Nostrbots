@@ -57,45 +57,42 @@ pipeline
         stage('finance bot') {
             when 
                 {
-                    // Note: You can change condition as per your need
-                    // Stage will run only when the day is Mon 
                     expression {
-                        (thisWeekday == "Sunday") && (thisHour == "13")
+                        (thisWeekday == "Monday") && (thisHour == "09")
                     }
                 }
             steps {
-                    // post some financial data
                     println "Step running because day is ${thisWeekday} and hour is ${thisHour}."
+                    // post some financial data
+                    sh 'php mondayFinanceBot.php'
                 }
         }
 
         stage('catholic morning bot') {
             when 
                 {
-                    // Note: You can change condition as per your need
-                    // Stage will run only when the hour is 5 am 
                     expression {
                         thisHour == "05"
                     }
                 }
             steps {
-                    // post morning readings
                     println "Step running because time is ${thisHour}."
+                    // post morning readings
+                    sh 'php catholicMorningBot.php'
                 }
         }
 
         stage('catholic evening bot') {
             when 
                 {
-                    // Note: You can change condition as per your need
-                    // Stage will run only when the hour is 5 pm
                     expression {
                         thisHour == "17"
                     }
                 }
             steps {
-                    // post evening readings
                     println "Step running because time is ${thisHour}."
+                    // post evening readings
+                    sh 'php catholicEveningBot.php'
                 }
         }
     }
