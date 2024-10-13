@@ -21,7 +21,7 @@ $note->setContent(content: 'Market update test.');
 $note->setTags(tags: [
     ['d', "finance-update-".strval(value: time())],
     ['title', "Finance Update"],
-    ['summary', "The state of the markets on Monday morning at ".$date."."],
+    ['summary', "The state of the markets on Monday morning on ".$date."."],
     ['t', "economics"],
     ['image', "https://i.nostr.build/GKZXx1cFV5gnsUFH.jpg"]
   ]);
