@@ -1,9 +1,9 @@
 def getday = env.BUILD_TIMESTAMP
-getday = getday.split(" ")
+getday = getday .split(" ")
 // Extract current day
 getday = getday [3]
 def gethour = env.BUILD_TIMESTAMP
-gethour = gethour.split(" ")
+gethour = gethour .split(" ")
 // Extract current day
 gethour = gethour [1]
 
