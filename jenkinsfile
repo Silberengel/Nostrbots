@@ -92,7 +92,7 @@ pipeline
             when 
                 {
                     expression {
-                        thisHour == "17"
+                        thisHour == "18"
                     }
                 }
             steps {
