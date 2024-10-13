@@ -3,19 +3,14 @@ import java.text.SimpleDateFormat
 // Get the calendar date-time for Berlin time zone
 def timeStamp = Calendar.getInstance().getTime().format('YYYY:MM:dd:hh:mm:ss',TimeZone.getTimeZone('CET'))
 println "Timestamp is: ${timeStamp}"
-env.BUILD_TIMESTAMP = timeStamp
-
-// Extract current day
-def thisWeekday = env.BUILD_TIMESTAMP
-thisWeekday = thisWeekday .split(":")
-thisWeekday = thisWeekday [3]
-println "Timestamp day is ${thisWeekday}"
-
 // Extract current hour
-def thisHour = env.BUILD_TIMESTAMP
+def thisHour = timeStamp
 thisHour = thisHour .split(":")
 thisHour = thisHour [4]
-println "Timestamp day is ${thisHour}"
+println "The hour is ${thisHour}"
+
+def thisWeekday = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+println "Weekday is: ${thisWeekday}"
 
 pipeline 
 {
@@ -53,7 +48,7 @@ pipeline
                     // Note: You can change condition as per your need
                     // Stage will run only when the hour is 5 am 
                     expression {
-                        thisHour == "05"
+                        thisHour == "09"
                     }
                 }
             steps {
