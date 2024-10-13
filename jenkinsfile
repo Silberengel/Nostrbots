@@ -49,13 +49,10 @@ pipeline
         NOSTR_BOT_KEY3 = credentials('NOSTR_BOT_KEY3')
     }
 
-    echo 
-
     stages {
     
         stage('build') {
             steps {
-                script {
                     // Make sure dependencies are installed
                     sh 'composer install'
                     echo 'NOSTR_BOT_KEY1'
@@ -63,7 +60,6 @@ pipeline
                     echo 'NOSTR_BOT_KEY3'
                 }
             }
-        }
 
         stage('finance bot') {
             when 
