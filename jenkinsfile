@@ -43,18 +43,18 @@ pipeline
 {
     agent any
     
+    environment {
+        NOSTR_BOT_KEY1 = credentials('financial-bot-key')
+        NOSTR_BOT_KEY2 = credentials('catholic-bot-key')
+        NOSTR_BOT_KEY3 = credentials('katholisch-bot-key')
+    }
+
     stages {
     
         stage('build') {
             steps {
                 // Make sure dependencies are installed
                 sh 'composer install'
-
-                sh '''
-                    source /etc/environment
-                    chmod +x ./build.sh
-                    ./build.sh
-                    '''
             }
         }
 
