@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../bootstrap.php';
+require __DIR__ . '/../bootstrap.php';
 use function nostrbots\botscripts\setup\test_keys;
 
 // make sure you have a key for npub1dy6trd...
