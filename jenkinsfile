@@ -12,29 +12,29 @@ println "The hour is ${thisHour}"
 // Get the the current weekday as an integer, with Sunday being 1
 def weekday = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
 println "Weekday is: ${weekday}"
-def thisWeekday = ""
+def thisWeekday = "weekday not yet set"
 // Change it to European-style calendar weeks (beginning with Monday) and to text weekdays
 switch(weekday) {
   case 1:
-    thisWeekday == "Sunday"
+    thisWeekday = "Sunday"
     break;
   case 2:
-    thisWeekday == "Monday"
+    thisWeekday = "Monday"
     break;
   case 3:
-    thisWeekday == "Tuesday"
+    thisWeekday = "Tuesday"
     break;
   case 4:
-    thisWeekday == "Wednesday"
+    thisWeekday = "Wednesday"
     break;
   case 5:
-    thisWeekday == "Thursday"
+    thisWeekday = "Thursday"
     break;
   case 6:
-    thisWeekday == "Friday"
+    thisWeekday = "Friday"
     break;
   case 7:
-    thisWeekday == "Saturday"
+    thisWeekday = "Saturday"
     break;
 }
 println "Written-out weekday is: ${thisWeekday}"
