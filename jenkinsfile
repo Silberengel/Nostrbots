@@ -43,8 +43,6 @@ pipeline
 {
     agent any
     
-    shortCommit = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
-
     stages {
     
         stage('finance bot') {
@@ -57,7 +55,8 @@ pipeline
             steps {
                     println "Step running because day is ${thisWeekday} and hour is ${thisHour}."
                     // post some financial data
-                    sh 'php src/botscripts/mondayFinanceBot.php'
+                    def output = sh(returnStdout: true, script: 'php src/botscripts/mondayFinanceBot.php')
+                    echo "Output: ${output}"
                 }
         }
 
@@ -71,8 +70,10 @@ pipeline
             steps {
                     println "Step running because time is ${thisHour}."
                     // post morning readings
-                    sh 'php src/botscripts/catholicMorningBot.php'
-                    sh 'php src/botscripts/katholischMorningBot.php'
+                    def output = sh(returnStdout: true, script: 'php src/botscripts/catholicMorningBot.php')
+                    echo "Output: ${output}"
+                    def output2 = sh(returnStdout: true, script: 'php src/botscripts/katholischMorningBot.php')
+                    echo "Output: ${output2}"
                 }
         }
 
@@ -86,8 +87,10 @@ pipeline
             steps {
                     println "Step running because time is ${thisHour}."
                     // post evening readings
-                    sh 'php src/botscripts/catholicEveningBot.php'
-                    sh 'php src/botscripts/katholischEveningBot.php'
+                    def output = sh(returnStdout: true, script: 'php src/botscripts/catholicEveningBot.php')
+                    echo "Output: ${output}"
+                    def output2 = sh(returnStdout: true, script: 'php src/botscripts/katholischEveningBot.php')
+                    echo "Output: ${output2}"
                 }
         }
     }
