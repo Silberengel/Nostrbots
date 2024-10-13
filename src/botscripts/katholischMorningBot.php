@@ -6,3 +6,5 @@ require_once __DIR__ . '/../bootstrap.php';
 test_keys('NOSTR_BOT_KEY3', "npub194xnj5fu66xkx259v0fv8626cves8aewdl7d8jd4v02s4hm99a8qzw9m2d");
 
 // test-run the relay list.
+
+return "The katholisch morning bot has run successfully on npub194xnj...";

@@ -6,3 +6,5 @@ require_once __DIR__ . '/../bootstrap.php';
 test_keys('NOSTR_BOT_KEY1', 'npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6');
 
 // test-run the relay list.
+
+return "The Monday morning finance bot has run successfully on npub1r0r9c...";
