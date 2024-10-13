@@ -5,17 +5,25 @@ use function nostrbots\utilities\check_var_set;
 use function nostrbots\utilities\get_key_set;
 use function nostrbots\utilities\print_npub;
 
-function test_keys($env){
+/**
+ * Compares the content of the env variable with the desired npub.
+ */
+function test_keys(string $env, string $npub): bool{
 
-    $key = getenv('NOSTR_BOT_KEY1');
+    $key = getenv($env);
 
-    if(!$botKeySet=check_var_set('NOSTR_BOT_KEY1')){
-        throw new Exception('The hex private key has not been set as. Aborting.');
+    if(!$botKeySet=check_var_set($env)){
+        return FALSE;
     }
 
     // print out the npub that will be used.
     $keys = get_key_set($key);
-    print_npub($keys);
-    echo PHP_EOL;
+    
+    if($keys===$npub){
+        print_npub($keys);
+        echo PHP_EOL;
+        return TRUE;
+    }
 
+    return FALSE;
 }

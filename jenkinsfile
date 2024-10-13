@@ -45,15 +45,6 @@ pipeline
     
     stages {
     
-        stage('check system') {
-            steps {
-                    // do something
-                    // check to make sure nsecs are stored in environment variables and return the relevant npubs
-                    // check to make sure that all target relays are running
-                    echo "system check PASS"
-                }
-        }
-
         stage('finance bot') {
             when 
                 {
@@ -64,7 +55,7 @@ pipeline
             steps {
                     println "Step running because day is ${thisWeekday} and hour is ${thisHour}."
                     // post some financial data
-                    sh 'php mondayFinanceBot.php'
+                    sh 'php src/botscripts/mondayFinanceBot.php'
                 }
         }
 
@@ -78,7 +69,8 @@ pipeline
             steps {
                     println "Step running because time is ${thisHour}."
                     // post morning readings
-                    sh 'php catholicMorningBot.php'
+                    sh 'php src/botscripts/catholicMorningBot.php'
+                    sh 'php src/botscripts/katholischMorningBot.php'
                 }
         }
 
@@ -92,7 +84,8 @@ pipeline
             steps {
                     println "Step running because time is ${thisHour}."
                     // post evening readings
-                    sh 'php catholicEveningBot.php'
+                    sh 'php src/botscripts/catholicEveningBot.php'
+                    sh 'php src/botscripts/katholischEveningBot.php'
                 }
         }
     }
