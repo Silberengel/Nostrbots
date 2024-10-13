@@ -6,7 +6,7 @@ println "Timestamp is: ${timeStamp}"
 // Extract current hour
 def thisHour = timeStamp
 thisHour = thisHour .split(":")
-thisHour = thisHour [4]
+thisHour = thisHour [3]
 println "The hour is ${thisHour}"
 
 // Get the the current weekday as an integer, with Sunday being 1
@@ -37,6 +37,7 @@ switch(weekday) {
     thisWeekday == "Saturday"
     break;
 }
+println "Written-out weekday is: ${thisWeekday}"
 
 pipeline 
 {
