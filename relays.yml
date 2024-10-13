@@ -10,6 +10,14 @@
     - wss://christpill.nostr1.com
     - wss://hotrightnow.nostr1.com
   more-relays:
+    - ws://localhost:8080
+    - wss://thecitadel.nostr1.com
+    - wss://theforest.nostr1.com
+    - wss://christpill.nostr1.com
+    - wss://hotrightnow.nostr1.com
+    - wss://nostr.sovbit.host
+    - wss://nostr.land
+    - wss://nostr.wine
     - wss://greensoul.space
     - wss://relay.damus.io
     - wss://relay.nostr.band
@@ -17,14 +25,11 @@
     - wss://nos.lol
     - wss://relay.mostr.pub
     - wss://relay.nos.social
-    - wss://nostr.land
-    - wss://nostr.wine
     - wss://nostr.mom
     - wss://relay.nostr.bg
     - wss://relay.wellorder.net
     - wss://relay.lumina.rocks
     - wss://relay.poster.place
-    - wss://nostr.sovbit.host
     - wss://nostr21.com
     - wss://wheat.happytavern.co
     - wss://nostrelites.org
