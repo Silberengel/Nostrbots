@@ -17,7 +17,7 @@ $date = $date->format('l jS \o\f F Y h:i:s A');
 
 $note = new Event();
 $note->setKind(kind: 30023);
-$note->setContent(content: 'Catholic morning hours test.');
+$note->setContent(content: 'Catholic morning hours test. #biblestr');
 $note->setTags(tags: [
     ['d', "catholic-hours-".strval(value: time())],
     ['title', "Liturgy of the Hours"],

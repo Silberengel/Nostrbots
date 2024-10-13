@@ -17,13 +17,13 @@ $date = $date->format('d.m.Y H:m');
 
 $note = new Event();
 $note->setKind(kind: 30023);
-$note->setContent(content: 'Katholisches Stundengebet Test.');
+$note->setContent(content: 'Katholisches Stundengebet Test. #biblestr');
 $note->setTags(tags: [
-    ['d', "katholische-stundengebet-".strval(value: time())],
+    ['d', "katholisches-stundengebet-".strval(value: time())],
     ['title', "Stundengebet der katholischen Kirche"],
     ['summary', "Morgendliche Liturgie des römischen Ritus für ".$date."."],
-    ['t', "religion", "katholisch", "Bibel"],
-    ['image', "https://i.nostr.build/hE82Q7iisbNGKQP2.png"]
+    ['t', "Religion", "katholisch", "Bibel"],
+    ['image', "https:S//i.nostr.build/hE82Q7iisbNGKQP2.png"]
   ]);
 
 print_r(value: $note);
