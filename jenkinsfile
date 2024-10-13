@@ -60,7 +60,8 @@ pipeline
                     // Note: You can change condition as per your need
                     // Stage will run only when the day is Mon 
                     expression {
-                        thisWeekday == "Monday"
+                        thisWeekday == "Monday" && thisHour == "13"
+                }
                     }
                 }
             steps {
@@ -75,7 +76,7 @@ pipeline
                     // Note: You can change condition as per your need
                     // Stage will run only when the hour is 5 am 
                     expression {
-                        thisHour == "09"
+                        thisHour == "05"
                     }
                 }
             steps {
