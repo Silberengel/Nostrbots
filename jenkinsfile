@@ -60,7 +60,7 @@ pipeline
                     // Note: You can change condition as per your need
                     // Stage will run only when the day is Mon 
                     expression {
-                        thisWeekday == "Monday" && thisHour == "13"
+                        (thisWeekday == "Monday" && thisHour == "13")
                     }
                 }
             steps {
