@@ -1,6 +1,6 @@
 import java.text.SimpleDateFormat
 
-// Get the calendar date-time for Berlin time zone
+// Get the current date-time for Berlin time zone
 def timeStamp = Calendar.getInstance().getTime().format('YYYY:MM:dd:hh:mm:ss',TimeZone.getTimeZone('CET'))
 println "Timestamp is: ${timeStamp}"
 // Extract current hour
@@ -9,8 +9,34 @@ thisHour = thisHour .split(":")
 thisHour = thisHour [4]
 println "The hour is ${thisHour}"
 
-def thisWeekday = Calendar.getInstance().get(Calendar.DAY_OF_WEEK).setFirstDayOfWeek(Calendar.MONDAY)
-println "Weekday is: ${thisWeekday}"
+// Get the the current weekday as an integer, with Sunday being 1
+def weekday = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+println "Weekday is: ${weekday}"
+def thisWeekday = ""
+// Change it to European-style calendar weeks (beginning with Monday) and to text weekdays
+switch(weekday) {
+  case 1:
+    thisWeekday == "Sunday"
+    break;
+  case 2:
+    thisWeekday == "Monday"
+    break;
+  case 3:
+    thisWeekday == "Tuesday"
+    break;
+  case 4:
+    thisWeekday == "Wednesday"
+    break;
+  case 5:
+    thisWeekday == "Thursday"
+    break;
+  case 6:
+    thisWeekday == "Friday"
+    break;
+  case 7:
+    thisWeekday == "Saturday"
+    break;
+}
 
 pipeline 
 {
@@ -33,7 +59,7 @@ pipeline
                     // Note: You can change condition as per your need
                     // Stage will run only when the day is Mon 
                     expression {
-                        thisWeekday == "Mon"
+                        thisWeekday == "Monday"
                     }
                 }
             steps {
