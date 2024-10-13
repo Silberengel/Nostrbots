@@ -45,6 +45,13 @@ pipeline
     
     stages {
     
+        stage('build') {
+            steps {
+                // Make sure dependencies are installed
+                sh 'composer install'
+            }
+        }
+
         stage('finance bot') {
             when 
                 {
