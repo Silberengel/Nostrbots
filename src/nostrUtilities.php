@@ -49,23 +49,59 @@ function check_var_set(string $envVariable): bool {
     return TRUE;
 
 }
-/** Returns a keyset (hex private/public, Bech32 private/public) for a private hex key.
- * If no key is provided, the function generates one.
- * Returns FALSE, if a nsec is provided. 
+/** Returns a keyset (hex private/public, 
+ *  Bech32 private/public) for a private hex key.
+ *  Returns FALSE, if a nsec is provided. 
 **/ 
-function get_key_set(string $privateKey="new"): array|bool {
+function get_key_set(string $hexPrivateKey): array|bool {
 
-    If(str_starts_with($privateKey, 'nsec')){
+    If(str_starts_with($hexPrivateKey, 'nsec')){
         echo "Please only submit hex private keys.";
         return FALSE;
     } 
 
-    $hexPrivateKey = new Key();
+    // get your public key in hex format from the hex private key
+    $hexPublicKey = new Key();
+    $hexPublicKey = $hexPublicKey->getPublicKey($hexPrivateKey);
 
-    If ($privateKey==="new"){
-        // generate a new private key in hex format
-        $hexPrivateKey = $hexPrivateKey->generatePrivateKey();
-    } else $hexPrivateKey = $privateKey;
+    // get your private key in Bech32 format from the hex private key
+    $bechPrivateKey = new Key();
+    $bechPrivateKey = $bechPrivateKey->convertPrivateKeyToBech32($hexPrivateKey);
+
+    // get your public key in Bech32 format from the hex public key
+    $bechPublicKey = new Key();
+    $bechPublicKey = $bechPublicKey->convertPublicKeyToBech32($hexPublicKey);
+
+    $keySet = [
+        "hexPrivateKey" => $hexPrivateKey,
+        "hexPublicKey" => $hexPublicKey,
+        "bechPrivateKey" => $bechPrivateKey,
+        "bechPublicKey" => $bechPublicKey,
+    ];
+
+    return $keySet;
+
+}
+
+/**
+ * Takes a key array and prints the npub inside of it.
+ * @param array $key
+ * @return void
+ */
+function print_npub(array $key): void{
+    if ($key){
+        $currentNpub = array_pop($key);
+        print_r($currentNpub);
+    } else print "There is no npub defined.";
+}
+
+/** Returns a new keyset (hex private/public, Bech32 private/public). 
+**/ 
+function get_new_key_set(): array {
+
+    // get your private key in hex format
+    $hexPrivateKey = new Key();
+    $hexPrivateKey = $hexPrivateKey->generatePrivateKey();
 
     // get your public key in hex format from the hex private key
     $hexPublicKey = new Key();

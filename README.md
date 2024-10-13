@@ -17,7 +17,7 @@ Check the `relays.yml` file, to see if you want to add or delete any from this p
 ### Define the private key
 
 Make sure to set the environment variables `NOSTR_BOT_KEY1` (and `NOSTR_BOT_KEY2`, etc. depending on how many bots you run) with the appropriate nsec (from whichever npub you want the bots to publish from), as that's how the info is passed to the script, for logging into private or authorized relays, or for signing events.
-This can be done under Linux with `export NOSTR_BOT_KEY1=<nsec or hex>`
+This can be done under Linux with `export NOSTR_BOT_KEY1=<hex private key>`
 
 If you do not have a bot npub, yet, you can enter `php src/newKeys.php` on the command line and receive a full set from the PHP Helper.
 
