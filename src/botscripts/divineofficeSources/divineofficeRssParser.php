@@ -14,7 +14,10 @@ foreach ($rss->getElementsByTagName('item') as $node) {
     $readingDate = strtok($readingDate, ',').", 2024";
     $readingDate = strtotime($readingDate);
     $readingDate = date("Ymd", $readingDate);
-    
+
+    $readingType = $node->getElementsByTagName('title')->item(0)->nodeValue;
+    $readingType = substring_between($readingType, ", ", " for ");
+
     $content = $node->getElementsByTagName('encoded')->item(0)->nodeValue;
     $content = trim($content);
     $content = str_replace("<p>[", "", $content);
@@ -25,8 +28,6 @@ foreach ($rss->getElementsByTagName('item') as $node) {
     $content = str_replace("&#8212;", "——", $content);
     $content = str_replace("&#8211;", "–", $content);
     $content = str_replace("&#119070;", "MUSIC CREDITS: ", $content);
-    
-    // change formatting to markdown
     $content = str_replace("Canticle – ", "Canticle\n", $content);
     $content = str_replace("Refrain:", "*Refrain:*", $content);
     $content = str_replace("<span style=\"color: #000000;\"><em> ", "*", $content);
@@ -44,6 +45,7 @@ foreach ($rss->getElementsByTagName('item') as $node) {
     $item = array (
             'title' => $node->getElementsByTagName('title')->item(0)->nodeValue,
             'readingDate' => $readingDate,
+            'readingType' => $readingType,
             'link' => $node->getElementsByTagName('link')->item(0)->nodeValue."?date=".$readingDate,
             'content' => $content
     );
@@ -61,3 +63,21 @@ fwrite($fp, print_r($feed, TRUE));
 fclose($fp);
 
 //?date=20241017
+
+function substring_between($string, $start, $end) {
+    $startPos = strpos($string, $start);
+    if ($startPos === false) {
+        return ""; // Start string not found
+    }
+    
+    $endPos = strpos($string, $end, $startPos + strlen($start));
+    if ($endPos === false) {
+        return ""; // End string not found
+    }
+    
+    // Calculate the length of the substring to extract
+    $length = $endPos - ($startPos + strlen($start));
+    
+    // Extract and return the substring
+    return substr($string, $startPos + strlen($start), $length);
+}
