@@ -43,6 +43,7 @@ foreach ($rss->getElementsByTagName('item') as $node) {
 
     $item = array (
             'title' => $node->getElementsByTagName('title')->item(0)->nodeValue,
+            'readingDate' => $readingDate,
             'link' => $node->getElementsByTagName('link')->item(0)->nodeValue."?date=".$readingDate,
             'content' => $content
     );
