@@ -1,0 +1,707 @@
+Array
+(
+    [0] => Array
+        (
+            [title] => Oct 13, Invitatory for Sunday of the 28th week of Ordinary Time
+            [readingDate] => 20241013
+            [readingType] => Invitatory
+            [link] => https://divineoffice.org/ip-ord-w02-w04-sun/?date=20241013
+        )
+
+    [1] => Array
+        (
+            [title] => Oct 13, Office of Readings for Sunday of the 28th week of Ordinary Time
+            [readingDate] => 20241013
+            [readingType] => Office of Readings
+            [link] => https://divineoffice.org/ord-w28-sun-or/?date=20241013
+        )
+
+    [2] => Array
+        (
+            [title] => Oct 13, Morning Prayer for Sunday of the 28th week of Ordinary Time
+            [readingDate] => 20241013
+            [readingType] => Morning Prayer
+            [link] => https://divineoffice.org/ord-w28-sun-mp/?date=20241013
+        )
+
+    [3] => Array
+        (
+            [title] => Oct 13, Midmorning Prayer for Sunday of the 28th week of Ordinary Time
+            [readingDate] => 20241013
+            [readingType] => Midmorning Prayer
+            [link] => https://divineoffice.org/ord-w28-sun-dp1-comp/?date=20241013
+        )
+
+    [4] => Array
+        (
+            [title] => Oct 13, Midday Prayer for Sunday of the 28th week of Ordinary Time
+            [readingDate] => 20241013
+            [readingType] => Midday Prayer
+            [link] => https://divineoffice.org/ord-w28-sun-dp2/?date=20241013
+        )
+
+    [5] => Array
+        (
+            [title] => Oct 13, Midafternoon Prayer for Sunday of the 28th week of Ordinary Time
+            [readingDate] => 20241013
+            [readingType] => Midafternoon Prayer
+            [link] => https://divineoffice.org/ord-w28-sun-dp3-comp/?date=20241013
+        )
+
+    [6] => Array
+        (
+            [title] => Oct 13, Evening Prayer for Sunday of the 28th week of Ordinary Time
+            [readingDate] => 20241013
+            [readingType] => Evening Prayer
+            [link] => https://divineoffice.org/ord-w28-sun-ep2/?date=20241013
+        )
+
+    [7] => Array
+        (
+            [title] => Oct 13, Night Prayer for Sunday of the 28th week of Ordinary Time
+            [readingDate] => 20241013
+            [readingType] => Night Prayer
+            [link] => https://divineoffice.org/ord-sun-np2-w2-w4/?date=20241013
+        )
+
+    [8] => Array
+        (
+            [title] => Oct 14, Invitatory for Monday of the 28th week of Ordinary Time
+            [readingDate] => 20241014
+            [readingType] => Invitatory
+            [link] => https://divineoffice.org/ip-ord-w02-w04-mon-psalm024/?date=20241014
+        )
+
+    [9] => Array
+        (
+            [title] => Oct 14, Office of Readings for Monday of the 28th week of Ordinary Time
+            [readingDate] => 20241014
+            [readingType] => Office of Readings
+            [link] => https://divineoffice.org/ord-w28-mon-or/?date=20241014
+        )
+
+    [10] => Array
+        (
+            [title] => Oct 14, Morning Prayer for Monday of the 28th week of Ordinary Time
+            [readingDate] => 20241014
+            [readingType] => Morning Prayer
+            [link] => https://divineoffice.org/ord-w04-mon-mp/?date=20241014
+        )
+
+    [11] => Array
+        (
+            [title] => Oct 14, Midmorning Prayer for Monday of the 28th week of Ordinary Time
+            [readingDate] => 20241014
+            [readingType] => Midmorning Prayer
+            [link] => https://divineoffice.org/ord-w04-mon-dp1-comp/?date=20241014
+        )
+
+    [12] => Array
+        (
+            [title] => Oct 14, Midday Prayer for Monday of the 28th week of Ordinary Time
+            [readingDate] => 20241014
+            [readingType] => Midday Prayer
+            [link] => https://divineoffice.org/ord-w04-mon-dp2/?date=20241014
+        )
+
+    [13] => Array
+        (
+            [title] => Oct 14, Midafternoon Prayer for Monday of the 28th week of Ordinary Time
+            [readingDate] => 20241014
+            [readingType] => Midafternoon Prayer
+            [link] => https://divineoffice.org/ord-w04-mon-dp3-comp/?date=20241014
+        )
+
+    [14] => Array
+        (
+            [title] => Oct 14, Evening Prayer for Monday of the 28th week of Ordinary Time
+            [readingDate] => 20241014
+            [readingType] => Evening Prayer
+            [link] => https://divineoffice.org/ord-w04-mon-ep/?date=20241014
+        )
+
+    [15] => Array
+        (
+            [title] => Oct 14, Night Prayer for Monday of the 28th week of Ordinary Time
+            [readingDate] => 20241014
+            [readingType] => Night Prayer
+            [link] => https://divineoffice.org/ord-mon-np-w2-w4/?date=20241014
+        )
+
+    [16] => Array
+        (
+            [title] => Oct 15, Invitatory for Tuesday of the 28th week of Ordinary Time
+            [readingDate] => 20241015
+            [readingType] => Invitatory
+            [link] => https://divineoffice.org/ip-ord-w02-w04-tue-psalm100/?date=20241015
+        )
+
+    [17] => Array
+        (
+            [title] => Oct 15, Office of Readings for Tuesday of the 28th week of Ordinary Time
+            [readingDate] => 20241015
+            [readingType] => Office of Readings
+            [link] => https://divineoffice.org/ord-w28-tue-or/?date=20241015
+        )
+
+    [18] => Array
+        (
+            [title] => Oct 15, Morning Prayer for Tuesday of the 28th week of Ordinary Time
+            [readingDate] => 20241015
+            [readingType] => Morning Prayer
+            [link] => https://divineoffice.org/ord-w04-tue-mp/?date=20241015
+        )
+
+    [19] => Array
+        (
+            [title] => Oct 15, Midmorning Prayer for Tuesday of the 28th week of Ordinary Time
+            [readingDate] => 20241015
+            [readingType] => Midmorning Prayer
+            [link] => https://divineoffice.org/ord-w04-tue-dp1-comp/?date=20241015
+        )
+
+    [20] => Array
+        (
+            [title] => Oct 15, Midday Prayer for Tuesday of the 28th week of Ordinary Time
+            [readingDate] => 20241015
+            [readingType] => Midday Prayer
+            [link] => https://divineoffice.org/ord-w04-tue-dp2-current/?date=20241015
+        )
+
+    [21] => Array
+        (
+            [title] => Oct 15, Midafternoon Prayer for Tuesday of the 28th week of Ordinary Time
+            [readingDate] => 20241015
+            [readingType] => Midafternoon Prayer
+            [link] => https://divineoffice.org/ord-w04-tue-dp3-comp/?date=20241015
+        )
+
+    [22] => Array
+        (
+            [title] => Oct 15, Evening Prayer for Tuesday of the 28th week of Ordinary Time
+            [readingDate] => 20241015
+            [readingType] => Evening Prayer
+            [link] => https://divineoffice.org/ord-w04-tue-ep/?date=20241015
+        )
+
+    [23] => Array
+        (
+            [title] => Oct 15, Night Prayer for Tuesday of the 28th week of Ordinary Time
+            [readingDate] => 20241015
+            [readingType] => Night Prayer
+            [link] => https://divineoffice.org/ord-tue-np-w2-w4/?date=20241015
+        )
+
+    [24] => Array
+        (
+            [title] => Oct 16, Invitatory for Wednesday of the 28th week of Ordinary Time
+            [readingDate] => 20241016
+            [readingType] => Invitatory
+            [link] => https://divineoffice.org/ip-ord-w02-w04-wed-psalm095/?date=20241016
+        )
+
+    [25] => Array
+        (
+            [title] => Oct 16, Office of Readings for Wednesday of the 28th week of Ordinary Time
+            [readingDate] => 20241016
+            [readingType] => Office of Readings
+            [link] => https://divineoffice.org/ord-w28-wed-or/?date=20241016
+        )
+
+    [26] => Array
+        (
+            [title] => Oct 16, Morning Prayer for Wednesday of the 28th week of Ordinary Time
+            [readingDate] => 20241016
+            [readingType] => Morning Prayer
+            [link] => https://divineoffice.org/ord-w04-wed-mp/?date=20241016
+        )
+
+    [27] => Array
+        (
+            [title] => Oct 16, Midmorning Prayer for Wednesday of the 28th week of Ordinary Time
+            [readingDate] => 20241016
+            [readingType] => Midmorning Prayer
+            [link] => https://divineoffice.org/ord-w04-wed-dp1-comp/?date=20241016
+        )
+
+    [28] => Array
+        (
+            [title] => Oct 16, Midday Prayer for Wednesday of the 28th week of Ordinary Time
+            [readingDate] => 20241016
+            [readingType] => Midday Prayer
+            [link] => https://divineoffice.org/ord-w04-wed-dp2-current/?date=20241016
+        )
+
+    [29] => Array
+        (
+            [title] => Oct 16, Midafternoon Prayer for Wednesday of the 28th week of Ordinary Time
+            [readingDate] => 20241016
+            [readingType] => Midafternoon Prayer
+            [link] => https://divineoffice.org/ord-w04-wed-dp3-comp/?date=20241016
+        )
+
+    [30] => Array
+        (
+            [title] => Oct 16, Evening Prayer for Wednesday of the 28th week of Ordinary Time
+            [readingDate] => 20241016
+            [readingType] => Evening Prayer
+            [link] => https://divineoffice.org/ord-w04-wed-ep/?date=20241016
+        )
+
+    [31] => Array
+        (
+            [title] => Oct 16, Night Prayer for Wednesday of the 28th week of Ordinary Time
+            [readingDate] => 20241016
+            [readingType] => Night Prayer
+            [link] => https://divineoffice.org/ord-wed-np-w2-w4/?date=20241016
+        )
+
+    [32] => Array
+        (
+            [title] => Oct 17, Invitatory for Thursday of the 28th week of Ordinary Time
+            [readingDate] => 20241017
+            [readingType] => Invitatory
+            [link] => https://divineoffice.org/ip-ord-w02-w04-thu-psalm067/?date=20241017
+        )
+
+    [33] => Array
+        (
+            [title] => Oct 17, Office of Readings for Thursday of the 28th week of Ordinary Time
+            [readingDate] => 20241017
+            [readingType] => Office of Readings
+            [link] => https://divineoffice.org/ord-w28-thu-or/?date=20241017
+        )
+
+    [34] => Array
+        (
+            [title] => Oct 17, Morning Prayer for Thursday of the 28th week of Ordinary Time
+            [readingDate] => 20241017
+            [readingType] => Morning Prayer
+            [link] => https://divineoffice.org/ord-w04-thu-mp/?date=20241017
+        )
+
+    [35] => Array
+        (
+            [title] => Oct 17, Midmorning Prayer for Thursday of the 28th week of Ordinary Time
+            [readingDate] => 20241017
+            [readingType] => Midmorning Prayer
+            [link] => https://divineoffice.org/ord-w04-thu-dp1-comp/?date=20241017
+        )
+
+    [36] => Array
+        (
+            [title] => Oct 17, Midday Prayer for Thursday of the 28th week of Ordinary Time
+            [readingDate] => 20241017
+            [readingType] => Midday Prayer
+            [link] => https://divineoffice.org/ord-w04-thu-dp2-current/?date=20241017
+        )
+
+    [37] => Array
+        (
+            [title] => Oct 17, Midafternoon Prayer for Thursday of the 28th week of Ordinary Time
+            [readingDate] => 20241017
+            [readingType] => Midafternoon Prayer
+            [link] => https://divineoffice.org/ord-w04-thu-dp3-comp/?date=20241017
+        )
+
+    [38] => Array
+        (
+            [title] => Oct 17, Evening Prayer for Thursday of the 28th week of Ordinary Time
+            [readingDate] => 20241017
+            [readingType] => Evening Prayer
+            [link] => https://divineoffice.org/ord-w04-thu-ep/?date=20241017
+        )
+
+    [39] => Array
+        (
+            [title] => Oct 17, Night Prayer for Thursday of the 28th week of Ordinary Time
+            [readingDate] => 20241017
+            [readingType] => Night Prayer
+            [link] => https://divineoffice.org/ord-thu-np-w2-w4/?date=20241017
+        )
+
+    [40] => Array
+        (
+            [title] => Oct 18, Invitatory for Friday of the 28th week of Ordinary Time
+            [readingDate] => 20241018
+            [readingType] => Invitatory
+            [link] => https://divineoffice.org/ip-ord-w02-w04-fri-psalm095/?date=20241018
+        )
+
+    [41] => Array
+        (
+            [title] => Oct 18, Office of Readings for Friday of the 28th week of Ordinary Time
+            [readingDate] => 20241018
+            [readingType] => Office of Readings
+            [link] => https://divineoffice.org/ord-w28-fri-or/?date=20241018
+        )
+
+    [42] => Array
+        (
+            [title] => Oct 18, Morning Prayer for Friday of the 28th week of Ordinary Time
+            [readingDate] => 20241018
+            [readingType] => Morning Prayer
+            [link] => https://divineoffice.org/ord-w04-fri-mp/?date=20241018
+        )
+
+    [43] => Array
+        (
+            [title] => Oct 18, Midmorning Prayer for Friday of the 28th week of Ordinary Time
+            [readingDate] => 20241018
+            [readingType] => Midmorning Prayer
+            [link] => https://divineoffice.org/ord-w04-fri-dp1-comp/?date=20241018
+        )
+
+    [44] => Array
+        (
+            [title] => Oct 18, Midday Prayer for Friday of the 28th week of Ordinary Time
+            [readingDate] => 20241018
+            [readingType] => Midday Prayer
+            [link] => https://divineoffice.org/ord-w04-fri-dp2-current/?date=20241018
+        )
+
+    [45] => Array
+        (
+            [title] => Oct 18, Midafternoon Prayer for Friday of the 28th week of Ordinary Time
+            [readingDate] => 20241018
+            [readingType] => Midafternoon Prayer
+            [link] => https://divineoffice.org/ord-w04-fri-dp3-comp/?date=20241018
+        )
+
+    [46] => Array
+        (
+            [title] => Oct 18, Evening Prayer for Friday of the 28th week of Ordinary Time
+            [readingDate] => 20241018
+            [readingType] => Evening Prayer
+            [link] => https://divineoffice.org/ord-w04-fri-ep/?date=20241018
+        )
+
+    [47] => Array
+        (
+            [title] => Oct 18, Night Prayer for Friday of the 28th week of Ordinary Time
+            [readingDate] => 20241018
+            [readingType] => Night Prayer
+            [link] => https://divineoffice.org/ord-fri-np-w2-w4/?date=20241018
+        )
+
+    [48] => Array
+        (
+            [title] => Oct 19, Invitatory for Saturday of the 28th week of Ordinary Time
+            [readingDate] => 20241019
+            [readingType] => Invitatory
+            [link] => https://divineoffice.org/ip-ord-w02-w04-sat-psalm100/?date=20241019
+        )
+
+    [49] => Array
+        (
+            [title] => Oct 19, Office of Readings for Saturday of the 28th week of Ordinary Time
+            [readingDate] => 20241019
+            [readingType] => Office of Readings
+            [link] => https://divineoffice.org/ord-w28-sat-or/?date=20241019
+        )
+
+    [50] => Array
+        (
+            [title] => Oct 19, Morning Prayer for Saturday of the 28th week of Ordinary Time
+            [readingDate] => 20241019
+            [readingType] => Morning Prayer
+            [link] => https://divineoffice.org/ord-w04-sat-mp/?date=20241019
+        )
+
+    [51] => Array
+        (
+            [title] => Oct 19, Midmorning Prayer for Saturday of the 28th week of Ordinary Time
+            [readingDate] => 20241019
+            [readingType] => Midmorning Prayer
+            [link] => https://divineoffice.org/ord-w04-sat-dp1-comp/?date=20241019
+        )
+
+    [52] => Array
+        (
+            [title] => Oct 19, Midday Prayer for Saturday of the 28th week of Ordinary Time
+            [readingDate] => 20241019
+            [readingType] => Midday Prayer
+            [link] => https://divineoffice.org/ord-w04-sat-dp2-current/?date=20241019
+        )
+
+    [53] => Array
+        (
+            [title] => Oct 19, Midafternoon Prayer for Saturday of the 28th week of Ordinary Time
+            [readingDate] => 20241019
+            [readingType] => Midafternoon Prayer
+            [link] => https://divineoffice.org/ord-w04-sat-dp3-comp/?date=20241019
+        )
+
+    [54] => Array
+        (
+            [title] => Oct 19, Evening Prayer for Saturday of the 28th week of Ordinary Time
+            [readingDate] => 20241019
+            [readingType] => Evening Prayer
+            [link] => https://divineoffice.org/ord-w29-sun-ep1/?date=20241019
+        )
+
+    [55] => Array
+        (
+            [title] => Oct 19, Night Prayer for Saturday of the 28th week of Ordinary Time
+            [readingDate] => 20241019
+            [readingType] => Night Prayer
+            [link] => https://divineoffice.org/sun-np1/?date=20241019
+        )
+
+    [56] => Array
+        (
+            [title] => Oct 20, Invitatory for Sunday of the 29th week of Ordinary Time
+            [readingDate] => 20241020
+            [readingType] => Invitatory
+            [link] => https://divineoffice.org/invitatory-ord-w1-w3-sun/?date=20241020
+        )
+
+    [57] => Array
+        (
+            [title] => Oct 20, Office of Readings for Sunday of the 29th week of Ordinary Time
+            [readingDate] => 20241020
+            [readingType] => Office of Readings
+            [link] => https://divineoffice.org/ord-w29-sun-or/?date=20241020
+        )
+
+    [58] => Array
+        (
+            [title] => Oct 20, Morning Prayer for Sunday of the 29th week of Ordinary Time
+            [readingDate] => 20241020
+            [readingType] => Morning Prayer
+            [link] => https://divineoffice.org/ord-w29-sun-mp/?date=20241020
+        )
+
+    [59] => Array
+        (
+            [title] => Oct 20, Midmorning Prayer for Sunday of the 29th week of Ordinary Time
+            [readingDate] => 20241020
+            [readingType] => Midmorning Prayer
+            [link] => https://divineoffice.org/ord-w29-sun-dp1-comp/?date=20241020
+        )
+
+    [60] => Array
+        (
+            [title] => Oct 20, Midday Prayer for Sunday of the 29th week of Ordinary Time
+            [readingDate] => 20241020
+            [readingType] => Midday Prayer
+            [link] => https://divineoffice.org/ord-w29-sun-dp2-current/?date=20241020
+        )
+
+    [61] => Array
+        (
+            [title] => Oct 20, Midafternoon Prayer for Sunday of the 29th week of Ordinary Time
+            [readingDate] => 20241020
+            [readingType] => Midafternoon Prayer
+            [link] => https://divineoffice.org/ord-w29-sun-dp3-comp/?date=20241020
+        )
+
+    [62] => Array
+        (
+            [title] => Oct 20, Evening Prayer for Sunday of the 29th week of Ordinary Time
+            [readingDate] => 20241020
+            [readingType] => Evening Prayer
+            [link] => https://divineoffice.org/ord-w29-sun-ep2/?date=20241020
+        )
+
+    [63] => Array
+        (
+            [title] => Oct 20, Night Prayer for Sunday of the 29th week of Ordinary Time
+            [readingDate] => 20241020
+            [readingType] => Night Prayer
+            [link] => https://divineoffice.org/ord-sun-np2-w1-w3/?date=20241020
+        )
+
+    [64] => Array
+        (
+            [title] => Oct 21, Invitatory for Monday of the 29th week of Ordinary Time
+            [readingDate] => 20241021
+            [readingType] => Invitatory
+            [link] => https://divineoffice.org/ip-ord-w01-w03-mon-psalm024/?date=20241021
+        )
+
+    [65] => Array
+        (
+            [title] => Oct 21, Office of Readings for Monday of the 29th week of Ordinary Time
+            [readingDate] => 20241021
+            [readingType] => Office of Readings
+            [link] => https://divineoffice.org/ord-w29-mon-or/?date=20241021
+        )
+
+    [66] => Array
+        (
+            [title] => Oct 21, Morning Prayer for Monday of the 29th week of Ordinary Time
+            [readingDate] => 20241021
+            [readingType] => Morning Prayer
+            [link] => https://divineoffice.org/ord-w01-mon-mp/?date=20241021
+        )
+
+    [67] => Array
+        (
+            [title] => Oct 21, Midmorning Prayer for Monday of the 29th week of Ordinary Time
+            [readingDate] => 20241021
+            [readingType] => Midmorning Prayer
+            [link] => https://divineoffice.org/ord-w01-mon-dp1-comp/?date=20241021
+        )
+
+    [68] => Array
+        (
+            [title] => Oct 21, Midday Prayer for Monday of the 29th week of Ordinary Time
+            [readingDate] => 20241021
+            [readingType] => Midday Prayer
+            [link] => https://divineoffice.org/ord-w01-mon-dp2-current/?date=20241021
+        )
+
+    [69] => Array
+        (
+            [title] => Oct 21, Midafternoon Prayer for Monday of the 29th week of Ordinary Time
+            [readingDate] => 20241021
+            [readingType] => Midafternoon Prayer
+            [link] => https://divineoffice.org/ord-w01-mon-dp3-comp/?date=20241021
+        )
+
+    [70] => Array
+        (
+            [title] => Oct 21, Evening Prayer for Monday of the 29th week of Ordinary Time
+            [readingDate] => 20241021
+            [readingType] => Evening Prayer
+            [link] => https://divineoffice.org/ord-w01-mon-ep/?date=20241021
+        )
+
+    [71] => Array
+        (
+            [title] => Oct 21, Night Prayer for Monday of the 29th week of Ordinary Time
+            [readingDate] => 20241021
+            [readingType] => Night Prayer
+            [link] => https://divineoffice.org/ord-mon-np-w1-w3/?date=20241021
+        )
+
+    [72] => Array
+        (
+            [title] => Oct 22, Invitatory for Tuesday of the 29th week of Ordinary Time
+            [readingDate] => 20241022
+            [readingType] => Invitatory
+            [link] => https://divineoffice.org/invitatory-ord-w1-w3-tue/?date=20241022
+        )
+
+    [73] => Array
+        (
+            [title] => Oct 22, Office of Readings for Tuesday of the 29th week of Ordinary Time
+            [readingDate] => 20241022
+            [readingType] => Office of Readings
+            [link] => https://divineoffice.org/ord-w29-tue-or/?date=20241022
+        )
+
+    [74] => Array
+        (
+            [title] => Oct 22, Morning Prayer for Tuesday of the 29th week of Ordinary Time
+            [readingDate] => 20241022
+            [readingType] => Morning Prayer
+            [link] => https://divineoffice.org/ord-w01-tue-mp/?date=20241022
+        )
+
+    [75] => Array
+        (
+            [title] => Oct 22, Midmorning Prayer for Tuesday of the 29th week of Ordinary Time
+            [readingDate] => 20241022
+            [readingType] => Midmorning Prayer
+            [link] => https://divineoffice.org/ord-w01-tue-dp1-comp/?date=20241022
+        )
+
+    [76] => Array
+        (
+            [title] => Oct 22, Midday Prayer for Tuesday of the 29th week of Ordinary Time
+            [readingDate] => 20241022
+            [readingType] => Midday Prayer
+            [link] => https://divineoffice.org/ord-w01-tue-dp2-current/?date=20241022
+        )
+
+    [77] => Array
+        (
+            [title] => Oct 22, Midafternoon Prayer for Tuesday of the 29th week of Ordinary Time
+            [readingDate] => 20241022
+            [readingType] => Midafternoon Prayer
+            [link] => https://divineoffice.org/ord-w01-tue-dp3-comp/?date=20241022
+        )
+
+    [78] => Array
+        (
+            [title] => Oct 22, Evening Prayer for Tuesday of the 29th week of Ordinary Time
+            [readingDate] => 20241022
+            [readingType] => Evening Prayer
+            [link] => https://divineoffice.org/ord-w01-tue-ep/?date=20241022
+        )
+
+    [79] => Array
+        (
+            [title] => Oct 22, Night Prayer for Tuesday of the 29th week of Ordinary Time
+            [readingDate] => 20241022
+            [readingType] => Night Prayer
+            [link] => https://divineoffice.org/ord-tue-np-w1-w3/?date=20241022
+        )
+
+    [80] => Array
+        (
+            [title] => Oct 23, Invitatory for Wednesday of the 29th week of Ordinary Time
+            [readingDate] => 20241023
+            [readingType] => Invitatory
+            [link] => https://divineoffice.org/ip-ord-w01-w03-wed-psalm095/?date=20241023
+        )
+
+    [81] => Array
+        (
+            [title] => Oct 23, Office of Readings for Wednesday of the 29th week of Ordinary Time
+            [readingDate] => 20241023
+            [readingType] => Office of Readings
+            [link] => https://divineoffice.org/ord-w29-wed-or/?date=20241023
+        )
+
+    [82] => Array
+        (
+            [title] => Oct 23, Morning Prayer for Wednesday of the 29th week of Ordinary Time
+            [readingDate] => 20241023
+            [readingType] => Morning Prayer
+            [link] => https://divineoffice.org/ord-w01-wed-mp/?date=20241023
+        )
+
+    [83] => Array
+        (
+            [title] => Oct 23, Midmorning Prayer for Wednesday of the 29th week of Ordinary Time
+            [readingDate] => 20241023
+            [readingType] => Midmorning Prayer
+            [link] => https://divineoffice.org/ord-w01-wed-dp1-comp/?date=20241023
+        )
+
+    [84] => Array
+        (
+            [title] => Oct 23, Midday Prayer for Wednesday of the 29th week of Ordinary Time
+            [readingDate] => 20241023
+            [readingType] => Midday Prayer
+            [link] => https://divineoffice.org/ord-w01-wed-dp2-current/?date=20241023
+        )
+
+    [85] => Array
+        (
+            [title] => Oct 23, Midafternoon Prayer for Wednesday of the 29th week of Ordinary Time
+            [readingDate] => 20241023
+            [readingType] => Midafternoon Prayer
+            [link] => https://divineoffice.org/ord-w01-wed-dp3-comp/?date=20241023
+        )
+
+    [86] => Array
+        (
+            [title] => Oct 23, Evening Prayer for Wednesday of the 29th week of Ordinary Time
+            [readingDate] => 20241023
+            [readingType] => Evening Prayer
+            [link] => https://divineoffice.org/ord-w01-wed-ep/?date=20241023
+        )
+
+    [87] => Array
+        (
+            [title] => Oct 23, Night Prayer for Wednesday of the 29th week of Ordinary Time
+            [readingDate] => 20241023
+            [readingType] => Night Prayer
+            [link] => https://divineoffice.org/ord-wed-np-w1-w3/?date=20241023
+        )
+
+)

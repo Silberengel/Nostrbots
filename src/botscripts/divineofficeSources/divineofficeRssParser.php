@@ -2,7 +2,7 @@
 
 // Feed-URL des RSS-Feeds
 $url = 'https://divineoffice.org/feed/';
-$rssFile = __DIR__ . '/rss.md';
+$rssFile = __DIR__ . '/rss.txt';
 
 $rss = new DOMDocument();
 $rss->load($url);
@@ -18,44 +18,13 @@ foreach ($rss->getElementsByTagName('item') as $node) {
     $readingType = $node->getElementsByTagName('title')->item(0)->nodeValue;
     $readingType = substring_between($readingType, ", ", " for ");
 
-    $content = $node->getElementsByTagName('encoded')->item(0)->nodeValue;
-    $content = trim($content);
-    $content = str_replace("<p>[", "", $content);
-    $content = str_replace("]</p>", "\n", $content);
-    $content = str_replace("&#8220;", "“", $content);
-    $content = str_replace("&#8221;", "”", $content);
-    $content = str_replace("&#8230;", "…", $content);
-    $content = str_replace("&#8212;", "——", $content);
-    $content = str_replace("&#8211;", "–", $content);
-    $content = str_replace("&#119070;", "MUSIC CREDITS: ", $content);
-    $content = str_replace("Canticle – ", "Canticle\n", $content);
-    $content = str_replace("Refrain:", "*Refrain:*", $content);
-    $content = str_replace("<span style=\"color: #000000;\"><em> ", "*", $content);
-    $content = str_replace("</em> (", "* (", $content);
-    $content = str_replace("<span style=\"color: #ff0000;\">——</span>", "——", $content);
-    $content = str_replace("<span style=\"color: #ff0000;\">", "\n## ", $content);
-    $content = str_replace("</span> ", "\n", $content);
-    $content = str_replace("</span>", "\n", $content);
-    $content = str_replace("</p>", "\n", $content);
-    $content = str_replace("&bull;", "•", $content);
-    $content = str_replace("&#8217;", "’", $content);
-    $content = str_replace("&#8216;", "‘", $content);
-    $content = strip_tags($content);
-
     $item = array (
             'title' => $node->getElementsByTagName('title')->item(0)->nodeValue,
             'readingDate' => $readingDate,
             'readingType' => $readingType,
-            'link' => $node->getElementsByTagName('link')->item(0)->nodeValue."?date=".$readingDate,
-            'content' => $content
+            'link' => $node->getElementsByTagName('link')->item(0)->nodeValue."?date=".$readingDate
     );
     array_push($feed, $item);
-}
-
-foreach ($feed as $f){
-    if (($key = array_search("Array", $f)) !== false) {
-        unset($f[$key]);
-    }
 }
 
 $fp = fopen($rssFile, 'w');
