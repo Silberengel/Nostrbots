@@ -114,8 +114,6 @@ function test_relays(string $relayUrl): bool {
     $success = array_search(needle: TRUE, haystack: 
         array_column(array: $response, column_key: 'isSuccess'));
 
-    var_dump($success);
-
     if($success === TRUE) {
         echo "The relay passed the test.".PHP_EOL;
         return TRUE;
