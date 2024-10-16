@@ -1,0 +1,25 @@
+# Please edit this file, according to what your bot should do.
+
+---
+
+bot-name: An Example Bot
+
+# Remember to set the environment variable with your hex private key
+# in Linux or WSL. This is the npub the bot will use to publish.
+# For Jenkins, this can be done under https://localhost:8081/credentials.
+# (Replace "localhost:8081" with the appropriate server address.)
+
+npub:
+  environment-variable-name: NOSTR_BOT_KEY1
+  npub: npub1dy6.....
+
+## This is the tag list for the article (long-form note).
+## The `d` tag will be generated from the title and a UNIX time stamp.
+## Feel free to add any additional tags, or to remove any tags, other than `title`.
+
+tags:
+  title: Test note
+  t: test, dev
+  summary: This is a test of the Nostrbot. It appears to have been successful. :-)
+  image: https://i.nostr.build/e336dT1ezofJdliH.png
+  alt: This is an article posted from Nostrbot.

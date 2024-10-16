@@ -1,0 +1,20 @@
+---
+
+# You can edit this list, 
+# to get different collections of relays for different use cases.
+
+favorite-relays:
+  - ws://localhost:8080
+  - wss://thecitadel.nostr1.com
+  - wss://theforest.nostr1.com
+  - wss://christpill.nostr1.com
+  - wss://hotrightnow.nostr1.com
+more-relays:
+  - wss://nostr.sovbit.host
+  - wss://nostr.land
+  - wss://nostr.wine
+  - wss://greensoul.space
+  - wss://nostr21.com
+  - wss://wheat.happytavern.co
+  - wss://nostrelites.org
+  - wss://elites.nostrati.org

@@ -1,0 +1,35 @@
+// This is a very simple PHP-based pipeline for posting articles.
+
+pipeline 
+{
+    agent any
+    
+    // Make sure that you have this secret text stored in your Jenkins server
+    // und "http://localhost:8081/credentials" (change the address, as needed).
+    // This environment variable needs to match the one in your article_data.yaml file.
+    environment {
+        NOSTR_BOT_KEY1 = credentials('NOSTR_BOT_KEY1')
+    }
+
+    stages {
+
+        stage('build') {
+            steps {
+                    // Make sure dependencies are installed
+                    sh 'composer install'
+                }
+            }
+
+        stage('An Example Bot') {
+            steps {
+                script {
+                    // step 1: Post an article saying "Hello world!"
+                    // step 2: Post a kind 1111 note, with the newly-published article embedded
+                    //         as a naddr.
+                    def output2 = sh(returnStdout: true, script: 'php bot.php anExampleBot note=true wss://thecitadel.nostr1.com')
+                    echo "Output: ${output2}"
+                }
+            }
+        }
+    }
+}
