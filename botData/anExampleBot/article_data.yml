@@ -11,15 +11,15 @@ bot-name: An Example Bot
 
 npub:
   environment-variable-name: NOSTR_BOT_KEY1
-  npub: npub1dy6.....
+  npub: npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6
 
 ## This is the tag list for the article (long-form note).
 ## The `d` tag will be generated from the title and a UNIX time stamp.
 ## Feel free to add any additional tags, or to remove any tags, other than `title`.
 
 tags:
-  title: Test note
-  t: test, dev
-  summary: This is a test of the Nostrbot. It appears to have been successful. :-)
-  image: https://i.nostr.build/e336dT1ezofJdliH.png
-  alt: This is an article posted from Nostrbot.
+  - [title, Test note]
+  - [t, test, dev]
+  - [summary, This is a test of the Nostrbot.]
+  - [image, https://i.nostr.build/e336dT1ezofJdliH.png]
+  - [alt, This is an article posted from Nostrbot.]

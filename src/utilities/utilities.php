@@ -77,9 +77,10 @@ function test_keys(string $envVariable, string $npub): bool{
     //
     $key = getenv(name: $envVariable);
     $keySet = get_key_set(hexPrivateKey: $key);
-    
-    if($keySet[0]===$npub) return TRUE;
+    if($keySet['bechPublicKey'] === $npub) return TRUE;
 
+    echo "The private hex key and the npub you supplied 
+    in the article_data.yml file didn't match.".PHP_EOL.PHP_EOL;
     return FALSE;
 }
 
@@ -125,6 +126,25 @@ function test_relays(string $relayUrl): bool {
     }
     echo "The relay ". $relayUrl. " failed the test and will be removed from the list".PHP_EOL;
     return FALSE;
+}
+
+
+function get_active_relays(string $websocket):array{
+    if(str_starts_with(haystack: $websocket, needle: "wss://" or "ws://")){
+      echo $websocket;
+      $result = test_relays( relayUrl: $websocket);
+      if($result === TRUE) $relays[] = $websocket;
+    }else {
+      $relays = get_relay_list(category: $websocket);
+      print_r(value: $relays);
+      foreach($relays as $r){
+        $result = test_relays( relayUrl: $r);
+        $currentRelay = array_search(needle: $r, haystack: $relays);
+        if($result === FALSE) array_splice(array: $relays, offset: $currentRelay, length: 1);
+      }
+    }
+
+    return $relays;
 }
 
 /** 

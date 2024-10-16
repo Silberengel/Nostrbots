@@ -4,8 +4,8 @@
 # to get different collections of relays for different use cases.
 
 favorite-relays:
-  - ws://localhost:8080
   - wss://thecitadel.nostr1.com
+  - ws://localhost:8080
   - wss://theforest.nostr1.com
   - wss://christpill.nostr1.com
 more-relays:
