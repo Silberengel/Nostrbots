@@ -22,29 +22,37 @@ $settings = get_bot_settings(args: $argv, argcount: $argc);
   echo "The relays chosen are: ".$settings[2].PHP_EOL;
   echo PHP_EOL.PHP_EOL;
 
-// Check if desired relays are active.
-// Remove inactive relays.
-// If all relays removed, default to hardcoded relay.
-// If that is also inactive, abort.
+// Check if they have at least on active relay, that they have access to.
 
-$webserver = $settings[2];
-
-  if(str_starts_with(haystack: $settings[2], needle: "wss://" or "ws://")){
-  
-    $result = test_relays( relayUrl: $webserver);
-
+echo "You have requested the following relays be used: ".PHP_EOL;
+$websocket = $settings[2];
+  if(str_starts_with(haystack: $websocket, needle: "wss://" or "ws://")){
+    echo $websocket;
+    $result = test_relays( relayUrl: $websocket);
+    if($result === TRUE) $relays[] = $websocket;
   }else {
-  
-    $relays = get_relay_list(category: $settings[2]);
-  
+    $relays = get_relay_list(category: $websocket);
+    print_r(value: $relays);
     foreach($relays as $r){
-
       $result = test_relays( relayUrl: $r);
-      die;
 
+      $currentRelay = array_search(needle: $r, haystack: $relays);
+      if($result === FALSE) array_splice(array: $relays, offset: $currentRelay, length: 1);
     }
-  
   }
+  if(empty($relays)){
+    $relays = get_hardcoded_relay();
+    echo "None of the requested relays worked. The script is defaulting to ".$relays[0].PHP_EOL;
+    $result = test_relays( relayUrl: $relays[0]);
+    if($result === FALSE){
+      throw new Exception(message: "All relays failed the test. Aborting.");
+    }
+  } 
+
+  echo "The relays that will be used are: ".PHP_EOL;
+  print_r(value: $relays);
+
+  die;
 
 $note = new Event();
 $note->setKind(kind: 30023);

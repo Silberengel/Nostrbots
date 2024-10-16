@@ -97,7 +97,7 @@ function test_relays(string $relayUrl): bool {
     // see if you can request related information from the relay
 
     $filter1 = new Filter();
-    $filter1->setKinds(kinds: [1, 3, 5, 7, 1111, 30023]); // You can add multiple kind numbers
+    $filter1->setKinds(kinds: [1, 3, 5, 7, 1111, 30040, 30041, 30023, 30818]); // You can add multiple kind numbers
     $filter1->setLimit(limit: 1); // Limit to fetch only a maximum of 25 events
     $filters = [$filter1];
     
@@ -107,24 +107,25 @@ function test_relays(string $relayUrl): bool {
     $relay->setMessage(message: $requestMessage);
     
     $request = new Request(relay: $relay, message: $requestMessage);
-    $response = $request->send();
 
-    var_dump($response);
+    echo PHP_EOL;
+    try{
+        $response = $request->send();
+    }catch(Exception $e){
+        echo $e->getMessage() . PHP_EOL;
+        echo "The relay ". $relayUrl. " failed the test, with an exception, and will be removed from the list".PHP_EOL;
+        return FALSE;
+    }
 
-    $success = array_search(needle: TRUE, haystack: 
-        array_column(array: $response, column_key: 'isSuccess'));
-
-    if($success === TRUE) {
-        echo "The relay passed the test.".PHP_EOL;
+    //TODO: clean this mess up. Should be able to extract the value from the object property.
+    // Need to figure out how to handle AUTH.
+    if(str_contains(haystack: json_encode(value: $response), needle: "\"isSuccess\":true")) {
+        echo "The relay ". $relayUrl. " passed the test.".PHP_EOL;
         return TRUE;
     }
-        
-    echo "The relay failed the test.".PHP_EOL;
+    echo "The relay ". $relayUrl. " failed the test and will be removed from the list".PHP_EOL;
     return FALSE;
-
 }
-
-
 
 /** 
  * Returns list of relays from relays.yml file. 
@@ -176,7 +177,7 @@ function get_hardcoded_relay():array{
 
     $hardcodedRelay = "wss://thecitadel.nostr1.com";
     
-    echo "There were no relays found. Defaulting to ".$hardcodedRelay;
+    echo "There were no relays found. Defaulting to ".$hardcodedRelay.PHP_EOL.PHP_EOL;
 
     $relays[] = $hardcodedRelay;
     

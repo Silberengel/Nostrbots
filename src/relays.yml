@@ -8,8 +8,8 @@ favorite-relays:
   - wss://thecitadel.nostr1.com
   - wss://theforest.nostr1.com
   - wss://christpill.nostr1.com
-  - wss://hotrightnow.nostr1.com
 more-relays:
+  - wss://hotrightnow.nostr1.com
   - wss://nostr.sovbit.host
   - wss://nostr.land
   - wss://nostr.wine
