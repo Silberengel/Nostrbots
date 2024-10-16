@@ -22,7 +22,7 @@ $settings = get_bot_settings(args: $argv, argcount: $argc);
   echo "The relays chosen are: ".$settings[2].PHP_EOL;
   echo PHP_EOL.PHP_EOL;
 
-// Check if they have at least on active relay, that they have access to.
+// Ensure that they have at least one active relay, that they have access to.
 
 echo "You have requested the following relays be used: ".PHP_EOL;
 $websocket = $settings[2];
@@ -35,24 +35,23 @@ $websocket = $settings[2];
     print_r(value: $relays);
     foreach($relays as $r){
       $result = test_relays( relayUrl: $r);
-
       $currentRelay = array_search(needle: $r, haystack: $relays);
       if($result === FALSE) array_splice(array: $relays, offset: $currentRelay, length: 1);
     }
   }
   if(empty($relays)){
     $relays = get_hardcoded_relay();
-    echo "None of the requested relays worked. The script is defaulting to ".$relays[0].PHP_EOL;
     $result = test_relays( relayUrl: $relays[0]);
     if($result === FALSE){
-      throw new Exception(message: "All relays failed the test. Aborting.");
+      echo PHP_EOL."All relays failed the test. Aborting.".PHP_EOL.PHP_EOL;
+      exit(125);
     }
   } 
 
   echo "The relays that will be used are: ".PHP_EOL;
   print_r(value: $relays);
 
-  die;
+die;
 
 $note = new Event();
 $note->setKind(kind: 30023);

@@ -108,6 +108,8 @@ function test_relays(string $relayUrl): bool {
     
     $request = new Request(relay: $relay, message: $requestMessage);
 
+    //TODO: clean this mess up. Should be able to extract the value from the object property.
+    // Need to figure out how to handle AUTH.
     echo PHP_EOL;
     try{
         $response = $request->send();
@@ -117,8 +119,6 @@ function test_relays(string $relayUrl): bool {
         return FALSE;
     }
 
-    //TODO: clean this mess up. Should be able to extract the value from the object property.
-    // Need to figure out how to handle AUTH.
     if(str_contains(haystack: json_encode(value: $response), needle: "\"isSuccess\":true")) {
         echo "The relay ". $relayUrl. " passed the test.".PHP_EOL;
         return TRUE;
@@ -175,7 +175,7 @@ function get_relay_list(string $category): array {
  */
 function get_hardcoded_relay():array{
 
-    $hardcodedRelay = "wss://thecitadel.nostr1.com";
+    $hardcodedRelay = "wss://thecit2343adel.nostr1.com";
     
     echo "There were no relays found. Defaulting to ".$hardcodedRelay.PHP_EOL.PHP_EOL;
 
