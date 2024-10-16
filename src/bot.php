@@ -118,4 +118,34 @@ $dTag = $dTags[1];
 $naddr = shell_exec(command: 'nak encode naddr -d '. $dTag . ' --author '.$hexPublicKey.' --kind '.(string)$kind.' --relay '.$relays[0]);
 echo "The message can be viewed at https://njump.me/".$naddr;
 
+$notification = $settings[1];
+// send a notification, where applicable
+if($notification==='on'){
+
+  $notificationKind = 1111;
+  $notification = new Event();
+  $notification->setKind(kind: $notificationKind);
+  $notification->setTags(tags: [
+    ["A", $naddr, $relays[0]], 
+    ["K", $notificationKind], 
+    ["a", $naddr, $relays[0]],
+    ["k", $notificationKind]
+  ]);
+  $notification->setContent(content: 
+    "A new article has been posted:\nnostr:".$naddr);
+
+  $signer = new Sign();
+  $signer->signEvent(event: $notification, private_key: $private_key);
+
+  $eventMessage = new EventMessage(event: $notification);
+  $relay = new Relay(websocket: $relayUrl);
+
+  $relay->setMessage(message: $eventMessage);
+  $result = $relay->send();
+
+  echo PHP_EOL."The <".$botName."> bot has published the notification with ID " . $notification->getid() .PHP_EOL.PHP_EOL;
+}
+
+echo "Finished.".PHP_EOL.PHP_EOL;
+
 exit(0);

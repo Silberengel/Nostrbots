@@ -12,7 +12,7 @@
             "cwd": "${fileDirname}",
             "externalConsole": false,
             "port": 9003,
-            "args": ["anExampleBot", "note=false", "wss://thecitadel.nostr1.com"]
+            "args": ["anExampleBot", "note=true", "wss://thecitadel.nostr1.com"]
         },
         {
             "name": "Listen for Xdebug",
