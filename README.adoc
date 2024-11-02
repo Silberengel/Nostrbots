@@ -1,0 +1,95 @@
+= Nostrbots
+Silberengel <support@gitcitadel.eu>
+:toc:
+
+[CAUTION]
+====
+THIS REPO IS NOT YET RELEASED! WORK IN PROGRESS.
+====
+
+== About
+
+This is a Nostr microapp that allows you to publish `kind 30023` *long-form notes*, with or without an associated `kind 1111` *comment* or `kind 01` *notification*. It also helps you to run *bots* from a https://www.jenkins.io/[Jenkins] automation server, that publishes those notes, according to a schedule or other trigger.
+
+.Nostrbot use case diagram
+image::https://raw.githubusercontent.com/ShadowySupercode/gitcitadel/refs/heads/master/plantUML/Nostrbots/Nostrbots%20Use%20Case.png[Nostrbots Use Case, 500]
+
+You could, for instance, have a *release bot* that sends out a notification of a new software release, when that build passes. Or you could have a *test failed bot*, that warns you on Nostr, if an automated test fails.
+
+Other possible applications are newsletters, software testing, relay/server testing, or preparing articles in advance and then sending them off at some later time.
+
+=== Features
+
+* [x] setup npub login
+* [x] setup article bot
+** [ ] add article notifications
+** [ ] add article comments
+* [ ] setup comment bot
+* [ ] setup notification bot
+
+== Setup
+
+This repository contains an example bot (located in the `/botData/anExampleBot` folder), that you can use to test it out. 
+
+AnExampleBot:
+
+1. publishes an article to the public OtherStuff relay https://thecitadel.nostr1.com[wss://thecitadel.nostr1.com], and then 
+2. publishes a comment or notification with the `naddr` for the article embedded (if so selected), and then 
+3. prints out hyperlinks, to view both events on https://njump.me/[Njump].
+
+=== Command-line instructions
+
+To run the bot in the shell, use the following command:
+```
+php bot.php anExampleBot
+```
+
+This command simply accepts the argument for the folder that the bot is located in. Everything else is configured in the yaml file.
+
+To have differently-behaving bots, simple duplicate `anExampleBot` for each one, rename the folder, and configure them, accordingly. Then call them according to their folder name.
+
+```
+php bot.php myNewBot12
+```
+
+=== Libraries
+
+Nostrbots is written in PHP 8 (with the yaml PECL extension) and https://github.com/fiatjaf/nak[NAK], so those are two things that'll need to be installed and configured, for this to work properly. I will be slowly phasing out the NAK commands, as https://github.com/nostrver-se/nostr-php[PHP Helper library] adds the features I need.
+
+I've set this repo up with composer, so `composer install` might be enough to get you started. Please ask for help, if it doesn't work, so that I can fix it!
+
+[NOTE]
+====
+I can be contacted using my npub https://nosta.me/nprofile1qydhwumn8ghj7argv4nx7un9wd6zumn0wd68yvfwvdhk6tcpr3mhxue69uhhg6r9vd5hgctyv4kzumn0wd68yvfwvdhk6tcqyr7jprhgeregx7q2j4fgjmjgy0xfm34l63pqvwyf2acsd9q0mynuzlmgw80[npub1l5sga6xg72phsz5422ykujprejwud075ggrr3z2hwyrfgr7eylqstegx9z] or over https://github.com/SilberWitch?tab=repositories[GitHub].
+====
+
+=== Define your relays
+
+Check the `src/relays.yml` file, to see if you want to add or delete any from this personal list. It's the relay list used for performing most of the functions. You can name the categories however you want, or just have no categories (then the bots use the entire list).
+
+=== Define the private key
+
+Make sure to set the environment variable `NOSTR_BOT_KEY1` (and `NOSTR_BOT_KEY2`, etc. depending on how many bots you run) with the appropriate nsec (from whichever npub you want the bots to publish from), as that's how the info is passed to the script, for logging into private or authorized relays, or for signing events.
+This can be done under Linux with `export NOSTR_BOT_KEY1=<hex private key>`
+
+That'll work, when running the PHP scripts from the command line, but you'll have to finagle it a bit, within Jenkins, by setting the variables as _secret text_ under (for a local Jenkins) http://localhost:8081/credentials/. Like so:
+
+.credentials page
+image::https://i.nostr.build/4I6nT1rva3lcmaPK.png[credentials, 500]
+
+If you do not have a bot npub, yet, you can enter `php src/newKeys.php` on the command line and receive a full set from the PHP Helper.
+
+=== Pipelines
+
+The bot-pipeline `jenkinsfile` needs to be manually edited, to match your bot information. Then, just go to your Jenkins instance, make sure that you have the appropriate plug-ins installed, and setup a pipeline build. You just need to tell it to use your git repo, where that repo is located, and precisely which jenkinsfile you want it to use, for that build.
+
+.pipeline form
+image::https://i.nostr.build/NPzpd87V6246PSxw.png[Pipeline, 500]
+
+.jenkinsfile form
+image::https://i.nostr.build/diCcUHWNBtqvgDuO.png[Jenkinsfile, 500]
+
+These will usually function like simple cron jobs, so set the `build periodically` setting, within the Jenkins GUI.
+
+.build trigger
+image::https://i.nostr.build/lfSR00ng8qTZs2WA.png[trigger, 500]
