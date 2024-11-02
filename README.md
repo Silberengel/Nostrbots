@@ -6,6 +6,8 @@ THIS REPO IS NOT YET RELEASED! WORK IN PROGRESS.
 
 This is a Nostr microapp that allows you to publish `kind 30023` **long-form notes**, with or without an associated `kind 1111` **notification**. It also helps you to run **bots from a [Jenkins](https://www.jenkins.io/) automation server**, that publishes those notes, according to a schedule or other trigger.
 
+![Nostrbots Use Case](https://raw.githubusercontent.com/ShadowySupercode/gitcitadel/refs/heads/master/plantUML/Nostrbots/Nostrbots%20Use%20Case.png)
+
 You could, for instance, have a *release bot* that sends out a notification of a new software release, when that build passes. Or you could have a *test failed bot*, that warns you on Nostr, if an automated test fails.
 
 Other possible applications are newsletters, software testing, relay/server testing, or preparing articles in advance and then sending them off at some later time.
