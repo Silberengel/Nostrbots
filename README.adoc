@@ -93,3 +93,10 @@ These will usually function like simple cron jobs, so set the `build periodicall
 
 .build trigger
 image::https://i.nostr.build/lfSR00ng8qTZs2WA.png[trigger, 500]
+
+== Documentation
+
+If you are interested in how it works, under the hood, I have some technical documentation.
+
+.class diagram
+image::https://raw.githubusercontent.com/ShadowySupercode/gitcitadel/refs/heads/master/plantUML/Nostrbots/Nostrbots%20Class%20Diagram.png[class diagram, 500]
