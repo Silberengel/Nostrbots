@@ -1,0 +1,13 @@
+This is a separate content section at level 3.
+
+==== Environment Setup
+
+This nested header should be part of the Configuration Management content.
+
+===== Development Environment
+
+Details about setting up the development environment.
+
+===== Production Environment  
+
+Details about production setup.

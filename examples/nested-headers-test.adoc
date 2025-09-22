@@ -1,0 +1,86 @@
+= Technical Guide with Nested Content
+
+This guide demonstrates content sections that contain nested headers.
+
+== Chapter 1: Introduction
+
+This chapter contains multiple subsections within the content.
+
+=== Basic Concepts
+
+This is the content section that should contain all the nested headers below.
+
+==== Core Principles
+
+These are the fundamental principles:
+
+1. Simplicity
+2. Clarity  
+3. Effectiveness
+
+===== Implementation Details
+
+Here are the specific implementation details that should be included
+in the same content section.
+
+====== Code Examples
+
+```php
+function example() {
+    return "This code should be in the content section";
+}
+```
+
+====== Best Practices
+
+- Follow coding standards
+- Write clear documentation
+- Test thoroughly
+
+==== Advanced Topics
+
+This is still part of the "Basic Concepts" content section.
+
+===== Performance Optimization
+
+Optimization techniques that should remain in the parent content section.
+
+===== Security Considerations
+
+Security guidelines that are part of the same content.
+
+=== Configuration Management
+
+This is a separate content section at level 3.
+
+==== Environment Setup
+
+This nested header should be part of the Configuration Management content.
+
+===== Development Environment
+
+Details about setting up the development environment.
+
+===== Production Environment  
+
+Details about production setup.
+
+== Chapter 2: Advanced Usage
+
+Another chapter with its own nested content.
+
+=== Complex Scenarios
+
+This content section contains complex nested information.
+
+==== Multi-step Processes
+
+Step-by-step instructions that should all be in the same content section.
+
+===== Process A
+
+Detailed instructions for Process A.
+
+===== Process B
+
+Detailed instructions for Process B.

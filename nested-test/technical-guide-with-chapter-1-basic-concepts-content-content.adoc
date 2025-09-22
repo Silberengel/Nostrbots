@@ -1,0 +1,40 @@
+This is the content section that should contain all the nested headers below.
+
+==== Core Principles
+
+These are the fundamental principles:
+
+1. Simplicity
+2. Clarity  
+3. Effectiveness
+
+===== Implementation Details
+
+Here are the specific implementation details that should be included
+in the same content section.
+
+====== Code Examples
+
+```php
+function example() {
+    return "This code should be in the content section";
+}
+```
+
+====== Best Practices
+
+- Follow coding standards
+- Write clear documentation
+- Test thoroughly
+
+==== Advanced Topics
+
+This is still part of the "Basic Concepts" content section.
+
+===== Performance Optimization
+
+Optimization techniques that should remain in the parent content section.
+
+===== Security Considerations
+
+Security guidelines that are part of the same content.

@@ -1,0 +1,13 @@
+This content section contains complex nested information.
+
+==== Multi-step Processes
+
+Step-by-step instructions that should all be in the same content section.
+
+===== Process A
+
+Detailed instructions for Process A.
+
+===== Process B
+
+Detailed instructions for Process B.

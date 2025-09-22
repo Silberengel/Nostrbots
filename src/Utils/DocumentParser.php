@@ -123,26 +123,35 @@ class DocumentParser
                     }
                 }
 
-                // Create section entry
-                $section = [
-                    'level' => $headerLevel,
-                    'title' => $headerText,
-                    'slug' => '', // Will be set after processing hierarchy
-                    'content' => [],
-                    'line_start' => $lineNum,
-                    'line_end' => null,
-                    'children' => [],
-                    'parent_slug' => null
-                ];
+                // Only create new sections for headers at or above content level
+                // Headers deeper than content level stay within their parent content section
+                if ($headerLevel <= $this->contentLevel) {
+                    // Create section entry
+                    $section = [
+                        'level' => $headerLevel,
+                        'title' => $headerText,
+                        'slug' => '', // Will be set after processing hierarchy
+                        'content' => [],
+                        'line_start' => $lineNum,
+                        'line_end' => null,
+                        'children' => [],
+                        'parent_slug' => null
+                    ];
 
-                // Close previous section and extract its content
-                if ($currentSection !== null) {
-                    $currentSection['line_end'] = $lineNum - 1;
-                    $currentSection['content'] = trim(implode("\n", $currentSection['content']));
-                    $this->addSection($currentSection);
+                    // Close previous section and extract its content
+                    if ($currentSection !== null) {
+                        $currentSection['line_end'] = $lineNum - 1;
+                        $currentSection['content'] = trim(implode("\n", $currentSection['content']));
+                        $this->addSection($currentSection);
+                    }
+
+                    $currentSection = $section;
+                } else {
+                    // This is a sub-header within a content section - add to current section content
+                    if ($currentSection !== null) {
+                        $currentSection['content'][] = $line;
+                    }
                 }
-
-                $currentSection = $section;
             } else {
                 // Add content to current section or preamble
                 if ($currentSection !== null) {
