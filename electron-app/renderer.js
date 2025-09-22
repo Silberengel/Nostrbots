@@ -16,6 +16,27 @@ const resultsContent = document.getElementById('resultsContent');
 const filesSection = document.getElementById('filesSection');
 const filesList = document.getElementById('filesList');
 
+// Key management elements
+const selectedKeySelect = document.getElementById('selectedKey');
+const refreshKeysBtn = document.getElementById('refreshKeysBtn');
+const addKeyBtn = document.getElementById('addKeyBtn');
+const deleteKeyBtn = document.getElementById('deleteKeyBtn');
+const keyInfo = document.getElementById('keyInfo');
+const keyAvatar = document.getElementById('keyAvatar');
+const keyInitials = document.getElementById('keyInitials');
+const keyDisplayName = document.getElementById('keyDisplayName');
+const keyNpub = document.getElementById('keyNpub');
+
+// Relay management elements
+const editRelaysBtn = document.getElementById('editRelaysBtn');
+const relayList = document.getElementById('relayList');
+
+// Publishing elements
+const publishSection = document.getElementById('publishSection');
+const dryRunBtn = document.getElementById('dryRunBtn');
+const testPublishBtn = document.getElementById('testPublishBtn');
+const publishBtn = document.getElementById('publishBtn');
+
 // Preview elements
 const rawTab = document.getElementById('rawTab');
 const renderedTab = document.getElementById('renderedTab');
@@ -27,12 +48,29 @@ const renderedHtml = document.getElementById('renderedHtml');
 let selectedFilePath = null;
 let selectedOutputDir = null;
 let generatedFiles = [];
+let availableKeys = [];
+let selectedKey = null;
+let relays = [];
 
 // Event listeners
 selectFileBtn.addEventListener('click', selectFile);
 selectOutputBtn.addEventListener('click', selectOutputDirectory);
 parseBtn.addEventListener('click', parseDocument);
 openOutputBtn.addEventListener('click', openOutputDirectory);
+
+// Key management event listeners
+refreshKeysBtn.addEventListener('click', loadKeys);
+addKeyBtn.addEventListener('click', showAddKeyModal);
+deleteKeyBtn.addEventListener('click', deleteSelectedKey);
+selectedKeySelect.addEventListener('change', handleKeySelection);
+
+// Relay management event listeners
+editRelaysBtn.addEventListener('click', showEditRelaysModal);
+
+// Publishing event listeners
+dryRunBtn.addEventListener('click', () => publishContent('dry-run'));
+testPublishBtn.addEventListener('click', () => publishContent('test'));
+publishBtn.addEventListener('click', () => publishContent('publish'));
 
 // Preview tab listeners
 rawTab.addEventListener('click', () => switchPreviewTab('raw'));
@@ -178,8 +216,12 @@ function displayGeneratedFiles() {
     
     if (generatedFiles.length === 0) {
         filesList.innerHTML = '<p>No generated files found</p>';
+        publishSection.classList.add('hidden');
         return;
     }
+    
+    // Show publish section when files are generated
+    publishSection.classList.remove('hidden');
 
     generatedFiles.forEach(file => {
         const fileItem = document.createElement('div');
@@ -331,10 +373,203 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Key Management Functions
+async function loadKeys() {
+    try {
+        const keys = await window.electronAPI.getAllBotKeys();
+        availableKeys = keys;
+        updateKeySelector();
+        
+        if (keys.length > 0 && !selectedKey) {
+            selectedKeySelect.value = keys[0].env_variable;
+            handleKeySelection();
+        }
+    } catch (error) {
+        console.error('Error loading keys:', error);
+        showError('Failed to load bot keys');
+    }
+}
+
+function updateKeySelector() {
+    selectedKeySelect.innerHTML = '';
+    
+    if (availableKeys.length === 0) {
+        selectedKeySelect.innerHTML = '<option value="">No keys found</option>';
+        return;
+    }
+    
+    availableKeys.forEach(key => {
+        const option = document.createElement('option');
+        option.value = key.env_variable;
+        option.textContent = `${key.display_name} (${key.npub.substring(0, 16)}...)`;
+        selectedKeySelect.appendChild(option);
+    });
+}
+
+function handleKeySelection() {
+    const envVar = selectedKeySelect.value;
+    if (!envVar) {
+        selectedKey = null;
+        keyInfo.classList.add('hidden');
+        deleteKeyBtn.disabled = true;
+        return;
+    }
+    
+    selectedKey = availableKeys.find(key => key.env_variable === envVar);
+    if (selectedKey) {
+        updateKeyInfo(selectedKey);
+        keyInfo.classList.remove('hidden');
+        deleteKeyBtn.disabled = false;
+    }
+}
+
+function updateKeyInfo(key) {
+    keyDisplayName.textContent = key.display_name;
+    keyNpub.textContent = key.npub;
+    
+    // Set avatar or initials
+    if (key.profile_pic) {
+        keyAvatar.src = key.profile_pic;
+        keyAvatar.classList.remove('hidden');
+        keyInitials.classList.add('hidden');
+    } else {
+        keyAvatar.classList.add('hidden');
+        keyInitials.textContent = key.display_name.charAt(0).toUpperCase();
+        keyInitials.classList.remove('hidden');
+    }
+}
+
+async function showAddKeyModal() {
+    try {
+        const result = await window.electronAPI.showAddKeyModal();
+        if (result) {
+            await loadKeys();
+            showSuccess('Key added successfully!');
+        }
+    } catch (error) {
+        console.error('Error adding key:', error);
+        showError('Failed to add key');
+    }
+}
+
+async function deleteSelectedKey() {
+    if (!selectedKey) return;
+    
+    const confirmed = confirm(`Are you sure you want to delete the key "${selectedKey.display_name}"?\n\nThis will remove the key from your environment variables.`);
+    if (!confirmed) return;
+    
+    try {
+        await window.electronAPI.deleteKey(selectedKey.env_variable);
+        await loadKeys();
+        showSuccess('Key deleted successfully!');
+    } catch (error) {
+        console.error('Error deleting key:', error);
+        showError('Failed to delete key');
+    }
+}
+
+// Relay Management Functions
+async function loadRelays() {
+    try {
+        const relayData = await window.electronAPI.getRelays();
+        relays = relayData;
+        updateRelayList();
+    } catch (error) {
+        console.error('Error loading relays:', error);
+        showError('Failed to load relay configuration');
+    }
+}
+
+function updateRelayList() {
+    relayList.innerHTML = '';
+    
+    relays.forEach(relay => {
+        const relayItem = document.createElement('div');
+        relayItem.className = 'relay-item';
+        relayItem.innerHTML = `
+            <span class="relay-url">${relay.url}</span>
+            <span class="relay-status">${relay.type || 'Default'}</span>
+        `;
+        relayList.appendChild(relayItem);
+    });
+}
+
+async function showEditRelaysModal() {
+    try {
+        const result = await window.electronAPI.showEditRelaysModal(relays);
+        if (result) {
+            relays = result;
+            updateRelayList();
+            showSuccess('Relay configuration updated!');
+        }
+    } catch (error) {
+        console.error('Error editing relays:', error);
+        showError('Failed to update relay configuration');
+    }
+}
+
+// Publishing Functions
+async function publishContent(mode) {
+    if (!selectedKey) {
+        showError('Please select a bot key first');
+        return;
+    }
+    
+    if (generatedFiles.length === 0) {
+        showError('Please parse a document first');
+        return;
+    }
+    
+    try {
+        const result = await window.electronAPI.publishContent({
+            mode: mode,
+            key: selectedKey,
+            files: generatedFiles,
+            relays: relays
+        });
+        
+        if (result.success) {
+            showSuccess(`Content ${mode} completed successfully!`);
+        } else {
+            showError(`Publish failed: ${result.error}`);
+        }
+    } catch (error) {
+        console.error('Error publishing content:', error);
+        showError('Failed to publish content');
+    }
+}
+
+// Show success message
+function showSuccess(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #48bb78;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 1000;
+        font-weight: 600;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        document.body.removeChild(notification);
+    }, 3000);
+}
+
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     updateParseButton();
     
     // Set default output directory to current directory
     outputDirInput.value = 'Current directory';
+    
+    // Load initial data
+    await loadKeys();
+    await loadRelays();
 });

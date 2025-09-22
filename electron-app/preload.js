@@ -10,6 +10,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Document parsing
   parseDocument: (options) => ipcRenderer.invoke('parse-document', options),
   
+  // Key management
+  getAllBotKeys: () => ipcRenderer.invoke('get-all-bot-keys'),
+  showAddKeyModal: () => ipcRenderer.invoke('show-add-key-modal'),
+  deleteKey: (envVar) => ipcRenderer.invoke('delete-key', envVar),
+  
+  // Relay management
+  getRelays: () => ipcRenderer.invoke('get-relays'),
+  showEditRelaysModal: (relays) => ipcRenderer.invoke('show-edit-relays-modal', relays),
+  
+  // Publishing
+  publishContent: (options) => ipcRenderer.invoke('publish-content', options),
+  
   // System operations
   openFile: (filePath) => ipcRenderer.invoke('open-file', filePath),
   openDirectory: (directoryPath) => ipcRenderer.invoke('open-directory', directoryPath),

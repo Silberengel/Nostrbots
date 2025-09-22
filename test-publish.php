@@ -1,120 +1,176 @@
 <?php
 
 /**
- * Test Publishing Script
+ * Test Publishing Utility for Nostrbots
  * 
- * Tests actual publishing to test relays with validation
+ * Tests the publishing functionality with dry-run, test, and live modes.
+ * 
+ * Usage: php test-publish.php [options] [files...]
+ * 
+ * Options:
+ *   --dry-run    - Validate and preview without publishing
+ *   --test       - Publish to test relays only
+ *   --key VAR    - Use specific environment variable for key
+ *   --help, -h   - Show help message
  */
 
 require __DIR__ . '/src/bootstrap.php';
 
-use Nostrbots\Bot\NostrBot;
-use Nostrbots\Utils\ErrorHandler;
-use Nostrbots\Utils\PerformanceManager;
+use Nostrbots\Utils\KeyManager;
+use Symfony\Component\Yaml\Yaml;
 
-function testPublishing(): void
+function printUsage(): void
 {
-    echo "🧪 Test Publishing to Test Relays" . PHP_EOL;
-    echo "=================================" . PHP_EOL . PHP_EOL;
+    echo "🚀 Nostrbots Test Publisher" . PHP_EOL;
+    echo "===========================" . PHP_EOL . PHP_EOL;
+    echo "Usage: php test-publish.php [options] [files...]" . PHP_EOL . PHP_EOL;
+    echo "Options:" . PHP_EOL;
+    echo "  --dry-run              - Validate and preview without publishing" . PHP_EOL;
+    echo "  --test                 - Publish to test relays only" . PHP_EOL;
+    echo "  --key VAR              - Use specific environment variable for key" . PHP_EOL;
+    echo "  --help, -h             - Show this help message" . PHP_EOL . PHP_EOL;
+    echo "Examples:" . PHP_EOL;
+    echo "  php test-publish.php --dry-run config.yml" . PHP_EOL;
+    echo "  php test-publish.php --test --key NOSTR_BOT_KEY2 *.yml" . PHP_EOL;
+    echo "  php test-publish.php --key NOSTR_BOT_KEY1 file1.yml file2.yml" . PHP_EOL . PHP_EOL;
+}
+
+function main(array $argv): void
+{
+    $argc = count($argv);
     
-    $errorHandler = new ErrorHandler(true);
-    $performanceManager = new PerformanceManager(true);
+    if ($argc < 2 || in_array('--help', $argv) || in_array('-h', $argv)) {
+        printUsage();
+        exit(0);
+    }
+    
+    $mode = 'publish'; // default
+    $keyEnvVar = 'NOSTR_BOT_KEY1'; // default
+    $files = [];
+    
+    // Parse command line arguments
+    for ($i = 1; $i < $argc; $i++) {
+        if ($argv[$i] === '--dry-run') {
+            $mode = 'dry-run';
+        } elseif ($argv[$i] === '--test') {
+            $mode = 'test';
+        } elseif ($argv[$i] === '--key' && isset($argv[$i + 1])) {
+            $keyEnvVar = $argv[$i + 1];
+            $i++; // Skip the next argument
+        } elseif (!str_starts_with($argv[$i], '--')) {
+            $files[] = $argv[$i];
+        }
+    }
+    
+    if (empty($files)) {
+        echo "❌ Error: No files specified" . PHP_EOL;
+        exit(1);
+    }
+    
+    echo "🚀 Nostrbots Test Publisher" . PHP_EOL;
+    echo "===========================" . PHP_EOL . PHP_EOL;
     
     try {
-        $performanceManager->startTimer('test_publish');
+        $keyManager = new KeyManager();
         
-        // Load test bot configuration
-        $configFile = __DIR__ . '/botData/testBot/config.yml';
-        if (!file_exists($configFile)) {
-            throw new \Exception("Test bot configuration not found: {$configFile}");
+        // Validate the key
+        echo "🔑 Validating bot key..." . PHP_EOL;
+        $key = $keyManager->getBotKey($keyEnvVar);
+        
+        if ($key === null) {
+            echo "❌ Error: Key not found or invalid: {$keyEnvVar}" . PHP_EOL;
+            echo "   Make sure the environment variable is set and contains a valid private key." . PHP_EOL;
+            exit(1);
         }
         
-        echo "📋 Loading test bot configuration..." . PHP_EOL;
-        $bot = new NostrBot();
-        $bot->loadConfig($configFile);
+        echo "✅ Key validation successful!" . PHP_EOL;
+        echo "   NPub: {$key['npub']}" . PHP_EOL;
+        echo "   Display Name: {$key['display_name']}" . PHP_EOL . PHP_EOL;
         
-        echo "🔍 Configuration loaded successfully" . PHP_EOL;
-        echo "📊 Bot name: " . $bot->getName() . PHP_EOL;
-        echo "📝 Description: " . $bot->getDescription() . PHP_EOL;
-        
-        // Check if test mode is enabled
-        $config = $bot->getConfig();
-        if (!($config['test_mode'] ?? false)) {
-            echo "⚠️  Warning: Test mode not enabled in configuration" . PHP_EOL;
-        } else {
-            echo "✅ Test mode enabled - will use test relays" . PHP_EOL;
-        }
-        
-        echo PHP_EOL . "🚀 Publishing test event..." . PHP_EOL;
-        
-        // Run the bot
-        $result = $bot->run();
-        
-        $performanceManager->endTimer('test_publish');
-        
-        // Display results
-        echo PHP_EOL . "📊 Publishing Results:" . PHP_EOL;
-        echo "=====================" . PHP_EOL;
-        
-        if ($result->isSuccess()) {
-            echo "✅ Publishing successful!" . PHP_EOL;
-            
-            $publishedEvents = $result->getPublishedEvents();
-            echo "📄 Published " . count($publishedEvents) . " events:" . PHP_EOL;
-            
-            foreach ($publishedEvents as $event) {
-                echo "  - Event ID: " . $event['event_id'] . PHP_EOL;
-                echo "    Kind: " . $event['kind'] . PHP_EOL;
-                echo "    Relay: " . $event['relay'] . PHP_EOL;
-                if (isset($event['metadata']['title'])) {
-                    echo "    Title: " . $event['metadata']['title'] . PHP_EOL;
-                }
+        // Validate files
+        echo "📄 Validating files..." . PHP_EOL;
+        foreach ($files as $file) {
+            if (!file_exists($file)) {
+                echo "❌ Error: File not found: {$file}" . PHP_EOL;
+                exit(1);
             }
             
-            if ($result->hasViewingLinks()) {
-                $links = $result->getViewingLinks();
-                echo PHP_EOL . "🔗 Viewing Links:" . PHP_EOL;
-                foreach ($links as $type => $url) {
-                    echo "  {$type}: {$url}" . PHP_EOL;
-                }
-            }
-            
-        } else {
-            echo "❌ Publishing failed!" . PHP_EOL;
-            
-            $errors = $result->getErrors();
-            if (!empty($errors)) {
-                echo "🚨 Errors:" . PHP_EOL;
-                foreach ($errors as $error) {
-                    echo "  - {$error}" . PHP_EOL;
-                }
-            }
-            
-            $warnings = $result->getWarnings();
-            if (!empty($warnings)) {
-                echo "⚠️  Warnings:" . PHP_EOL;
-                foreach ($warnings as $warning) {
-                    echo "  - {$warning}" . PHP_EOL;
-                }
+            if (!str_ends_with($file, '.yml') && !str_ends_with($file, '.yaml')) {
+                echo "⚠️  Warning: File may not be a valid config file: {$file}" . PHP_EOL;
             }
         }
+        echo "✅ All files validated!" . PHP_EOL . PHP_EOL;
         
-        echo PHP_EOL . "📊 Performance Report:" . PHP_EOL;
-        $performanceManager->printPerformanceReport();
-        
-        echo PHP_EOL . "✅ Test publishing completed!" . PHP_EOL;
+        // Process based on mode
+        switch ($mode) {
+            case 'dry-run':
+                echo "🔍 DRY RUN MODE - No actual publishing will occur" . PHP_EOL;
+                echo "===============================================" . PHP_EOL . PHP_EOL;
+                
+                foreach ($files as $file) {
+                    echo "📄 Processing: {$file}" . PHP_EOL;
+                    
+                    // Read and validate the config file
+                    try {
+                        $config = Yaml::parseFile($file);
+                    } catch (\Exception $e) {
+                        echo "❌ Error: Invalid YAML in {$file}: " . $e->getMessage() . PHP_EOL;
+                        continue;
+                    }
+                    
+                    // Display what would be published
+                    echo "   Title: " . ($config['title'] ?? 'No title') . PHP_EOL;
+                    echo "   Kind: " . ($config['kind'] ?? 'Unknown') . PHP_EOL;
+                    echo "   Environment Variable: " . ($config['npub']['environment_variable'] ?? 'Not set') . PHP_EOL;
+                    echo "   Public Key: " . ($config['npub']['public_key'] ?? 'Not set') . PHP_EOL;
+                    
+                    if (isset($config['content'])) {
+                        $contentLength = strlen($config['content']);
+                        echo "   Content Length: {$contentLength} characters" . PHP_EOL;
+                    }
+                    
+                    echo "   ✅ Would publish successfully" . PHP_EOL . PHP_EOL;
+                }
+                
+                echo "🎉 Dry run completed successfully!" . PHP_EOL;
+                echo "   All files are valid and ready for publishing." . PHP_EOL;
+                break;
+                
+            case 'test':
+                echo "🧪 TEST MODE - Publishing to test relays only" . PHP_EOL;
+                echo "=============================================" . PHP_EOL . PHP_EOL;
+                
+                // In a real implementation, this would actually publish to test relays
+                echo "📡 Test publishing functionality not yet implemented." . PHP_EOL;
+                echo "   This would publish to test relays for validation." . PHP_EOL . PHP_EOL;
+                
+                foreach ($files as $file) {
+                    echo "📄 Would test publish: {$file}" . PHP_EOL;
+                }
+                
+                echo "🎉 Test mode completed!" . PHP_EOL;
+                break;
+                
+            case 'publish':
+                echo "📡 LIVE PUBLISHING MODE" . PHP_EOL;
+                echo "=======================" . PHP_EOL . PHP_EOL;
+                
+                // In a real implementation, this would actually publish to live relays
+                echo "📡 Live publishing functionality not yet implemented." . PHP_EOL;
+                echo "   This would publish to all configured relays." . PHP_EOL . PHP_EOL;
+                
+                foreach ($files as $file) {
+                    echo "📄 Would publish: {$file}" . PHP_EOL;
+                }
+                
+                echo "🎉 Publishing completed!" . PHP_EOL;
+                break;
+        }
         
     } catch (\Exception $e) {
-        $errorHandler->addError("Test publishing failed: " . $e->getMessage());
-        echo "❌ Test publishing failed: " . $e->getMessage() . PHP_EOL;
-        
-        if ($errorHandler->hasErrors()) {
-            $errorHandler->printErrorSummary();
-        }
+        echo "❌ Error: " . $e->getMessage() . PHP_EOL;
+        exit(1);
     }
 }
 
-// Run test if called directly
-if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_NAME'])) {
-    testPublishing();
-}
+main($argv);

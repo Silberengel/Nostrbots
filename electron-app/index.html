@@ -37,6 +37,54 @@
                 </div>
             </section>
 
+            <!-- Key Management -->
+            <section class="key-section">
+                <h2>🔑 Bot Keys</h2>
+                <div class="key-management">
+                    <div class="key-selector">
+                        <label for="selectedKey">Select Bot Key</label>
+                        <select id="selectedKey">
+                            <option value="">Loading keys...</option>
+                        </select>
+                        <button id="refreshKeysBtn" class="btn btn-secondary">🔄 Refresh</button>
+                    </div>
+                    <div class="key-actions">
+                        <button id="addKeyBtn" class="btn btn-primary">➕ Add Key</button>
+                        <button id="deleteKeyBtn" class="btn btn-danger" disabled>🗑️ Delete</button>
+                    </div>
+                </div>
+                <div id="keyInfo" class="key-info hidden">
+                    <div class="key-details">
+                        <div class="key-avatar">
+                            <img id="keyAvatar" src="" alt="Profile" class="hidden">
+                            <div id="keyInitials" class="key-initials"></div>
+                        </div>
+                        <div class="key-meta">
+                            <div id="keyDisplayName" class="key-name"></div>
+                            <div id="keyNpub" class="key-npub"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Relay Configuration -->
+            <section class="relay-section">
+                <h2>🌐 Relay Configuration</h2>
+                <div class="relay-management">
+                    <button id="editRelaysBtn" class="btn btn-secondary">✏️ Edit Relays</button>
+                    <div id="relayList" class="relay-list">
+                        <div class="relay-item">
+                            <span class="relay-url">wss://thecitadel.nostr1.com</span>
+                            <span class="relay-status">Default</span>
+                        </div>
+                        <div class="relay-item">
+                            <span class="relay-url">wss://freelay.sovbit.host</span>
+                            <span class="relay-status">Default</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Configuration -->
             <section class="config-section">
                 <h2>⚙️ Configuration</h2>
@@ -97,13 +145,37 @@
 
             <!-- Actions -->
             <section class="actions-section">
-                <button id="parseBtn" class="btn btn-success btn-large" disabled>
-                    <span class="btn-text">Parse Document</span>
-                    <span class="btn-spinner hidden">⏳</span>
-                </button>
-                <button id="openOutputBtn" class="btn btn-outline hidden">
-                    📁 Open Output Folder
-                </button>
+                <div class="action-buttons">
+                    <button id="parseBtn" class="btn btn-success btn-large" disabled>
+                        <span class="btn-text">Parse Document</span>
+                        <span class="btn-spinner hidden">⏳</span>
+                    </button>
+                    <button id="openOutputBtn" class="btn btn-outline hidden">
+                        📁 Open Output Folder
+                    </button>
+                </div>
+                
+                <div id="publishSection" class="publish-section hidden">
+                    <h3>🚀 Publish to Nostr</h3>
+                    <div class="publish-options">
+                        <button id="dryRunBtn" class="btn btn-warning">
+                            🔍 Dry Run
+                        </button>
+                        <button id="testPublishBtn" class="btn btn-info">
+                            🧪 Test Publish
+                        </button>
+                        <button id="publishBtn" class="btn btn-success">
+                            📡 Publish
+                        </button>
+                    </div>
+                    <div class="publish-info">
+                        <small>
+                            <strong>Dry Run:</strong> Validate and preview without publishing<br>
+                            <strong>Test Publish:</strong> Publish to test relays only<br>
+                            <strong>Publish:</strong> Publish to all configured relays
+                        </small>
+                    </div>
+                </div>
             </section>
 
             <!-- Results -->

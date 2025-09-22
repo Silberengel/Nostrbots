@@ -5,4 +5,5 @@ default-relays:
   - wss://freelay.sovbit.host
 
 test-relays:
+  - wss://freelay.sovbit.host
   - ws://localhost:7777

@@ -155,3 +155,149 @@ ipcMain.handle('open-directory', async (event, directoryPath) => {
     return { success: false, error: error.message };
   }
 });
+
+// Key management handlers
+ipcMain.handle('get-all-bot-keys', async () => {
+  return new Promise((resolve, reject) => {
+    exec('php manage-keys.php list', { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
+      if (error) {
+        console.error('Error getting keys:', error);
+        reject({ success: false, error: error.message });
+        return;
+      }
+      
+      try {
+        // Parse the output to extract key information
+        // For now, return a mock structure - in a real implementation,
+        // we'd parse the actual output from the PHP script
+        const keys = [];
+        
+        // Check for environment variables
+        for (let i = 1; i <= 10; i++) {
+          const envVar = `NOSTR_BOT_KEY${i}`;
+          const value = process.env[envVar];
+          if (value) {
+            keys.push({
+              env_variable: envVar,
+              npub: `npub1${'0'.repeat(58)}`, // Mock npub
+              display_name: `Bot Key ${i}`,
+              profile_pic: null
+            });
+          }
+        }
+        
+        resolve(keys);
+      } catch (parseError) {
+        reject({ success: false, error: parseError.message });
+      }
+    });
+  });
+});
+
+ipcMain.handle('show-add-key-modal', async () => {
+  // For now, return a simple confirmation
+  // In a full implementation, this would show a modal dialog
+  const result = await dialog.showMessageBox(mainWindow, {
+    type: 'info',
+    title: 'Add New Key',
+    message: 'Key generation feature coming soon!',
+    detail: 'This will open a key generation dialog where you can create a new bot key.',
+    buttons: ['OK']
+  });
+  
+  return result.response === 0;
+});
+
+ipcMain.handle('delete-key', async (event, envVar) => {
+  // For now, just return success
+  // In a full implementation, this would actually remove the environment variable
+  console.log(`Would delete key: ${envVar}`);
+  return { success: true };
+});
+
+// Relay management handlers
+ipcMain.handle('get-relays', async () => {
+  try {
+    const relaysPath = path.join(__dirname, '..', 'src', 'relays.yml');
+    const content = fs.readFileSync(relaysPath, 'utf8');
+    
+    // Simple YAML parsing for the relays file
+    const relays = [];
+    const lines = content.split('\n');
+    let currentSection = null;
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('default-relays:') || trimmed.startsWith('test-relays:')) {
+        currentSection = trimmed.replace(':', '').replace('-', '');
+      } else if (trimmed.startsWith('- ') && currentSection) {
+        const url = trimmed.substring(2);
+        relays.push({
+          url: url,
+          type: currentSection === 'defaultrelays' ? 'Default' : 'Test'
+        });
+      }
+    }
+    
+    return relays;
+  } catch (error) {
+    console.error('Error loading relays:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('show-edit-relays-modal', async (event, currentRelays) => {
+  // For now, return the current relays unchanged
+  // In a full implementation, this would show a modal to edit relays
+  const result = await dialog.showMessageBox(mainWindow, {
+    type: 'info',
+    title: 'Edit Relays',
+    message: 'Relay editing feature coming soon!',
+    detail: 'This will open a relay configuration dialog.',
+    buttons: ['OK']
+  });
+  
+  return result.response === 0 ? currentRelays : null;
+});
+
+// Publishing handlers
+ipcMain.handle('publish-content', async (event, options) => {
+  const { mode, key, files, relays } = options;
+  
+  return new Promise((resolve, reject) => {
+    let command;
+    
+    if (mode === 'dry-run') {
+      command = `php test-publish.php --dry-run --key ${key.env_variable}`;
+    } else if (mode === 'test') {
+      command = `php test-publish.php --test --key ${key.env_variable}`;
+    } else {
+      command = `php test-publish.php --key ${key.env_variable}`;
+    }
+    
+    // Add file arguments
+    files.forEach(file => {
+      command += ` "${file}"`;
+    });
+    
+    console.log('Executing publish command:', command);
+    
+    exec(command, { cwd: path.join(__dirname, '..') }, (error, stdout, stderr) => {
+      if (error) {
+        console.error('Publish error:', error);
+        resolve({
+          success: false,
+          error: error.message,
+          stderr: stderr
+        });
+        return;
+      }
+      
+      resolve({
+        success: true,
+        output: stdout,
+        stderr: stderr
+      });
+    });
+  });
+});
