@@ -44,8 +44,11 @@ function main(array $argv): void
         echo "   • Store it securely (password manager, encrypted file, etc.)" . PHP_EOL . PHP_EOL;
 
         echo "📋 Setup Instructions:" . PHP_EOL;
-        echo "1. Set the environment variable:" . PHP_EOL;
+        echo "1. Set the environment variable (you can use either format):" . PHP_EOL;
+        echo "   # Hex format (recommended for scripts):" . PHP_EOL;
         echo "   export {$envVarName}={$keySet['hexPrivateKey']}" . PHP_EOL . PHP_EOL;
+        echo "   # Bech32 format (human-readable):" . PHP_EOL;
+        echo "   export {$envVarName}={$keySet['bechPrivateKey']}" . PHP_EOL . PHP_EOL;
 
         echo "2. Update your bot configuration file:" . PHP_EOL;
         echo "   npub:" . PHP_EOL;
@@ -53,7 +56,7 @@ function main(array $argv): void
         echo "     public_key: \"{$keySet['bechPublicKey']}\"" . PHP_EOL . PHP_EOL;
 
         echo "3. For Jenkins, add '{$envVarName}' as a 'Secret text' credential" . PHP_EOL;
-        echo "   with the hex private key as the value." . PHP_EOL . PHP_EOL;
+        echo "   with either the hex or bech32 private key as the value." . PHP_EOL . PHP_EOL;
 
         echo "🎉 You're ready to start using Nostrbots!" . PHP_EOL;
 

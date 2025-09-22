@@ -45,8 +45,14 @@ php generate-keys.php --env-var NOSTR_BOT_KEY1
 
 ### 3. Set Environment Variable
 
+You can use either hex or bech32 format:
+
 ```bash
+# Hex format (recommended for scripts)
 export NOSTR_BOT_KEY1=your_hex_private_key_here
+
+# Bech32 format (human-readable)
+export NOSTR_BOT_KEY1=nsec1your_bech32_private_key_here
 ```
 
 ### 4. Run a Bot
@@ -77,7 +83,7 @@ event_kind: 30023
 # Identity
 npub:
   environment_variable: "NOSTR_BOT_KEY1"
-  public_key: "npub1..."
+  public_key: "npub1..."  # Can also use hex format
 
 # Content
 title: "My Article Title"

@@ -27,18 +27,28 @@ class KeyManager
             throw new \InvalidArgumentException("Environment variable '{$envVariable}' is not set or is empty");
         }
 
-        // Validate key format
+        // Convert bech32 nsec to hex if needed
         if (str_starts_with($privateKey, 'nsec')) {
-            throw new \InvalidArgumentException("Please use hex private keys, not nsec format");
+            try {
+                $key = new Key();
+                $privateKey = $key->convertToHex($privateKey);
+                echo "✓ Converted nsec to hex format" . PHP_EOL;
+            } catch (\Exception $e) {
+                throw new \InvalidArgumentException("Invalid nsec format: " . $e->getMessage());
+            }
         }
 
+        // Validate hex format
         if (!ctype_xdigit($privateKey) || strlen($privateKey) !== 64) {
-            throw new \InvalidArgumentException("Private key must be a 64-character hex string");
+            throw new \InvalidArgumentException("Private key must be a 64-character hex string or valid nsec format");
         }
+
+        // Normalize the expected public key to bech32 format
+        $normalizedExpectedPubkey = $this->normalizePublicKey($expectedPubkey);
 
         // Validate that the private key matches the expected public key
         $keySet = $this->getKeySet($privateKey);
-        if ($keySet['bechPublicKey'] !== $expectedPubkey) {
+        if ($keySet['bechPublicKey'] !== $normalizedExpectedPubkey) {
             throw new \InvalidArgumentException("Private key does not match the expected public key");
         }
 
@@ -96,6 +106,36 @@ class KeyManager
         $hexPrivateKey = $key->generatePrivateKey();
         
         return $this->getKeySet($hexPrivateKey);
+    }
+
+    /**
+     * Normalize a public key to bech32 npub format
+     * 
+     * @param string $publicKey The public key in any format (hex or bech32)
+     * @return string The normalized bech32 npub
+     * @throws \InvalidArgumentException If key format is invalid
+     */
+    public function normalizePublicKey(string $publicKey): string
+    {
+        // If it's already bech32 npub, validate and return
+        if (str_starts_with($publicKey, 'npub1')) {
+            if (strlen($publicKey) !== 63) {
+                throw new \InvalidArgumentException("Invalid npub format: wrong length");
+            }
+            return $publicKey;
+        }
+
+        // If it's hex format, convert to bech32
+        if (ctype_xdigit($publicKey) && strlen($publicKey) === 64) {
+            try {
+                $key = new Key();
+                return $key->convertPublicKeyToBech32($publicKey);
+            } catch (\Exception $e) {
+                throw new \InvalidArgumentException("Invalid hex public key: " . $e->getMessage());
+            }
+        }
+
+        throw new \InvalidArgumentException("Public key must be a 64-character hex string or valid npub format");
     }
 
     /**

@@ -10,7 +10,7 @@ event_kind: 30023
 # Nostr identity configuration
 npub:
   environment_variable: "NOSTR_BOT_KEY1"
-  public_key: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+  public_key: "npub1z5pyqp2k2uvqkhv5c7murhcezvgqfj3da8ddfry89cqz4qhsk3sqzdku2z"
 
 # Relay configuration
 relays: "favorite-relays"  # Use category from relays.yml, or "all", or specific URL

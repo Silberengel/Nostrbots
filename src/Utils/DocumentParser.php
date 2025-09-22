@@ -29,8 +29,35 @@ class DocumentParser
      * @param string $outputDir Directory to save generated configuration files
      * @return array Parse results with generated files
      */
+    /**
+     * Reset the parser state for a new document
+     */
+    public function reset(): void
+    {
+        $this->documentPath = '';
+        $this->documentContent = '';
+        $this->format = '';
+        $this->contentLevel = 0;
+        $this->contentKind = '';
+        $this->sections = [];
+        $this->preamble = null;
+        $this->documentTitle = '';
+        $this->baseSlug = '';
+    }
+
     public function parseDocument(string $documentPath, int $contentLevel, string $contentKind, string $outputDir): array
     {
+        // Validate content level
+        if ($contentLevel < 1 || $contentLevel > 6) {
+            throw new \InvalidArgumentException("Content level must be between 1 and 6, got: {$contentLevel}");
+        }
+
+        $this->documentPath = $documentPath;
+        $this->contentLevel = $contentLevel;
+        $this->contentKind = $this->normalizeContentKind($contentKind);
+        
+        // Reset state for new document (after setting the new parameters)
+        $this->reset();
         $this->documentPath = $documentPath;
         $this->contentLevel = $contentLevel;
         $this->contentKind = $this->normalizeContentKind($contentKind);
@@ -99,19 +126,21 @@ class DocumentParser
         $currentSection = null;
         $preambleContent = [];
         $foundFirstHeader = false;
+        $foundNonTitleHeader = false;
 
         foreach ($lines as $lineNum => $line) {
             $headerLevel = $this->getHeaderLevel($line);
             
             if ($headerLevel > 0) {
-                $foundFirstHeader = true;
-                $headerText = $this->extractHeaderText($line);
-                
-                // Handle preamble if we haven't found the first header yet
-                if (!$foundFirstHeader && !empty($preambleContent)) {
+                // Handle preamble if we haven't found a non-title header yet
+                // For contentLevel=1, don't clear preamble content when we encounter headers
+                if (!$foundNonTitleHeader && !empty($preambleContent) && $this->contentLevel !== 1) {
                     $this->preamble = trim(implode("\n", $preambleContent));
                     $preambleContent = [];
                 }
+                
+                $foundFirstHeader = true;
+                $headerText = $this->extractHeaderText($line);
 
                 // Determine section type based on level
                 if ($headerLevel === 1) {
@@ -121,6 +150,19 @@ class DocumentParser
                         $this->baseSlug = $this->generateSlug($headerText);
                         continue;
                     }
+                }
+
+                // Mark that we found a non-title header
+                if ($headerLevel > 1) {
+                    $foundNonTitleHeader = true;
+                }
+
+                // For contentLevel = 1, treat everything after the title as a single content section
+                if ($this->contentLevel === 1) {
+                    // Don't create sections for any headers - treat them all as content
+                    // Add to preamble content since we'll convert it to a content section later
+                    $preambleContent[] = $line;
+                    continue;
                 }
 
                 // Only create new sections for headers at or above content level
@@ -156,7 +198,8 @@ class DocumentParser
                 // Add content to current section or preamble
                 if ($currentSection !== null) {
                     $currentSection['content'][] = $line;
-                } elseif (!$foundFirstHeader) {
+                } elseif ($this->contentLevel === 1 || !$foundNonTitleHeader) {
+                    // For contentLevel = 1, add all content after title to preamble
                     $preambleContent[] = $line;
                 }
             }
@@ -169,9 +212,30 @@ class DocumentParser
             $this->addSection($currentSection);
         }
 
-        // Handle preamble if no headers were found
-        if (!$foundFirstHeader && !empty($preambleContent)) {
+        // Handle preamble if we have content but no non-title headers were found
+        if (!$foundNonTitleHeader && !empty($preambleContent)) {
             $this->preamble = trim(implode("\n", $preambleContent));
+        }
+
+        // For contentLevel = 1, create a single content section from all content after the title
+        if ($this->contentLevel === 1 && !empty($preambleContent)) {
+            $contentSection = [
+                'level' => 1,
+                'title' => $this->documentTitle,
+                'slug' => $this->baseSlug,
+                'content' => trim(implode("\n", $preambleContent)),
+                'line_start' => 0,
+                'line_end' => count($lines) - 1,
+                'is_content' => true
+            ];
+            $this->addSection($contentSection);
+            // Clear preamble since we're treating this as a content section
+            $this->preamble = null;
+        }
+
+        // Validate that we have a root header (level 1)
+        if (empty($this->documentTitle)) {
+            throw new \InvalidArgumentException("Document must have a root header (level 1) to define the document title");
         }
 
         // Process hierarchical d-tags after all sections are parsed
@@ -230,6 +294,13 @@ class DocumentParser
         
         // Remove multiple consecutive hyphens
         $slug = preg_replace('/-+/', '-', $slug);
+        
+        // Limit length to prevent filesystem issues (50 chars should be enough for most cases)
+        if (strlen($slug) > 50) {
+            $slug = substr($slug, 0, 50);
+            // Remove trailing hyphen if it exists
+            $slug = rtrim($slug, '-');
+        }
         
         return $slug;
     }
@@ -666,13 +737,25 @@ class DocumentParser
         ];
 
         foreach ($this->sections as $section) {
-            $structure['sections'][] = [
+            $structureSection = [
                 'level' => $section['level'],
                 'title' => $section['title'],
                 'slug' => $section['slug'],
                 'type' => ($section['level'] === $this->contentLevel) ? 'content' : 'index',
                 'content_length' => strlen($section['content'])
             ];
+            
+            // Include is_content flag if it exists
+            if (isset($section['is_content'])) {
+                $structureSection['is_content'] = $section['is_content'];
+            }
+            
+            // Include content if it exists
+            if (isset($section['content'])) {
+                $structureSection['content'] = $section['content'];
+            }
+            
+            $structure['sections'][] = $structureSection;
         }
 
         return $structure;

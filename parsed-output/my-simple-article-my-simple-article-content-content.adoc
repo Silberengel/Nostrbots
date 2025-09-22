@@ -1,0 +1,7 @@
+== This header becomes content
+
+More content here.
+
+=== Even deeper headers are content
+
+All of this becomes part of the article content.

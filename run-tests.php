@@ -74,7 +74,14 @@ function runPerformanceTests(): void
     
     $startTime = microtime(true);
     $parser = new \Nostrbots\Utils\DocumentParser();
-    $result = $parser->parseDocument($largeContent, 3, 30041);
+    $tempFile = tempnam(sys_get_temp_dir(), 'perf_test_') . '.adoc';
+    file_put_contents($tempFile, $largeContent);
+    
+    try {
+        $result = $parser->parseDocument($tempFile, 3, '30041', sys_get_temp_dir());
+    } finally {
+        unlink($tempFile);
+    }
     $endTime = microtime(true);
     
     $duration = round(($endTime - $startTime) * 1000, 2);
