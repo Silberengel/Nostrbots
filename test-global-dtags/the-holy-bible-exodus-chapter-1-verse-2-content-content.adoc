@@ -1,1 +1,0 @@
-Reuben, Simeon, Levi, and Judah,

@@ -1,1 +1,0 @@
-Creating new event kinds for specialized use cases.

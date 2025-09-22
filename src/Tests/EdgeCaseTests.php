@@ -42,6 +42,7 @@ class EdgeCaseTests
                 'testNoHeadersDocument' => 'Document with no headers',
                 'testOnlyPreambleDocument' => 'Document with only preamble',
                 'testNoRootHeader' => 'Document without root header (should fail)',
+                'testMultipleDocumentHeaders' => 'Document with multiple document headers (should fail)',
             ],
             'Content Level Tests' => [
                 'testInvalidContentLevel' => 'Invalid content level (too high)',
@@ -209,6 +210,13 @@ class EdgeCaseTests
     private function testNoRootHeader(): void
     {
         $this->assertParsingFails("== Chapter 1 (no root header)\n\nContent here.\n\n== Chapter 2\n\nMore content.", 3, 'root');
+    }
+
+    private function testMultipleDocumentHeaders(): void
+    {
+        $documentWithMultipleHeaders = "= First Document Title\n\nThis is preamble content.\n\n= Second Document Title\n\nThis should fail because there are two document headers.\n\n== Chapter 1\n\nContent here.";
+        
+        $this->assertParsingFails($documentWithMultipleHeaders, 3, 'multiple document headers');
     }
 
     // ============================================================================
@@ -420,7 +428,7 @@ class EdgeCaseTests
 
 // Run tests if called directly
 if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_NAME'])) {
-    require_once __DIR__ . '/../src/bootstrap.php';
+    require_once __DIR__ . '/../bootstrap.php';
     
     $tester = new EdgeCaseTests();
     $tester->runAllTests();

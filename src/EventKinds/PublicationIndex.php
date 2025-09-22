@@ -32,8 +32,12 @@ class PublicationIndex extends AbstractEventKind
         $event = new Event();
         $event->setKind($this->getKind());
 
-        // Content field MUST be empty for publication indices
-        $event->setContent('');
+        // Content field can contain preamble for root indices, empty for nested indices
+        $contentText = '';
+        if (isset($config['preamble']) && !empty($config['preamble'])) {
+            $contentText = $config['preamble'];
+        }
+        $event->setContent($contentText);
 
         // Handle index management (create, update, or append)
         $finalConfig = $this->processIndexManagement($config);
@@ -80,8 +84,8 @@ class PublicationIndex extends AbstractEventKind
                 $errors[] = 'content_references must be an array';
             } else {
                 foreach ($config['content_references'] as $index => $ref) {
-                    if (!is_array($ref) || !isset($ref['kind'], $ref['pubkey'], $ref['d_tag'])) {
-                        $errors[] = "content_references[{$index}] must have kind, pubkey, and d_tag fields";
+                    if (!is_array($ref) || !isset($ref['kind'], $ref['d_tag'])) {
+                        $errors[] = "content_references[{$index}] must have kind and d_tag fields (pubkey is optional)";
                     }
                     
                     // Validate supported event kinds
@@ -141,6 +145,7 @@ class PublicationIndex extends AbstractEventKind
             'published_on' => 'Publication date (YYYY-MM-DD)',
             'source' => 'URL to original source',
             'isbn' => 'ISBN identifier (will be formatted as i tag)',
+            'preamble' => 'Preamble content for root indices (markdown format)',
             'content_references' => 'Array of content sections to include (supports kinds 30023, 30040, 30041, 30818)',
             'index_management' => 'Configuration for creating/updating indices with flexible ordering',
             'hierarchy_level' => 'Nesting level for hierarchical publications (0=root, 1=chapter, 2=section, etc.)',

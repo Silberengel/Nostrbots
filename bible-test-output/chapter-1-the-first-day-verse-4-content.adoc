@@ -1,1 +1,0 @@
-And God saw the light, that it was good: and God divided the light from the darkness.

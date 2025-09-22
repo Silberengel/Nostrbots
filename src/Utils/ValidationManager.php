@@ -2,8 +2,13 @@
 
 namespace Nostrbots\Utils;
 
-use Swentel\Nostr\Event;
-use Swentel\Nostr\Relay;
+use swentel\nostr\Event\Event;
+use swentel\nostr\Relay\Relay;
+use swentel\nostr\Relay\RelaySet;
+use swentel\nostr\Request\Request;
+use swentel\nostr\Message\RequestMessage;
+use swentel\nostr\Subscription\Subscription;
+use swentel\nostr\Filter\Filter;
 
 /**
  * Handles post-publish validation and verification
@@ -22,11 +27,19 @@ class ValidationManager
     /**
      * Validate that an event was published correctly
      */
-    public function validateEvent(Event $event, int $waitSeconds = 10): bool
+    public function validateEvent(\swentel\nostr\Event\Event $event, int $waitSeconds = 10): bool
     {
         echo "🔍 Validating published event..." . PHP_EOL;
-        echo "⏳ Waiting {$waitSeconds} seconds for event propagation..." . PHP_EOL;
         
+        // Check if we're in mock mode
+        if (getenv('NOSTR_MOCK_PUBLISH') === 'true') {
+            echo "🔧 MOCK MODE: Simulating successful event validation" . PHP_EOL;
+            echo "   Event ID: " . $event->getId() . PHP_EOL;
+            echo "   Public Key: " . $event->getPublicKey() . PHP_EOL;
+            return true;
+        }
+        
+        echo "⏳ Waiting {$waitSeconds} seconds for event propagation..." . PHP_EOL;
         sleep($waitSeconds);
         
         return $this->retryManager->execute(function() use ($event) {
@@ -57,41 +70,47 @@ class ValidationManager
         $relays = $this->relayManager->getRelays('write');
         $eventId = $expectedEvent->getId();
         
+        // Create RelaySet for validation
+        $relaySet = new RelaySet();
         foreach ($relays as $relayUrl) {
-            try {
-                $relay = new Relay($relayUrl);
-                $relay->connect();
-                
-                // Query for the specific event
-                $filter = [
-                    'ids' => [$eventId]
-                ];
-                
-                $events = $relay->query($filter);
-                
-                if (!empty($events)) {
-                    $fetchedEvent = $events[0];
-                    
-                    // Validate key fields
-                    if ($this->validateEventFields($expectedEvent, $fetchedEvent)) {
-                        echo "✅ Event validation successful on relay: {$relayUrl}" . PHP_EOL;
-                        $relay->disconnect();
-                        return true;
-                    } else {
-                        echo "❌ Event validation failed - content mismatch on relay: {$relayUrl}" . PHP_EOL;
-                    }
-                } else {
-                    echo "⚠️  Event not found on relay: {$relayUrl}" . PHP_EOL;
-                }
-                
-                $relay->disconnect();
-            } catch (\Exception $e) {
-                echo "⚠️  Failed to validate on relay {$relayUrl}: " . $e->getMessage() . PHP_EOL;
-            }
+            $relaySet->addRelay(new Relay($relayUrl));
         }
         
-        echo "❌ Event validation failed on all relays" . PHP_EOL;
-        return false;
+        try {
+            // Create subscription and filter for the specific event
+            $subscription = new Subscription();
+            $subscriptionId = $subscription->setId();
+            $filter = new Filter();
+            $filter->setIds([$eventId]);
+            $requestMessage = new RequestMessage($subscriptionId, [$filter]);
+            
+            $request = new Request($relaySet, $requestMessage);
+            $response = $request->send();
+            
+            // Process the response to find the event
+            foreach ($response as $relayUrl => $relayResponses) {
+                foreach ($relayResponses as $responseItem) {
+                    if (is_object($responseItem) && isset($responseItem->type) && $responseItem->type === 'EVENT') {
+                        $event = $responseItem->event;
+                        
+                        // Validate key fields
+                        if ($this->validateEventFields($expectedEvent, $event)) {
+                            echo "✅ Event validation successful on relay: {$relayUrl}" . PHP_EOL;
+                            return true;
+                        } else {
+                            echo "❌ Event validation failed - content mismatch on relay: {$relayUrl}" . PHP_EOL;
+                        }
+                    }
+                }
+            }
+            
+            echo "❌ Event not found on any relay" . PHP_EOL;
+            return false;
+            
+        } catch (\Exception $e) {
+            echo "❌ Error validating event: " . $e->getMessage() . PHP_EOL;
+            return false;
+        }
     }
 
     /**

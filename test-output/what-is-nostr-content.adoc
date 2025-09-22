@@ -1,6 +1,0 @@
-Nostr (Notes and Other Stuff Transmitted by Relays) is a simple, open protocol 
-that enables global, decentralized, and censorship-resistant social media.
-
-The protocol is designed around two main components:
-- **Clients**: Applications that users interact with
-- **Relays**: Servers that store and forward messages

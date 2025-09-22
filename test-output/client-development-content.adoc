@@ -1,1 +1,0 @@
-Building Nostr clients requires understanding several key areas.

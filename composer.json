@@ -4,9 +4,9 @@
         "ext-gmp": "*",
         "ext-xml": "*",
         "bitwasp/bech32": "^0.0.1",
-        "phrity/websocket": "^3.0",
+        "phrity/websocket": "^3.5",
         "simplito/elliptic-php": "^1.0",
-        "mdanter/ecc": "^1.0",
+        "paragonie/ecc": "^2.0",
         "swentel/nostr-php": "^1.4.1",
         "textalk/websocket": "^1.5",
         "symfony/yaml": "^7.3"
@@ -17,7 +17,7 @@
     },
     "autoload": {
         "psr-4": {
-          "nostrbots\\": "src/"
+          "Nostrbots\\": "src/"
            }
          }
 }

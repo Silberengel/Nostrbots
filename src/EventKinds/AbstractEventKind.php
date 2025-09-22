@@ -129,9 +129,13 @@ abstract class AbstractEventKind implements EventKindInterface
             $errors[] = "Summary must be 500 characters or less";
         }
 
-        // Validate image URL
-        if (isset($config['image']) && !filter_var($config['image'], FILTER_VALIDATE_URL)) {
-            $errors[] = "Image must be a valid URL";
+        // Validate image URL or local file path
+        if (isset($config['image'])) {
+            $image = $config['image'];
+            // Allow local file paths for testing (starting with /)
+            if (!filter_var($image, FILTER_VALIDATE_URL) && !str_starts_with($image, '/')) {
+                $errors[] = "Image must be a valid URL or local file path";
+            }
         }
 
         // Validate topics

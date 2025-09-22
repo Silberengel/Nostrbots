@@ -18,11 +18,11 @@ class KeyManager
      * Get a private key from environment variable and validate it
      * 
      * @param string $envVariable Environment variable name
-     * @param string $expectedPubkey Expected public key (npub format)
+     * @param string|null $expectedPubkey Expected public key (npub format), null to derive from private key
      * @return string The hex private key
      * @throws \InvalidArgumentException If key is invalid or doesn't match
      */
-    public function getPrivateKey(string $envVariable, string $expectedPubkey): string
+    public function getPrivateKey(string $envVariable, ?string $expectedPubkey = null): string
     {
         // Check if environment variable is set
         $privateKey = getenv($envVariable);
@@ -46,16 +46,19 @@ class KeyManager
             throw new \InvalidArgumentException("Private key must be a 64-character hex string or valid nsec format");
         }
 
-        // Normalize the expected public key to bech32 format
-        $normalizedExpectedPubkey = $this->normalizePublicKey($expectedPubkey);
-
-        // Validate that the private key matches the expected public key
+        // Get the key set to derive the public key
         $keySet = $this->getKeySet($privateKey);
-        if ($keySet['bechPublicKey'] !== $normalizedExpectedPubkey) {
-            throw new \InvalidArgumentException("Private key does not match the expected public key");
+        
+        // If expected public key is provided, validate it matches
+        if ($expectedPubkey !== null) {
+            $normalizedExpectedPubkey = $this->normalizePublicKey($expectedPubkey);
+            if ($keySet['bechPublicKey'] !== $normalizedExpectedPubkey) {
+                throw new \InvalidArgumentException("Private key does not match the expected public key");
+            }
+            echo "✓ Key validation successful for {$expectedPubkey}" . PHP_EOL;
+        } else {
+            echo "✓ Key validation successful for {$keySet['bechPublicKey']}" . PHP_EOL;
         }
-
-        echo "✓ Key validation successful for {$expectedPubkey}" . PHP_EOL;
         return $privateKey;
     }
 

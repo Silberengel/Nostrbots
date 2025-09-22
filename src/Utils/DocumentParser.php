@@ -29,6 +29,227 @@ class DocumentParser
      * @param string $outputDir Directory to save generated configuration files
      * @return array Parse results with generated files
      */
+    
+    /**
+     * Parse a document and return hierarchical structure for direct publishing
+     * 
+     * @param string $documentPath Path to the document file
+     * @param int $contentLevel Header level that becomes content sections (1-6)
+     * @param string $contentKind Kind of content to generate ('30023', '30041', '30818', 'longform', 'publication', 'wiki')
+     * @return array Hierarchical structure ready for publishing
+     */
+    public function parseDocumentForDirectPublishing(string $documentPath, int $contentLevel, string $contentKind): array
+    {
+        // Validate content level
+        if ($contentLevel < 1 || $contentLevel > 6) {
+            throw new \InvalidArgumentException("Content level must be between 1 and 6, got: {$contentLevel}");
+        }
+
+        $this->documentPath = $documentPath;
+        $this->contentLevel = $contentLevel;
+        $this->contentKind = $this->normalizeContentKind($contentKind);
+        
+        // Reset state for new document
+        $this->reset();
+        $this->documentPath = $documentPath;
+        $this->contentLevel = $contentLevel;
+        $this->contentKind = $this->normalizeContentKind($contentKind);
+        
+        if (!file_exists($documentPath)) {
+            throw new \InvalidArgumentException("Document file not found: {$documentPath}");
+        }
+
+        $this->documentContent = file_get_contents($documentPath);
+        $this->format = $this->detectFormat($documentPath);
+        
+        // Parse the document structure
+        $this->parseStructure();
+        
+        // Validate document structure after parsing
+        if (empty($this->documentTitle)) {
+            throw new \InvalidArgumentException("Invalid document structure: Document must have exactly one document title (level 1 header). Found 0 document headers.");
+        }
+        
+        // Build hierarchical structure for direct publishing
+        return $this->buildHierarchicalStructure();
+    }
+
+    /**
+     * Build hierarchical structure optimized for direct publishing
+     * Returns array with content sections and indices in dependency order
+     */
+    private function buildHierarchicalStructure(): array
+    {
+        // Extract metadata from document header
+        $metadata = $this->extractDocumentMetadata();
+        
+        $structure = [
+            'document_title' => $this->documentTitle,
+            'base_slug' => $this->baseSlug,
+            'content_level' => $this->contentLevel,
+            'content_kind' => $this->contentKind,
+            'preamble' => $this->preamble,
+            'metadata' => $metadata, // Document metadata from header
+            'publish_order' => [], // Order for publishing (content first, then indices)
+            'content_sections' => [], // Level >= contentLevel (actual content)
+            'index_sections' => [], // Level < contentLevel (indices/containers)
+            'main_index' => null // Root index configuration
+        ];
+
+        // Organize sections by type
+        foreach ($this->sections as $section) {
+            $sectionData = [
+                'title' => $section['title'],
+                'slug' => $section['slug'],
+                'level' => $section['level'],
+                'content' => $section['content'],
+                'parent_slug' => $section['parent_slug'],
+                'children' => []
+            ];
+
+            if ($section['level'] >= $this->contentLevel) {
+                // Content section - publish first
+                $sectionData['event_kind'] = $this->contentKind;
+                $sectionData['d_tag'] = $section['slug'] . '-content';
+                $structure['content_sections'][] = $sectionData;
+            } else {
+                // Index section - publish after content
+                $sectionData['event_kind'] = 30040;
+                $sectionData['d_tag'] = $section['slug'];
+                $structure['index_sections'][] = $sectionData;
+            }
+        }
+
+        // Build main index (root)
+        $structure['main_index'] = [
+            'title' => $this->documentTitle,
+            'slug' => $this->baseSlug,
+            'event_kind' => 30040,
+            'd_tag' => $this->baseSlug,
+            'content_references' => $this->buildContentReferences($structure)
+        ];
+
+        // Build publish order: content sections first, then indices, then main index
+        $structure['publish_order'] = array_merge(
+            $structure['content_sections'],
+            $structure['index_sections'],
+            [$structure['main_index']]
+        );
+
+        return $structure;
+    }
+
+    /**
+     * Build content references for the main index
+     */
+    private function buildContentReferences(array $structure): array
+    {
+        $references = [];
+        $order = 0;
+
+        // Add preamble if exists
+        if ($structure['preamble']) {
+            $references[] = [
+                'kind' => $structure['content_kind'],
+                'd_tag' => $structure['base_slug'] . '-preamble-content',
+                'relay' => 'wss://thecitadel.nostr1.com',
+                'order' => $order++
+            ];
+        }
+
+        // Add top-level sections (level 2)
+        foreach ($structure['index_sections'] as $section) {
+            if ($section['level'] === 2) {
+                $references[] = [
+                    'kind' => 30040,
+                    'd_tag' => $section['d_tag'],
+                    'relay' => 'wss://thecitadel.nostr1.com',
+                    'order' => $order++
+                ];
+            }
+        }
+
+        return $references;
+    }
+
+    /**
+     * Extract metadata from document header (key-value pairs after title)
+     */
+    private function extractDocumentMetadata(): array
+    {
+        $metadata = [];
+        $lines = explode("\n", $this->documentContent);
+        $foundTitle = false;
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            
+            // Skip empty lines
+            if (empty($line)) {
+                continue;
+            }
+            
+            // Check if we've found the document title
+            if (!$foundTitle && preg_match('/^=\s+(.+)$/', $line, $matches)) {
+                $foundTitle = true;
+                continue;
+            }
+            
+            // If we haven't found the title yet, skip
+            if (!$foundTitle) {
+                continue;
+            }
+            
+            // Stop at first header after title (== or deeper)
+            if (preg_match('/^={2,}\s+(.+)$/', $line)) {
+                break;
+            }
+            
+            // Parse AsciiDoc attributes (format: :key: value) or key-value pairs (format: key: value)
+            if (preg_match('/^:?([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.+)$/', $line, $matches)) {
+                $key = strtolower(trim($matches[1]));
+                $value = trim($matches[2]);
+                
+                // Set default values for common metadata (author and version first)
+                switch ($key) {
+                    case 'author':
+                        $metadata['author'] = $value;
+                        break;
+                    case 'version':
+                        $metadata['version'] = $value;
+                        break;
+                    case 'relays':
+                        $metadata['relays'] = $value;
+                        break;
+                    case 'auto_update':
+                        $metadata['auto_update'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                        break;
+                    case 'summary':
+                        $metadata['summary'] = $value;
+                        break;
+                    case 'type':
+                        $metadata['type'] = $value;
+                        break;
+                    case 'hierarchy_level':
+                        $metadata['hierarchy_level'] = (int)$value;
+                        break;
+                    default:
+                        // Store any custom metadata
+                        $metadata[$key] = $value;
+                        break;
+                }
+            }
+        }
+        
+        // Set defaults for required metadata
+        $metadata['relays'] = $metadata['relays'] ?? 'favorite-relays';
+        $metadata['auto_update'] = $metadata['auto_update'] ?? true;
+        $metadata['summary'] = $metadata['summary'] ?? 'Generated from document: ' . $this->documentTitle;
+        $metadata['type'] = $metadata['type'] ?? 'documentation';
+        $metadata['hierarchy_level'] = $metadata['hierarchy_level'] ?? 0;
+        
+        return $metadata;
+    }
     /**
      * Reset the parser state for a new document
      */
@@ -71,6 +292,11 @@ class DocumentParser
         
         // Parse the document structure
         $this->parseStructure();
+        
+        // Validate document structure after parsing
+        if (empty($this->documentTitle)) {
+            throw new \InvalidArgumentException("Invalid document structure: Document must have exactly one document title (level 1 header). Found 0 document headers.");
+        }
         
         // Generate configuration files
         return $this->generateConfigurations($outputDir);
@@ -127,6 +353,7 @@ class DocumentParser
         $preambleContent = [];
         $foundFirstHeader = false;
         $foundNonTitleHeader = false;
+        $documentHeaderCount = 0;
 
         foreach ($lines as $lineNum => $line) {
             $previousLine = ($lineNum > 0) ? $lines[$lineNum - 1] : null;
@@ -145,7 +372,12 @@ class DocumentParser
 
                 // Determine section type based on level
                 if ($headerLevel === 1) {
-                    // Document title
+                    // Document title - validate only one document header
+                    $documentHeaderCount++;
+                    if ($documentHeaderCount > 1) {
+                        throw new \InvalidArgumentException("Invalid document structure: Found multiple document headers (level 1 headers). AsciiDoc documents can only have one document title. Found at least 2: '{$this->documentTitle}' and '{$headerText}'");
+                    }
+                    
                     if (empty($this->documentTitle)) {
                         $this->documentTitle = $headerText;
                         $this->baseSlug = $this->generateSlug($headerText);
