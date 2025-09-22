@@ -1,0 +1,24 @@
+= My First Nostr Article
+
+This is a simple test article for the Nostrbots Desktop application.
+
+== Introduction
+
+The Nostrbots Desktop app makes it easy to convert documents into Nostr publications. You can create:
+
+* Long-form articles (30023)
+* Publication content (30041) 
+* Wiki articles (30818)
+
+== Features
+
+The app provides a beautiful interface for:
+
+* File selection and preview
+* Content type configuration
+* Simple and hierarchical publication modes
+* Real-time parsing results
+
+== Conclusion
+
+This demonstrates how easy it is to create Nostr content with the desktop application!

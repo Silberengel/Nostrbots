@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nostrbots Desktop - Document Parser</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <h1>🚀 Nostrbots Desktop</h1>
+                <p>Convert documents to Nostr publications</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- File Selection -->
+            <section class="file-section">
+                <h2>📄 Select Document</h2>
+                <div class="file-input-group">
+                    <input type="text" id="filePath" placeholder="No file selected" readonly>
+                    <button id="selectFileBtn" class="btn btn-primary">Browse</button>
+                </div>
+                <div id="filePreview" class="file-preview hidden">
+                    <h3>Document Preview</h3>
+                    <pre id="fileContent"></pre>
+                </div>
+            </section>
+
+            <!-- Configuration -->
+            <section class="config-section">
+                <h2>⚙️ Configuration</h2>
+                
+                <div class="config-grid">
+                    <div class="config-group">
+                        <label for="contentKind">Content Type</label>
+                        <select id="contentKind">
+                            <option value="longform">Long-form Article (30023)</option>
+                            <option value="publication">Publication Content (30041)</option>
+                            <option value="wiki">Wiki Article (30818)</option>
+                        </select>
+                    </div>
+
+                    <div class="config-group">
+                        <label for="outputDir">Output Directory</label>
+                        <div class="file-input-group">
+                            <input type="text" id="outputDir" placeholder="Current directory" readonly>
+                            <button id="selectOutputBtn" class="btn btn-secondary">Browse</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mode-selection">
+                    <h3>Publication Mode</h3>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="mode" value="simple" checked>
+                            <span class="radio-label">
+                                <strong>Simple Standalone Article</strong>
+                                <small>Single article with all content</small>
+                            </span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="mode" value="hierarchical">
+                            <span class="radio-label">
+                                <strong>Hierarchical Publication</strong>
+                                <small>Complex structure with chapters/sections</small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="hierarchicalOptions" class="hierarchical-options hidden">
+                    <div class="config-group">
+                        <label for="contentLevel">Content Level</label>
+                        <select id="contentLevel">
+                            <option value="2">Level 2 - Chapters</option>
+                            <option value="3" selected>Level 3 - Sections</option>
+                            <option value="4">Level 4 - Subsections</option>
+                            <option value="5">Level 5 - Deep nesting</option>
+                            <option value="6">Level 6 - Maximum depth</option>
+                        </select>
+                        <small>Headers at this level become content sections</small>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Actions -->
+            <section class="actions-section">
+                <button id="parseBtn" class="btn btn-success btn-large" disabled>
+                    <span class="btn-text">Parse Document</span>
+                    <span class="btn-spinner hidden">⏳</span>
+                </button>
+                <button id="openOutputBtn" class="btn btn-outline hidden">
+                    📁 Open Output Folder
+                </button>
+            </section>
+
+            <!-- Results -->
+            <section id="resultsSection" class="results-section hidden">
+                <h2>📊 Results</h2>
+                <div id="resultsContent"></div>
+            </section>
+
+            <!-- Generated Files -->
+            <section id="filesSection" class="files-section hidden">
+                <h2>📁 Generated Files</h2>
+                <div id="filesList"></div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Built with ❤️ for the Nostr community</p>
+            <p><a href="https://github.com/SilberWitch/Nostrbots" target="_blank">GitHub</a> | <a href="https://nostr.com" target="_blank">Nostr</a></p>
+        </footer>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
