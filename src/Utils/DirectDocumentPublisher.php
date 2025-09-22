@@ -39,36 +39,53 @@ class DirectDocumentPublisher
         echo "📊 Content level: {$contentLevel}, Content kind: {$contentKind}" . PHP_EOL . PHP_EOL;
 
         try {
-            // Parse document into hierarchical structure
-            echo "🔍 Parsing document structure..." . PHP_EOL;
-            $structure = $this->parser->parseDocumentForDirectPublishing($documentPath, $contentLevel, $contentKind);
-            
-            echo "✅ Document parsed successfully!" . PHP_EOL;
-            echo "📋 Title: {$structure['document_title']}" . PHP_EOL;
-            echo "📊 Found " . count($structure['content_sections']) . " content sections" . PHP_EOL;
-            echo "📊 Found " . count($structure['index_sections']) . " index sections" . PHP_EOL;
-            echo "📊 Total events to publish: " . count($structure['publish_order']) . PHP_EOL . PHP_EOL;
+            $structure = $this->parseDocument($documentPath, $contentLevel, $contentKind);
+            $this->displayParseResults($structure);
 
             if ($dryRun) {
                 echo "🔍 DRY RUN MODE - No events will be published" . PHP_EOL;
                 return $this->buildDryRunResults($structure);
             }
 
-            // Publish in dependency order (content first, then indices, then main index)
-            echo "🚀 Starting publication process..." . PHP_EOL . PHP_EOL;
-            $this->publishInOrder($structure);
-
-            return $this->buildResults($structure);
+            return $this->publishStructure($structure);
 
         } catch (\Exception $e) {
             $this->errors[] = $e->getMessage();
             echo "❌ Error: " . $e->getMessage() . PHP_EOL;
-            return [
-                'success' => false,
-                'errors' => $this->errors,
-                'published_events' => $this->publishedEvents
-            ];
+            return $this->buildErrorResults();
         }
+    }
+
+    /**
+     * Parse document into hierarchical structure
+     */
+    private function parseDocument(string $documentPath, int $contentLevel, string $contentKind): array
+    {
+        echo "🔍 Parsing document structure..." . PHP_EOL;
+        $structure = $this->parser->parseDocumentForDirectPublishing($documentPath, $contentLevel, $contentKind);
+        echo "✅ Document parsed successfully!" . PHP_EOL;
+        return $structure;
+    }
+
+    /**
+     * Display parsing results
+     */
+    private function displayParseResults(array $structure): void
+    {
+        echo "📋 Title: {$structure['document_title']}" . PHP_EOL;
+        echo "📊 Found " . count($structure['content_sections']) . " content sections" . PHP_EOL;
+        echo "📊 Found " . count($structure['index_sections']) . " index sections" . PHP_EOL;
+        echo "📊 Total events to publish: " . count($structure['publish_order']) . PHP_EOL . PHP_EOL;
+    }
+
+    /**
+     * Publish the hierarchical structure
+     */
+    private function publishStructure(array $structure): array
+    {
+        echo "🚀 Starting publication process..." . PHP_EOL . PHP_EOL;
+        $this->publishInOrder($structure);
+        return $this->buildResults($structure);
     }
 
     /**
@@ -83,36 +100,57 @@ class DirectDocumentPublisher
             
             try {
                 $config = $this->buildEventConfig($section, $structure['metadata'], $publishedEventIds);
-                $this->bot->loadConfig($config);
+                $result = $this->publishEvent($config, $section);
                 
-                $result = $this->bot->run(false); // false = not dry run
-                
-                if ($result->isSuccess()) {
-                    $eventId = $this->extractEventId($result);
-                    $publishedEventIds[$section['d_tag']] = $eventId;
-                    
-                    $this->publishedEvents[] = [
-                        'title' => $section['title'],
-                        'event_id' => $eventId,
-                        'kind' => $section['event_kind'],
-                        'd_tag' => $section['d_tag']
-                    ];
-                    
-                    echo "✅ Published: {$eventId}" . PHP_EOL;
+                if ($result['success']) {
+                    $publishedEventIds[$section['d_tag']] = $result['event_id'];
+                    $this->publishedEvents[] = $result;
+                    echo "✅ Published: {$result['event_id']}" . PHP_EOL;
                 } else {
-                    $error = "Failed to publish: {$section['title']}";
-                    $this->errors[] = $error;
-                    echo "❌ {$error}" . PHP_EOL;
+                    $this->handlePublishError($section['title'], $result['error']);
                 }
                 
             } catch (\Exception $e) {
-                $error = "Error publishing {$section['title']}: " . $e->getMessage();
-                $this->errors[] = $error;
-                echo "❌ {$error}" . PHP_EOL;
+                $this->handlePublishError($section['title'], $e->getMessage());
             }
             
             echo PHP_EOL;
         }
+    }
+
+    /**
+     * Publish a single event
+     */
+    private function publishEvent(array $config, array $section): array
+    {
+        $this->bot->loadConfig($config);
+        $result = $this->bot->run(false); // false = not dry run
+        
+        if ($result->isSuccess()) {
+            $eventId = $this->extractEventId($result);
+            return [
+                'success' => true,
+                'event_id' => $eventId,
+                'title' => $section['title'],
+                'kind' => $section['event_kind'],
+                'd_tag' => $section['d_tag']
+            ];
+        } else {
+            return [
+                'success' => false,
+                'error' => 'Failed to publish event'
+            ];
+        }
+    }
+
+    /**
+     * Handle publish error
+     */
+    private function handlePublishError(string $title, string $error): void
+    {
+        $errorMessage = "Failed to publish: {$title} - {$error}";
+        $this->errors[] = $errorMessage;
+        echo "❌ {$errorMessage}" . PHP_EOL;
     }
 
     /**
@@ -204,6 +242,18 @@ class DirectDocumentPublisher
             'errors' => $this->errors,
             'total_published' => count($this->publishedEvents),
             'total_expected' => count($structure['publish_order'])
+        ];
+    }
+
+    /**
+     * Build error results
+     */
+    private function buildErrorResults(): array
+    {
+        return [
+            'success' => false,
+            'errors' => $this->errors,
+            'published_events' => $this->publishedEvents
         ];
     }
 }

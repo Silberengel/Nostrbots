@@ -78,7 +78,7 @@ function runPerformanceTests(): void
     file_put_contents($tempFile, $largeContent);
     
     try {
-        $result = $parser->parseDocument($tempFile, 3, '30041', sys_get_temp_dir());
+        $result = $parser->parseDocumentForDirectPublishing($tempFile, 3, '30041');
     } finally {
         unlink($tempFile);
     }
@@ -89,7 +89,7 @@ function runPerformanceTests(): void
     
     echo "    ✅ Parsed large document in {$duration}ms" . PHP_EOL;
     echo "    📊 Peak memory usage: " . formatBytes($memoryUsage) . PHP_EOL;
-    echo "    📄 Generated " . count($result) . " configurations" . PHP_EOL;
+    echo "    📄 Generated " . count($result['publish_order']) . " events to publish" . PHP_EOL;
     
     // Test memory efficiency
     if ($memoryUsage > 50 * 1024 * 1024) { // 50MB

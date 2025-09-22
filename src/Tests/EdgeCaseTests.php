@@ -104,7 +104,7 @@ class EdgeCaseTests
         file_put_contents($tempFile, $content);
         
         try {
-            return $this->parser->parseDocument($tempFile, $contentLevel, $contentKind, sys_get_temp_dir());
+            return $this->parser->parseDocumentForDirectPublishing($tempFile, $contentLevel, $contentKind);
         } finally {
             unlink($tempFile);
         }

@@ -21,6 +21,9 @@ use Nostrbots\EventKinds\EventKindRegistry;
 use Nostrbots\Utils\ErrorHandler;
 use Nostrbots\Utils\PerformanceManager;
 
+/**
+ * Show help information
+ */
 function showHelp(): void
 {
     echo "Nostrbots - Direct Document Publishing for Nostr" . PHP_EOL;
@@ -66,14 +69,17 @@ function showHelp(): void
     echo "See docs/DIRECT_PUBLISHING.md for complete documentation." . PHP_EOL;
 }
 
-function main(array $argv): int
+/**
+ * Parse command line arguments
+ */
+function parseArguments(array $argv): array
 {
     $argc = count($argv);
 
     // Check for help flag
     if ($argc < 2 || in_array('--help', $argv) || in_array('-h', $argv)) {
         showHelp();
-        return 0;
+        exit(0);
     }
 
     // Check if this is the publish command
@@ -81,118 +87,166 @@ function main(array $argv): int
         echo "Error: Invalid command. Use 'publish' to publish documents." . PHP_EOL;
         echo "Usage: php nostrbots.php publish <document> [options]" . PHP_EOL;
         echo "Run 'php nostrbots.php --help' for more information." . PHP_EOL;
-        return 1;
+        exit(1);
     }
     
     // Check if document path is provided
     if ($argc < 3) {
         echo "Error: Document path required for publishing" . PHP_EOL;
         echo "Usage: php nostrbots.php publish <document> [options]" . PHP_EOL;
-        return 1;
+        exit(1);
     }
     
-    $documentPath = $argv[2];
-    
-    // Parse options
-    $dryRun = in_array('--dry-run', $argv);
-    $verbose = in_array('--verbose', $argv);
-    $profile = in_array('--profile', $argv);
-    
-    // Parse content-level option
-    $contentLevel = 4; // default
+    return [
+        'document_path' => $argv[2],
+        'dry_run' => in_array('--dry-run', $argv),
+        'verbose' => in_array('--verbose', $argv),
+        'profile' => in_array('--profile', $argv),
+        'content_level' => parseContentLevel($argv),
+        'content_kind' => parseContentKind($argv)
+    ];
+}
+
+/**
+ * Parse content level from arguments
+ */
+function parseContentLevel(array $argv): int
+{
     $contentLevelIndex = array_search('--content-level', $argv);
     if ($contentLevelIndex !== false && isset($argv[$contentLevelIndex + 1])) {
-        $contentLevel = (int)$argv[$contentLevelIndex + 1];
+        return (int)$argv[$contentLevelIndex + 1];
     }
-    
-    // Parse content-kind option
-    $contentKind = '30041'; // default
+    return 4; // default
+}
+
+/**
+ * Parse content kind from arguments
+ */
+function parseContentKind(array $argv): string
+{
     $contentKindIndex = array_search('--content-kind', $argv);
     if ($contentKindIndex !== false && isset($argv[$contentKindIndex + 1])) {
-        $contentKind = $argv[$contentKindIndex + 1];
+        return $argv[$contentKindIndex + 1];
     }
-    
-    // Validate document path
+    return '30041'; // default
+}
+
+/**
+ * Validate document file
+ */
+function validateDocument(string $documentPath): void
+{
     if (!file_exists($documentPath)) {
         echo "Error: Document file '{$documentPath}' not found" . PHP_EOL;
-        return 1;
+        exit(1);
     }
     
     // Check file extension
     $extension = strtolower(pathinfo($documentPath, PATHINFO_EXTENSION));
     if (!in_array($extension, ['adoc', 'md'])) {
         echo "Error: Document must be .adoc or .md file" . PHP_EOL;
-        return 1;
+        exit(1);
     }
+}
+
+/**
+ * Display publishing header
+ */
+function displayPublishingHeader(array $args): void
+{
+    echo "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
+    echo "📄 Nostrbots - Direct Document Publishing" . PHP_EOL;
+    echo "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL . PHP_EOL;
     
-    // Initialize error handling and performance monitoring
-    $errorHandler = new ErrorHandler($verbose);
-    $performanceManager = new PerformanceManager($profile);
+    if ($args['verbose']) {
+        echo "Document: {$args['document_path']}" . PHP_EOL;
+        echo "Content Level: {$args['content_level']}" . PHP_EOL;
+        echo "Content Kind: {$args['content_kind']}" . PHP_EOL;
+        echo "Dry Run: " . ($args['dry_run'] ? 'Yes' : 'No') . PHP_EOL . PHP_EOL;
+    }
+}
+
+/**
+ * Display publishing results
+ */
+function displayResults(array $result, bool $verbose): void
+{
+    echo PHP_EOL . "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
+    echo "📊 Publishing Summary" . PHP_EOL;
+    echo "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
     
-    try {
-        $performanceManager->startTimer('direct_publishing');
+    if ($result['success']) {
+        echo "Status: ✅ Success" . PHP_EOL;
+        echo "Document: {$result['document_title']}" . PHP_EOL;
         
-        echo "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
-        echo "📄 Nostrbots - Direct Document Publishing" . PHP_EOL;
-        echo "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL . PHP_EOL;
-        
-        if ($verbose) {
-            echo "Document: {$documentPath}" . PHP_EOL;
-            echo "Content Level: {$contentLevel}" . PHP_EOL;
-            echo "Content Kind: {$contentKind}" . PHP_EOL;
-            echo "Dry Run: " . ($dryRun ? 'Yes' : 'No') . PHP_EOL . PHP_EOL;
-        }
-        
-        // Create direct publisher
-        $publisher = new DirectDocumentPublisher();
-        
-        // Publish the document
-        $result = $publisher->publishDocument($documentPath, $contentLevel, $contentKind, $dryRun);
-        
-        // Display results
-        echo PHP_EOL . "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
-        echo "📊 Publishing Summary" . PHP_EOL;
-        echo "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
-        
-        if ($result['success']) {
-            echo "Status: ✅ Success" . PHP_EOL;
-            echo "Document: {$result['document_title']}" . PHP_EOL;
+        if (isset($result['dry_run'])) {
+            echo "Mode: 🔍 Dry Run (No events published)" . PHP_EOL;
+            echo "Content Sections: {$result['content_sections']}" . PHP_EOL;
+            echo "Index Sections: {$result['index_sections']}" . PHP_EOL;
+            echo "Total Events: {$result['total_events']}" . PHP_EOL;
+        } else {
+            echo "Published Events: {$result['total_published']}/{$result['total_expected']}" . PHP_EOL;
             
-            if (isset($result['dry_run'])) {
-                echo "Mode: 🔍 Dry Run (No events published)" . PHP_EOL;
-                echo "Content Sections: {$result['content_sections']}" . PHP_EOL;
-                echo "Index Sections: {$result['index_sections']}" . PHP_EOL;
-                echo "Total Events: {$result['total_events']}" . PHP_EOL;
-            } else {
-                echo "Published Events: {$result['total_published']}/{$result['total_expected']}" . PHP_EOL;
-                
-                if ($verbose && !empty($result['published_events'])) {
-                    echo PHP_EOL . "Published Events:" . PHP_EOL;
-                    foreach ($result['published_events'] as $event) {
-                        echo "  📝 {$event['event_id']} (kind {$event['kind']}) - {$event['title']}" . PHP_EOL;
-                    }
+            if ($verbose && !empty($result['published_events'])) {
+                echo PHP_EOL . "Published Events:" . PHP_EOL;
+                foreach ($result['published_events'] as $event) {
+                    echo "  📝 {$event['event_id']} (kind {$event['kind']}) - {$event['title']}" . PHP_EOL;
                 }
             }
-        } else {
-            echo "Status: ❌ Failed" . PHP_EOL;
-            echo "Published Events: {$result['total_published']}/{$result['total_expected']}" . PHP_EOL;
         }
-        
-        // Show errors if any
-        if (!empty($result['errors'])) {
-            echo PHP_EOL . "Errors:" . PHP_EOL;
-            foreach ($result['errors'] as $error) {
-                echo "  ❌ {$error}" . PHP_EOL;
-            }
+    } else {
+        echo "Status: ❌ Failed" . PHP_EOL;
+        echo "Published Events: {$result['total_published']}/{$result['total_expected']}" . PHP_EOL;
+    }
+    
+    // Show errors if any
+    if (!empty($result['errors'])) {
+        echo PHP_EOL . "Errors:" . PHP_EOL;
+        foreach ($result['errors'] as $error) {
+            echo "  ❌ {$error}" . PHP_EOL;
         }
+    }
+    
+    echo PHP_EOL . "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
+    echo $result['success'] ? "🎉 Document publishing completed successfully!" : "💥 Document publishing failed!";
+    echo PHP_EOL . "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
+}
+
+/**
+ * Main application entry point
+ */
+function main(array $argv): int
+{
+    try {
+        // Parse and validate arguments
+        $args = parseArguments($argv);
+        validateDocument($args['document_path']);
         
-        echo PHP_EOL . "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
-        echo $result['success'] ? "🎉 Document publishing completed successfully!" : "💥 Document publishing failed!";
-        echo PHP_EOL . "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
+        // Initialize components
+        $errorHandler = new ErrorHandler($args['verbose']);
+        $performanceManager = new PerformanceManager($args['profile']);
+        $publisher = new DirectDocumentPublisher();
         
-        // Performance monitoring
+        // Start performance monitoring
+        $performanceManager->startTimer('direct_publishing');
+        
+        // Display header
+        displayPublishingHeader($args);
+        
+        // Publish the document
+        $result = $publisher->publishDocument(
+            $args['document_path'],
+            $args['content_level'],
+            $args['content_kind'],
+            $args['dry_run']
+        );
+        
+        // Display results
+        displayResults($result, $args['verbose']);
+        
+        // End performance monitoring
         $performanceManager->endTimer('direct_publishing');
-        if ($profile) {
+        if ($args['profile']) {
             echo PHP_EOL;
             $performanceManager->printPerformanceReport();
         }
@@ -200,17 +254,10 @@ function main(array $argv): int
         return $result['success'] ? 0 : 1;
         
     } catch (\Exception $e) {
-        $errorHandler->addError("Fatal error: " . $e->getMessage(), [
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        
         echo "💥 Fatal error: " . $e->getMessage() . PHP_EOL;
-        if ($verbose) {
+        if (isset($args['verbose']) && $args['verbose']) {
             echo "Stack trace:" . PHP_EOL . $e->getTraceAsString() . PHP_EOL;
         }
-        
         return 1;
     }
 }
