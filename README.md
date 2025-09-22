@@ -68,6 +68,75 @@ php nostrbots.php longFormExample
 php nostrbots.php longFormExample --verbose
 ```
 
+## Document Parser
+
+The document parser converts structured documents (Asciidoc/Markdown) into Nostr publication hierarchies or simple standalone articles.
+
+### Simple Standalone Articles (Default)
+
+Create single articles from documents - perfect for blog posts, articles, and simple content:
+
+```bash
+# Long-form article (30023)
+php parse-document.php article.adoc longform
+
+# Publication article (30041) 
+php parse-document.php article.adoc publication
+
+# Wiki article (30818)
+php parse-document.php article.adoc wiki
+```
+
+**Document Structure:**
+```asciidoc
+= My Article Title
+
+This is the content of my article.
+It can have multiple paragraphs.
+
+== This header becomes content
+
+More content here.
+```
+
+This creates a single 30023/30041/30818 event with all content after the title.
+
+### Hierarchical Publications
+
+For complex book-like structures with multiple chapters and sections:
+
+```bash
+# Create hierarchical publication
+php parse-document.php bible.adoc 30041 --hierarchical --content-level 4
+
+# Wiki with hierarchy
+php parse-document.php guide.md wiki --hierarchical --content-level 3
+```
+
+**Document Structure:**
+```asciidoc
+= Bible (Level 1 - Main index)
+== Genesis (Level 2 - Book index)
+=== Chapter 1 (Level 3 - Chapter index)
+==== Verse 1 (Level 4 - Content sections) ← --content-level=4
+```
+
+### Command Line Options
+
+```bash
+php parse-document.php <document_file> <content_kind> [options]
+
+Options:
+  --hierarchical     Create hierarchical publication structure
+  --content-level N  Set content level (1-6, default: 3)
+  -h, --help        Show help message
+
+Content Kinds:
+  longform, 30023    Long-form articles
+  publication, 30041 Publication content
+  wiki, 30818        Wiki articles
+```
+
 ## Configuration
 
 Each bot is configured through a `config.yml` file in its folder under `botData/`. Here's a basic example:
