@@ -1,0 +1,1 @@
+Understanding these core concepts is essential for working with Nostr.

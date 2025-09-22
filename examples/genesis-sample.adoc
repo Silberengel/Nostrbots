@@ -1,0 +1,63 @@
+= The Book of Genesis
+
+The first book of the Bible, containing the accounts of creation, the fall of man, 
+and the stories of the patriarchs from Adam to Joseph.
+
+This book establishes the foundation for understanding God's relationship with humanity
+and His plan of redemption that unfolds throughout Scripture.
+
+== Chapter 1
+
+The Creation Account - God creates the heavens and the earth in six days.
+
+=== The Beginning
+
+==== Verse 1
+
+In the beginning God created the heaven and the earth.
+
+==== Verse 2
+
+And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.
+
+==== Verse 3
+
+And God said, Let there be light: and there was light.
+
+=== The First Day
+
+==== Verse 4
+
+And God saw the light, that it was good: and God divided the light from the darkness.
+
+==== Verse 5
+
+And God called the light Day, and the darkness he called Night. And the evening and the morning were the first day.
+
+== Chapter 2
+
+The Garden of Eden - God creates man and places him in the garden.
+
+=== The Creation of Man
+
+==== Verse 1
+
+Thus the heavens and the earth were finished, and all the host of them.
+
+==== Verse 2
+
+And on the seventh day God ended his work which he had made; and he rested on the seventh day from all his work which he had made.
+
+==== Verse 7
+
+And the LORD God formed man of the dust of the ground, and breathed into his nostrils the breath of life; and man became a living soul.
+
+=== The Garden
+
+==== Verse 8
+
+And the LORD God planted a garden eastward in Eden; and there he put the man whom he had formed.
+
+==== Verse 9
+
+And out of the ground made the LORD God to grow every tree that is pleasant to the sight, and good for food; the tree of life also in the midst of the garden, and the tree of knowledge of good and evil.
