@@ -9,7 +9,7 @@ event_kind: 30023
 
 # Nostr identity configuration
 npub:
-  environment_variable: "NOSTR_BOT_KEY1"
+  environment_variable: "NOSTR_BOT_KEY"
   public_key: "npub1z5pyqp2k2uvqkhv5c7murhcezvgqfj3da8ddfry89cqz4qhsk3sqzdku2z"
 
 # Relay configuration

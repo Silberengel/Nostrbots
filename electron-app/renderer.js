@@ -16,16 +16,36 @@ const resultsContent = document.getElementById('resultsContent');
 const filesSection = document.getElementById('filesSection');
 const filesList = document.getElementById('filesList');
 
-// Key management elements
-const selectedKeySelect = document.getElementById('selectedKey');
-const refreshKeysBtn = document.getElementById('refreshKeysBtn');
-const addKeyBtn = document.getElementById('addKeyBtn');
-const deleteKeyBtn = document.getElementById('deleteKeyBtn');
-const keyInfo = document.getElementById('keyInfo');
-const keyAvatar = document.getElementById('keyAvatar');
-const keyInitials = document.getElementById('keyInitials');
-const keyDisplayName = document.getElementById('keyDisplayName');
-const keyNpub = document.getElementById('keyNpub');
+// Bot configuration management elements
+const selectedBotSelect = document.getElementById('selectedBot');
+const refreshBotsBtn = document.getElementById('refreshBotsBtn');
+const createBotBtn = document.getElementById('createBotBtn');
+const editBotBtn = document.getElementById('editBotBtn');
+const deleteBotBtn = document.getElementById('deleteBotBtn');
+const botInfo = document.getElementById('botInfo');
+const botName = document.getElementById('botName');
+const botDescription = document.getElementById('botDescription');
+const botEventKind = document.getElementById('botEventKind');
+
+// Bot configuration modals
+const createBotModal = document.getElementById('createBotModal');
+const editBotModal = document.getElementById('editBotModal');
+const newBotNameInput = document.getElementById('newBotName');
+const newBotTypeSelect = document.getElementById('newBotType');
+const newBotConfigTextarea = document.getElementById('newBotConfig');
+const editBotNameInput = document.getElementById('editBotName');
+const editBotConfigTextarea = document.getElementById('editBotConfig');
+
+// Key management elements (simplified - no longer used for management)
+// const selectedKeySelect = document.getElementById('selectedKey');
+// const refreshKeysBtn = document.getElementById('refreshKeysBtn');
+// const addKeyBtn = document.getElementById('addKeyBtn');
+// const deleteKeyBtn = document.getElementById('deleteKeyBtn');
+// const keyInfo = document.getElementById('keyInfo');
+// const keyAvatar = document.getElementById('keyAvatar');
+// const keyInitials = document.getElementById('keyInitials');
+// const keyDisplayName = document.getElementById('keyDisplayName');
+// const keyNpub = document.getElementById('keyNpub');
 
 // Relay management elements
 const editRelaysBtn = document.getElementById('editRelaysBtn');
@@ -48,9 +68,9 @@ const renderedHtml = document.getElementById('renderedHtml');
 let selectedFilePath = null;
 let selectedOutputDir = null;
 let generatedFiles = [];
-let availableKeys = [];
-let selectedKey = null;
 let relays = [];
+let selectedBot = null;
+let availableBots = [];
 
 // Event listeners
 selectFileBtn.addEventListener('click', selectFile);
@@ -58,11 +78,27 @@ selectOutputBtn.addEventListener('click', selectOutputDirectory);
 parseBtn.addEventListener('click', parseDocument);
 openOutputBtn.addEventListener('click', openOutputDirectory);
 
-// Key management event listeners
-refreshKeysBtn.addEventListener('click', loadKeys);
-addKeyBtn.addEventListener('click', showAddKeyModal);
-deleteKeyBtn.addEventListener('click', deleteSelectedKey);
-selectedKeySelect.addEventListener('change', handleKeySelection);
+// Bot configuration event listeners
+refreshBotsBtn.addEventListener('click', loadBotConfigurations);
+createBotBtn.addEventListener('click', openCreateBotModal);
+editBotBtn.addEventListener('click', editBot);
+deleteBotBtn.addEventListener('click', deleteBot);
+selectedBotSelect.addEventListener('change', onBotSelectionChange);
+
+// Bot configuration modal event listeners
+document.getElementById('closeCreateBotModal').addEventListener('click', closeCreateBotModal);
+document.getElementById('cancelCreateBot').addEventListener('click', closeCreateBotModal);
+document.getElementById('saveCreateBot').addEventListener('click', createBot);
+document.getElementById('closeEditBotModal').addEventListener('click', closeEditBotModal);
+document.getElementById('cancelEditBot').addEventListener('click', closeEditBotModal);
+document.getElementById('saveEditBot').addEventListener('click', saveBotEdit);
+newBotTypeSelect.addEventListener('change', (e) => loadBotTemplate(e.target.value));
+
+// Key management event listeners (removed - using command line instead)
+// refreshKeysBtn.addEventListener('click', loadKeys);
+// addKeyBtn.addEventListener('click', showAddKeyModal);
+// deleteKeyBtn.addEventListener('click', deleteSelectedKey);
+// selectedKeySelect.addEventListener('change', handleKeySelection);
 
 // Relay management event listeners
 editRelaysBtn.addEventListener('click', showEditRelaysModal);
@@ -562,6 +598,240 @@ function showSuccess(message) {
     }, 3000);
 }
 
+// Bot Configuration Management Functions
+async function loadBotConfigurations() {
+    try {
+        const result = await window.electronAPI.getBotConfigs();
+        if (result.success) {
+            availableBots = result.configs;
+            updateBotSelector();
+        } else {
+            console.error('Failed to load bot configurations:', result.error);
+            showNotification('Failed to load bot configurations', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading bot configurations:', error);
+        showNotification('Error loading bot configurations', 'error');
+    }
+}
+
+function updateBotSelector() {
+    selectedBotSelect.innerHTML = '<option value="">Select a bot configuration...</option>';
+    
+    if (availableBots.length === 0) {
+        selectedBotSelect.innerHTML = '<option value="">No bot configurations found</option>';
+        return;
+    }
+    
+    availableBots.forEach(bot => {
+        const option = document.createElement('option');
+        option.value = bot.name;
+        option.textContent = bot.name;
+        selectedBotSelect.appendChild(option);
+    });
+}
+
+function updateBotInfo() {
+    if (!selectedBot) {
+        botInfo.classList.add('hidden');
+        editBotBtn.disabled = true;
+        deleteBotBtn.disabled = true;
+        return;
+    }
+    
+    botInfo.classList.remove('hidden');
+    editBotBtn.disabled = false;
+    deleteBotBtn.disabled = false;
+    
+    // Parse the YAML content to extract bot information
+    try {
+        const lines = selectedBot.content.split('\n');
+        let botNameValue = selectedBot.name;
+        let botDescriptionValue = 'No description';
+        let botEventKindValue = 'Unknown';
+        
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('bot_name:')) {
+                botNameValue = trimmed.replace('bot_name:', '').trim().replace(/['"]/g, '');
+            } else if (trimmed.startsWith('bot_description:')) {
+                botDescriptionValue = trimmed.replace('bot_description:', '').trim().replace(/['"]/g, '');
+            } else if (trimmed.startsWith('event_kind:')) {
+                const kind = trimmed.replace('event_kind:', '').trim();
+                switch (kind) {
+                    case '30023':
+                        botEventKindValue = 'Long-form Article (30023)';
+                        break;
+                    case '30041':
+                        botEventKindValue = 'Publication Content (30041)';
+                        break;
+                    case '30818':
+                        botEventKindValue = 'Wiki Article (30818)';
+                        break;
+                    default:
+                        botEventKindValue = `Event Kind ${kind}`;
+                }
+            }
+        }
+        
+        botName.textContent = botNameValue;
+        botDescription.textContent = botDescriptionValue;
+        botEventKind.textContent = botEventKindValue;
+    } catch (error) {
+        console.error('Error parsing bot configuration:', error);
+        botName.textContent = selectedBot.name;
+        botDescription.textContent = 'Error parsing configuration';
+        botEventKind.textContent = 'Unknown';
+    }
+}
+
+async function createBot() {
+    const name = newBotNameInput.value.trim();
+    const type = newBotTypeSelect.value;
+    
+    if (!name) {
+        showNotification('Please enter a bot name', 'error');
+        return;
+    }
+    
+    // Validate bot name (alphanumeric and hyphens only)
+    if (!/^[a-z0-9-]+$/.test(name)) {
+        showNotification('Bot name can only contain lowercase letters, numbers, and hyphens', 'error');
+        return;
+    }
+    
+    // Check if bot already exists
+    if (availableBots.some(bot => bot.name === name)) {
+        showNotification('A bot with this name already exists', 'error');
+        return;
+    }
+    
+    try {
+        // Get template for the selected type
+        const templateResult = await window.electronAPI.getBotConfigTemplate(type);
+        if (!templateResult.success) {
+            showNotification('Failed to get bot template', 'error');
+            return;
+        }
+        
+        // Replace placeholder values in template
+        let config = templateResult.template;
+        config = config.replace(/my-bot/g, name);
+        config = config.replace(/My Bot/g, name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, ' '));
+        
+        // Save the bot configuration
+        const saveResult = await window.electronAPI.saveBotConfig({
+            name: name,
+            content: config
+        });
+        
+        if (saveResult.success) {
+            showNotification('Bot configuration created successfully!', 'success');
+            closeCreateBotModal();
+            await loadBotConfigurations();
+        } else {
+            showNotification('Failed to create bot configuration: ' + saveResult.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error creating bot:', error);
+        showNotification('Error creating bot configuration', 'error');
+    }
+}
+
+async function editBot() {
+    if (!selectedBot) return;
+    
+    editBotNameInput.value = selectedBot.name;
+    editBotConfigTextarea.value = selectedBot.content;
+    editBotModal.classList.remove('hidden');
+}
+
+async function saveBotEdit() {
+    if (!selectedBot) return;
+    
+    try {
+        const saveResult = await window.electronAPI.saveBotConfig({
+            name: selectedBot.name,
+            content: editBotConfigTextarea.value
+        });
+        
+        if (saveResult.success) {
+            showNotification('Bot configuration updated successfully!', 'success');
+            closeEditBotModal();
+            await loadBotConfigurations();
+            // Re-select the current bot
+            selectedBotSelect.value = selectedBot.name;
+            onBotSelectionChange();
+        } else {
+            showNotification('Failed to update bot configuration: ' + saveResult.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error saving bot edit:', error);
+        showNotification('Error saving bot configuration', 'error');
+    }
+}
+
+async function deleteBot() {
+    if (!selectedBot) return;
+    
+    const confirmed = confirm(`Are you sure you want to delete the bot configuration "${selectedBot.name}"? This action cannot be undone.`);
+    if (!confirmed) return;
+    
+    try {
+        const deleteResult = await window.electronAPI.deleteBotConfig(selectedBot.name);
+        
+        if (deleteResult.success) {
+            showNotification('Bot configuration deleted successfully!', 'success');
+            selectedBot = null;
+            await loadBotConfigurations();
+            updateBotInfo();
+        } else {
+            showNotification('Failed to delete bot configuration: ' + deleteResult.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting bot:', error);
+        showNotification('Error deleting bot configuration', 'error');
+    }
+}
+
+function onBotSelectionChange() {
+    const selectedName = selectedBotSelect.value;
+    selectedBot = availableBots.find(bot => bot.name === selectedName) || null;
+    updateBotInfo();
+}
+
+function openCreateBotModal() {
+    newBotNameInput.value = '';
+    newBotTypeSelect.value = 'longform';
+    newBotConfigTextarea.value = 'Loading template...';
+    createBotModal.classList.remove('hidden');
+    
+    // Load template for default type
+    loadBotTemplate('longform');
+}
+
+function closeCreateBotModal() {
+    createBotModal.classList.add('hidden');
+}
+
+function closeEditBotModal() {
+    editBotModal.classList.add('hidden');
+}
+
+async function loadBotTemplate(type) {
+    try {
+        const result = await window.electronAPI.getBotConfigTemplate(type);
+        if (result.success) {
+            newBotConfigTextarea.value = result.template;
+        } else {
+            newBotConfigTextarea.value = 'Error loading template';
+        }
+    } catch (error) {
+        console.error('Error loading template:', error);
+        newBotConfigTextarea.value = 'Error loading template';
+    }
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
     updateParseButton();
@@ -570,6 +840,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     outputDirInput.value = 'Current directory';
     
     // Load initial data
-    await loadKeys();
+    await loadBotConfigurations();
     await loadRelays();
 });

@@ -155,9 +155,9 @@ title: "Updated Article Title"
 ## 🔐 Security Features
 
 ### Key Management
-- **Environment variables**: Secure private key storage
+- **Environment variables**: Secure private key storage via NOSTR_BOT_KEY
 - **Validation**: Automatic key-pair validation
-- **Multiple keys**: Support for different bots with different keys
+- **Single key approach**: Simplified key management with one environment variable
 - **Key generation**: Built-in key generation utility
 
 ### Relay Security
@@ -243,8 +243,8 @@ content_files:
 ## 🚀 Getting Started
 
 1. **Install dependencies**: `composer install`
-2. **Generate keys**: `php generate-keys.php`
-3. **Configure environment**: `export NOSTR_BOT_KEY1=your_hex_key`
+2. **Generate key**: `php manage-keys.php generate`
+3. **Configure environment**: `export NOSTR_BOT_KEY=your_hex_key`
 4. **Test configuration**: `php nostrbots.php exampleBot --dry-run`
 5. **Publish content**: `php nostrbots.php exampleBot`
 

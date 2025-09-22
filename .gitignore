@@ -1,2 +1,3 @@
 /vendor
 composer.locknode_modules/
+electron-app/node_modules/

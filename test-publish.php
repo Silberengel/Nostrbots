@@ -10,7 +10,6 @@
  * Options:
  *   --dry-run    - Validate and preview without publishing
  *   --test       - Publish to test relays only
- *   --key VAR    - Use specific environment variable for key
  *   --help, -h   - Show help message
  */
 
@@ -27,12 +26,12 @@ function printUsage(): void
     echo "Options:" . PHP_EOL;
     echo "  --dry-run              - Validate and preview without publishing" . PHP_EOL;
     echo "  --test                 - Publish to test relays only" . PHP_EOL;
-    echo "  --key VAR              - Use specific environment variable for key" . PHP_EOL;
     echo "  --help, -h             - Show this help message" . PHP_EOL . PHP_EOL;
     echo "Examples:" . PHP_EOL;
     echo "  php test-publish.php --dry-run config.yml" . PHP_EOL;
-    echo "  php test-publish.php --test --key NOSTR_BOT_KEY2 *.yml" . PHP_EOL;
-    echo "  php test-publish.php --key NOSTR_BOT_KEY1 file1.yml file2.yml" . PHP_EOL . PHP_EOL;
+    echo "  php test-publish.php --test *.yml" . PHP_EOL;
+    echo "  php test-publish.php file1.yml file2.yml" . PHP_EOL . PHP_EOL;
+    echo "Note: Uses NOSTR_BOT_KEY environment variable for authentication." . PHP_EOL . PHP_EOL;
 }
 
 function main(array $argv): void
@@ -45,7 +44,6 @@ function main(array $argv): void
     }
     
     $mode = 'publish'; // default
-    $keyEnvVar = 'NOSTR_BOT_KEY1'; // default
     $files = [];
     
     // Parse command line arguments
@@ -54,9 +52,6 @@ function main(array $argv): void
             $mode = 'dry-run';
         } elseif ($argv[$i] === '--test') {
             $mode = 'test';
-        } elseif ($argv[$i] === '--key' && isset($argv[$i + 1])) {
-            $keyEnvVar = $argv[$i + 1];
-            $i++; // Skip the next argument
         } elseif (!str_starts_with($argv[$i], '--')) {
             $files[] = $argv[$i];
         }
@@ -75,10 +70,10 @@ function main(array $argv): void
         
         // Validate the key
         echo "🔑 Validating bot key..." . PHP_EOL;
-        $key = $keyManager->getBotKey($keyEnvVar);
+        $key = $keyManager->getBotKey('NOSTR_BOT_KEY');
         
         if ($key === null) {
-            echo "❌ Error: Key not found or invalid: {$keyEnvVar}" . PHP_EOL;
+            echo "❌ Error: Key not found or invalid: NOSTR_BOT_KEY" . PHP_EOL;
             echo "   Make sure the environment variable is set and contains a valid private key." . PHP_EOL;
             exit(1);
         }

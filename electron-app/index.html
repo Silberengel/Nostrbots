@@ -37,32 +37,51 @@
                 </div>
             </section>
 
-            <!-- Key Management -->
-            <section class="key-section">
-                <h2>🔑 Bot Keys</h2>
-                <div class="key-management">
-                    <div class="key-selector">
-                        <label for="selectedKey">Select Bot Key</label>
-                        <select id="selectedKey">
-                            <option value="">Loading keys...</option>
+            <!-- Bot Configuration Management -->
+            <section class="bot-config-section">
+                <h2>🤖 Bot Configurations</h2>
+                <div class="bot-management">
+                    <div class="bot-selector">
+                        <label for="selectedBot">Select Bot Configuration</label>
+                        <select id="selectedBot">
+                            <option value="">Loading configurations...</option>
                         </select>
-                        <button id="refreshKeysBtn" class="btn btn-secondary">🔄 Refresh</button>
+                        <button id="refreshBotsBtn" class="btn btn-secondary">🔄 Refresh</button>
                     </div>
-                    <div class="key-actions">
-                        <button id="addKeyBtn" class="btn btn-primary">➕ Add Key</button>
-                        <button id="deleteKeyBtn" class="btn btn-danger" disabled>🗑️ Delete</button>
+                    <div class="bot-actions">
+                        <button id="createBotBtn" class="btn btn-primary">➕ Create Bot</button>
+                        <button id="editBotBtn" class="btn btn-secondary" disabled>✏️ Edit</button>
+                        <button id="deleteBotBtn" class="btn btn-danger" disabled>🗑️ Delete</button>
                     </div>
                 </div>
-                <div id="keyInfo" class="key-info hidden">
-                    <div class="key-details">
-                        <div class="key-avatar">
-                            <img id="keyAvatar" src="" alt="Profile" class="hidden">
-                            <div id="keyInitials" class="key-initials"></div>
+                <div id="botInfo" class="bot-info hidden">
+                    <div class="bot-details">
+                        <div class="bot-meta">
+                            <div id="botName" class="bot-name"></div>
+                            <div id="botDescription" class="bot-description"></div>
+                            <div id="botEventKind" class="bot-event-kind"></div>
                         </div>
-                        <div class="key-meta">
-                            <div id="keyDisplayName" class="key-name"></div>
-                            <div id="keyNpub" class="key-npub"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Information -->
+            <section class="key-section">
+                <h2>🔑 Bot Keys</h2>
+                <div class="key-info">
+                    <div class="info-box">
+                        <p><strong>Key Management:</strong> Use the command line to manage your Nostr bot keys.</p>
+                        <div class="command-examples">
+                            <p><strong>Generate a new key:</strong></p>
+                            <code>php manage-keys.php generate</code>
+                            
+                            <p><strong>Check key status:</strong></p>
+                            <code>./load-keys.sh</code>
+                            
+                            <p><strong>Set environment variable:</strong></p>
+                            <code>export NOSTR_BOT_KEY=your_private_key_here</code>
                         </div>
+                        <p class="note">The GUI will automatically use the NOSTR_BOT_KEY environment variable if it's set.</p>
                     </div>
                 </div>
             </section>
@@ -193,7 +212,7 @@
 
         <footer class="footer">
             <p>Built with ❤️ for the Nostr community</p>
-            <p><a href="https://github.com/SilberWitch/Nostrbots" target="_blank">GitHub</a> | <a href="https://nostr.com" target="_blank">Nostr</a></p>
+            <p><a href="https://github.com/SilberWitch/Nostrbots" target="_blank">GitHub</a> | <a href="https://imwald.eu" target="_blank">My Nostr Homepage</a></p>
         </footer>
     </div>
 
@@ -201,12 +220,64 @@
     <script src="node_modules/marked/marked.min.js"></script>
     <script src="asciidoc-renderer.js"></script>
     
-    <!-- Load test utilities (only in dev mode) -->
-    <script>
-        if (window.location.search.includes('dev=true')) {
-            document.write('<script src="test-rendering.js"><\/script>');
-        }
-    </script>
+    <!-- Bot Configuration Modals -->
+    <div id="createBotModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Bot Configuration</h3>
+                <button class="modal-close" id="closeCreateBotModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newBotName">Bot Name</label>
+                    <input type="text" id="newBotName" placeholder="my-bot" required>
+                    <small>Use lowercase letters, numbers, and hyphens only</small>
+                </div>
+                <div class="form-group">
+                    <label for="newBotType">Content Type</label>
+                    <select id="newBotType">
+                        <option value="longform">Long-form Article (30023)</option>
+                        <option value="publication">Publication Content (30041)</option>
+                        <option value="wiki">Wiki Article (30818)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="newBotConfig">Configuration</label>
+                    <textarea id="newBotConfig" rows="20" placeholder="Loading template..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelCreateBot" class="btn btn-secondary">Cancel</button>
+                <button id="saveCreateBot" class="btn btn-primary">Create Bot</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editBotModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Bot Configuration</h3>
+                <button class="modal-close" id="closeEditBotModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editBotName">Bot Name</label>
+                    <input type="text" id="editBotName" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="editBotConfig">Configuration</label>
+                    <textarea id="editBotConfig" rows="20"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelEditBot" class="btn btn-secondary">Cancel</button>
+                <button id="saveEditBot" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load test utilities -->
+    <script src="test-rendering.js"></script>
     
     <script src="renderer.js"></script>
 </body>

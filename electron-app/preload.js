@@ -10,6 +10,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Document parsing
   parseDocument: (options) => ipcRenderer.invoke('parse-document', options),
   
+  // Bot configuration management
+  getBotConfigs: () => ipcRenderer.invoke('get-bot-configs'),
+  saveBotConfig: (configData) => ipcRenderer.invoke('save-bot-config', configData),
+  deleteBotConfig: (configName) => ipcRenderer.invoke('delete-bot-config', configName),
+  getBotConfigTemplate: (contentType) => ipcRenderer.invoke('get-bot-config-template', contentType),
+  
   // Key management
   getAllBotKeys: () => ipcRenderer.invoke('get-all-bot-keys'),
   showAddKeyModal: () => ipcRenderer.invoke('show-add-key-modal'),

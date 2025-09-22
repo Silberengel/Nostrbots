@@ -35,6 +35,22 @@ A modern, extensible PHP framework for publishing various types of Nostr events 
 
 For a user-friendly GUI experience:
 
+#### Quick Start
+```bash
+# Generate and setup your first key
+./setup-keys.sh --generate
+
+# Start the desktop app with keys loaded
+./start-electron.sh
+```
+
+#### Development Mode
+```bash
+# Start with development tools
+./start-electron.sh --dev
+```
+
+#### Manual Setup
 ```bash
 cd electron-app
 ./install.sh
@@ -53,10 +69,10 @@ For developers and automation:
 composer install
 ```
 
-### 2. Generate Keys
+### 2. Generate Key
 
 ```bash
-php generate-keys.php --env-var NOSTR_BOT_KEY1
+php manage-keys.php generate
 ```
 
 ### 3. Set Environment Variable
@@ -65,10 +81,10 @@ You can use either hex or bech32 format:
 
 ```bash
 # Hex format (recommended for scripts)
-export NOSTR_BOT_KEY1=your_hex_private_key_here
+export NOSTR_BOT_KEY=your_hex_private_key_here
 
 # Bech32 format (human-readable)
-export NOSTR_BOT_KEY1=nsec1your_bech32_private_key_here
+export NOSTR_BOT_KEY=nsec1your_bech32_private_key_here
 ```
 
 ### 4. Run a Bot
@@ -167,7 +183,7 @@ event_kind: 30023
 
 # Identity
 npub:
-  environment_variable: "NOSTR_BOT_KEY1"
+  environment_variable: "NOSTR_BOT_KEY"
   public_key: "npub1..."  # Can also use hex format
 
 # Content
@@ -327,7 +343,7 @@ Example Jenkinsfile:
 pipeline {
     agent any
     environment {
-        NOSTR_BOT_KEY1 = credentials('NOSTR_BOT_KEY1')
+        NOSTR_BOT_KEY = credentials('NOSTR_BOT_KEY')
     }
     stages {
         stage('Install') {

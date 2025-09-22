@@ -3,7 +3,7 @@
 /**
  * Test Key Management Functionality
  * 
- * Tests the enhanced KeyManager with multiple key support and profile fetching.
+ * Tests the simplified KeyManager with single key support and profile fetching.
  */
 
 require __DIR__ . '/src/bootstrap.php';
@@ -13,8 +13,8 @@ use Symfony\Component\Yaml\Yaml;
 
 function testKeyManager(): void
 {
-    echo "🔑 Testing Enhanced Key Manager" . PHP_EOL;
-    echo "===============================" . PHP_EOL . PHP_EOL;
+    echo "🔑 Testing Single Key Manager" . PHP_EOL;
+    echo "=============================" . PHP_EOL . PHP_EOL;
     
     $keyManager = new KeyManager();
     
@@ -22,7 +22,7 @@ function testKeyManager(): void
     echo "Test 1: Generate New Key" . PHP_EOL;
     echo "------------------------" . PHP_EOL;
     try {
-        $result = $keyManager->generateNewBotKey();
+        $result = $keyManager->generateNewBotKey('NOSTR_BOT_KEY');
         echo "✅ Key generation successful!" . PHP_EOL;
         echo "   Environment Variable: {$result['env_variable']}" . PHP_EOL;
         echo "   NPub: {$result['key_set']['bechPublicKey']}" . PHP_EOL;
@@ -31,57 +31,42 @@ function testKeyManager(): void
         echo "❌ Key generation failed: " . $e->getMessage() . PHP_EOL . PHP_EOL;
     }
     
-    // Test 2: Get all available keys
-    echo "Test 2: Get All Available Keys" . PHP_EOL;
-    echo "------------------------------" . PHP_EOL;
+    // Test 2: Get current key
+    echo "Test 2: Get Current Key" . PHP_EOL;
+    echo "----------------------" . PHP_EOL;
     try {
-        $keys = $keyManager->getAllBotKeys();
-        echo "✅ Found " . count($keys) . " configured key(s)" . PHP_EOL;
-        
-        foreach ($keys as $key) {
-            echo "   🔐 {$key['env_variable']}" . PHP_EOL;
+        $key = $keyManager->getBotKey('NOSTR_BOT_KEY');
+        if ($key) {
+            echo "✅ Found configured key" . PHP_EOL;
+            echo "   🔐 NOSTR_BOT_KEY" . PHP_EOL;
             echo "      NPub: {$key['npub']}" . PHP_EOL;
             echo "      Display Name: {$key['display_name']}" . PHP_EOL;
             if ($key['profile_pic']) {
                 echo "      Profile Pic: {$key['profile_pic']}" . PHP_EOL;
             }
-        }
-        echo PHP_EOL;
-    } catch (\Exception $e) {
-        echo "❌ Failed to get keys: " . $e->getMessage() . PHP_EOL . PHP_EOL;
-    }
-    
-    // Test 3: Get next available key slot
-    echo "Test 3: Get Next Available Key Slot" . PHP_EOL;
-    echo "-----------------------------------" . PHP_EOL;
-    try {
-        $nextSlot = $keyManager->getNextAvailableKeySlot();
-        if ($nextSlot) {
-            echo "✅ Next available slot: {$nextSlot}" . PHP_EOL;
         } else {
-            echo "⚠️  All key slots are full (maximum 10 keys supported)" . PHP_EOL;
+            echo "❌ No NOSTR_BOT_KEY found" . PHP_EOL;
         }
         echo PHP_EOL;
     } catch (\Exception $e) {
-        echo "❌ Failed to get next slot: " . $e->getMessage() . PHP_EOL . PHP_EOL;
+        echo "❌ Failed to get key: " . $e->getMessage() . PHP_EOL . PHP_EOL;
     }
     
-    // Test 4: Validate specific key
-    echo "Test 4: Validate Specific Key" . PHP_EOL;
-    echo "-----------------------------" . PHP_EOL;
-    $testEnvVar = 'NOSTR_BOT_KEY1';
+    // Test 3: Validate current key
+    echo "Test 3: Validate Current Key" . PHP_EOL;
+    echo "----------------------------" . PHP_EOL;
     try {
-        $isValid = $keyManager->validateBotKey($testEnvVar);
+        $isValid = $keyManager->validateBotKey('NOSTR_BOT_KEY');
         if ($isValid) {
-            echo "✅ Key {$testEnvVar} is valid" . PHP_EOL;
+            echo "✅ NOSTR_BOT_KEY is valid" . PHP_EOL;
             
-            $key = $keyManager->getBotKey($testEnvVar);
+            $key = $keyManager->getBotKey('NOSTR_BOT_KEY');
             if ($key) {
                 echo "   NPub: {$key['npub']}" . PHP_EOL;
                 echo "   Display Name: {$key['display_name']}" . PHP_EOL;
             }
         } else {
-            echo "❌ Key {$testEnvVar} is not valid or not found" . PHP_EOL;
+            echo "❌ NOSTR_BOT_KEY is not valid or not found" . PHP_EOL;
         }
         echo PHP_EOL;
     } catch (\Exception $e) {
@@ -129,7 +114,7 @@ function testCLIKeyManagement(): void
     echo $output . PHP_EOL;
     
     echo "Testing manage-keys.php generate command..." . PHP_EOL;
-    $output = shell_exec('php manage-keys.php generate --env-var NOSTR_BOT_TEST_KEY 2>&1');
+    $output = shell_exec('php manage-keys.php generate 2>&1');
     echo "Output:" . PHP_EOL;
     echo $output . PHP_EOL;
 }
@@ -144,7 +129,7 @@ function testPublishingFunctionality(): void
         'title' => 'Test Article',
         'kind' => 30023,
         'npub' => [
-            'environment_variable' => 'NOSTR_BOT_KEY1',
+            'environment_variable' => 'NOSTR_BOT_KEY',
             'public_key' => 'npub1test1234567890abcdefghijklmnopqrstuvwxyz'
         ],
         'content' => 'This is a test article content for publishing tests.'
@@ -158,13 +143,13 @@ function testPublishingFunctionality(): void
     
     // Test dry-run mode
     echo "Testing dry-run mode..." . PHP_EOL;
-    $output = shell_exec("php test-publish.php --dry-run --key NOSTR_BOT_KEY1 {$testFile} 2>&1");
+    $output = shell_exec("php test-publish.php --dry-run {$testFile} 2>&1");
     echo "Output:" . PHP_EOL;
     echo $output . PHP_EOL;
     
     // Test test mode
     echo "Testing test mode..." . PHP_EOL;
-    $output = shell_exec("php test-publish.php --test --key NOSTR_BOT_KEY1 {$testFile} 2>&1");
+    $output = shell_exec("php test-publish.php --test {$testFile} 2>&1");
     echo "Output:" . PHP_EOL;
     echo $output . PHP_EOL;
     
