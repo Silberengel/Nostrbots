@@ -21,7 +21,10 @@
     "electron": "^28.0.0",
     "electron-builder": "^24.6.4"
   },
-  "dependencies": {},
+  "dependencies": {
+    "marked": "^9.1.6",
+    "asciidoctor": "^2.2.6"
+  },
   "build": {
     "appId": "com.nostrbots.desktop",
     "productName": "Nostrbots Desktop",

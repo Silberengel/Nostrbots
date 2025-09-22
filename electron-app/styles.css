@@ -264,6 +264,46 @@ h3 {
     border: 1px solid #e2e8f0;
 }
 
+/* Preview tabs */
+.preview-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tab-button {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: #718096;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.tab-button:hover {
+    color: #4a5568;
+    background: #edf2f7;
+}
+
+.tab-button.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background: white;
+}
+
+/* Content tabs */
+.content-tab {
+    display: none;
+}
+
+.content-tab.active {
+    display: block;
+}
+
 .file-preview pre {
     background: white;
     padding: 15px;
@@ -274,6 +314,112 @@ h3 {
     line-height: 1.4;
     max-height: 300px;
     overflow-y: auto;
+    margin: 0;
+}
+
+/* Rendered content */
+#renderedHtml {
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    max-height: 300px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Markdown/Asciidoc styling */
+#renderedHtml h1,
+#renderedHtml h2,
+#renderedHtml h3,
+#renderedHtml h4,
+#renderedHtml h5,
+#renderedHtml h6 {
+    color: #2d3748;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+}
+
+#renderedHtml h1 {
+    font-size: 1.8em;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0.3em;
+}
+
+#renderedHtml h2 {
+    font-size: 1.5em;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.2em;
+}
+
+#renderedHtml h3 {
+    font-size: 1.3em;
+}
+
+#renderedHtml p {
+    margin-bottom: 1em;
+    color: #4a5568;
+}
+
+#renderedHtml ul,
+#renderedHtml ol {
+    margin-bottom: 1em;
+    padding-left: 2em;
+}
+
+#renderedHtml li {
+    margin-bottom: 0.3em;
+    color: #4a5568;
+}
+
+#renderedHtml code {
+    background: #f7fafc;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.9em;
+    color: #e53e3e;
+}
+
+#renderedHtml pre {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 15px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    margin: 1em 0;
+}
+
+#renderedHtml blockquote {
+    border-left: 4px solid #667eea;
+    padding-left: 1em;
+    margin: 1em 0;
+    color: #718096;
+    font-style: italic;
+}
+
+#renderedHtml table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+#renderedHtml th,
+#renderedHtml td {
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+#renderedHtml th {
+    background: #f7fafc;
+    font-weight: 600;
+    color: #2d3748;
 }
 
 /* Results */

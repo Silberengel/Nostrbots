@@ -24,8 +24,16 @@
                     <button id="selectFileBtn" class="btn btn-primary">Browse</button>
                 </div>
                 <div id="filePreview" class="file-preview hidden">
-                    <h3>Document Preview</h3>
-                    <pre id="fileContent"></pre>
+                    <div class="preview-tabs">
+                        <button id="rawTab" class="tab-button active">Raw</button>
+                        <button id="renderedTab" class="tab-button">Rendered</button>
+                    </div>
+                    <div id="rawContent" class="content-tab active">
+                        <pre id="fileContent"></pre>
+                    </div>
+                    <div id="renderedContent" class="content-tab">
+                        <div id="renderedHtml"></div>
+                    </div>
                 </div>
             </section>
 

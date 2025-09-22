@@ -16,6 +16,13 @@ const resultsContent = document.getElementById('resultsContent');
 const filesSection = document.getElementById('filesSection');
 const filesList = document.getElementById('filesList');
 
+// Preview elements
+const rawTab = document.getElementById('rawTab');
+const renderedTab = document.getElementById('renderedTab');
+const rawContent = document.getElementById('rawContent');
+const renderedContent = document.getElementById('renderedContent');
+const renderedHtml = document.getElementById('renderedHtml');
+
 // State
 let selectedFilePath = null;
 let selectedOutputDir = null;
@@ -26,6 +33,10 @@ selectFileBtn.addEventListener('click', selectFile);
 selectOutputBtn.addEventListener('click', selectOutputDirectory);
 parseBtn.addEventListener('click', parseDocument);
 openOutputBtn.addEventListener('click', openOutputDirectory);
+
+// Preview tab listeners
+rawTab.addEventListener('click', () => switchPreviewTab('raw'));
+renderedTab.addEventListener('click', () => switchPreviewTab('rendered'));
 
 // Mode change handler
 modeRadios.forEach(radio => {
@@ -44,6 +55,11 @@ async function selectFile() {
             const result = await window.electronAPI.readFile(filePath);
             if (result.success) {
                 fileContent.textContent = result.content;
+                
+                // Render the content based on file type
+                const renderedContent = await renderContent(result.content, filePath);
+                renderedHtml.innerHTML = renderedContent;
+                
                 filePreview.classList.remove('hidden');
             } else {
                 showError('Failed to read file: ' + result.error);
@@ -266,6 +282,56 @@ function showError(message) {
     setTimeout(() => {
         document.body.removeChild(notification);
     }, 5000);
+}
+
+// Preview tab switching
+function switchPreviewTab(tab) {
+    // Update tab buttons
+    rawTab.classList.toggle('active', tab === 'raw');
+    renderedTab.classList.toggle('active', tab === 'rendered');
+    
+    // Update content tabs
+    rawContent.classList.toggle('active', tab === 'raw');
+    renderedContent.classList.toggle('active', tab === 'rendered');
+}
+
+// Content rendering
+async function renderContent(content, filePath) {
+    const extension = filePath.toLowerCase().split('.').pop();
+    
+    try {
+        if (extension === 'md' || extension === 'markdown') {
+            // Render Markdown
+            const { marked } = await import('marked');
+            return marked.parse(content);
+        } else if (extension === 'adoc' || extension === 'asciidoc') {
+            // Render Asciidoc
+            const Asciidoctor = (await import('asciidoctor')).default();
+            return Asciidoctor.convert(content, {
+                safe: 'safe',
+                backend: 'html5',
+                doctype: 'article',
+                attributes: {
+                    'showtitle': true,
+                    'icons': 'font',
+                    'source-highlighter': 'highlight.js'
+                }
+            });
+        } else {
+            // Fallback to plain text with basic formatting
+            return `<pre>${escapeHtml(content)}</pre>`;
+        }
+    } catch (error) {
+        console.error('Rendering error:', error);
+        return `<div class="error">Error rendering content: ${escapeHtml(error.message)}</div>`;
+    }
+}
+
+// HTML escaping utility
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Initialize
