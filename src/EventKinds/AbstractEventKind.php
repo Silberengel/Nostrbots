@@ -13,15 +13,23 @@ use swentel\nostr\Event\Event;
 abstract class AbstractEventKind implements EventKindInterface
 {
     /**
-     * Generate a unique d-tag for addressable events
+     * Generate a d-tag for addressable events
      * 
      * @param string $title The title or base identifier
      * @param bool $includeTimestamp Whether to include timestamp for uniqueness
+     * @param bool $forceNormalization Whether to apply normalization rules (for wiki articles)
      * @return string The generated d-tag
      */
-    protected function generateDTag(string $title, bool $includeTimestamp = true): string
+    protected function generateDTag(string $title, bool $includeTimestamp = true, bool $forceNormalization = false): string
     {
-        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
+        if ($forceNormalization) {
+            // Apply NIP-54 normalization rules for wiki articles
+            $slug = strtolower(preg_replace('/[^a-zA-Z0-9]/', '-', $title));
+            $slug = trim($slug, '-');
+        } else {
+            // Standard slug generation
+            $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
+        }
         
         if ($includeTimestamp) {
             $slug .= '-' . time();
@@ -42,9 +50,16 @@ abstract class AbstractEventKind implements EventKindInterface
 
         // Add d-tag for addressable events
         if (isset($config['d-tag'])) {
+            // Use provided d-tag (allows reusing existing article d-tags)
             $tags[] = ['d', $config['d-tag']];
+        } elseif (isset($config['reuse_d_tag'])) {
+            // Reuse an existing d-tag for replacing content
+            $tags[] = ['d', $config['reuse_d_tag']];
         } elseif (isset($config['title'])) {
-            $tags[] = ['d', $this->generateDTag($config['title'])];
+            // Generate new d-tag from title
+            $includeTimestamp = !isset($config['static_d_tag']) || !$config['static_d_tag'];
+            $forceNormalization = isset($config['normalize_d_tag']) && $config['normalize_d_tag'];
+            $tags[] = ['d', $this->generateDTag($config['title'], $includeTimestamp, $forceNormalization)];
         }
 
         // Add title tag
@@ -161,7 +176,10 @@ abstract class AbstractEventKind implements EventKindInterface
             'topics' => 'Array of topic tags (t tags)',
             'published_at' => 'Unix timestamp of first publication',
             'custom_tags' => 'Array of additional custom tags',
-            'd-tag' => 'Custom d-tag identifier (auto-generated if not provided)'
+            'd-tag' => 'Custom d-tag identifier (auto-generated if not provided)',
+            'reuse_d_tag' => 'Reuse an existing d-tag to replace/update content',
+            'static_d_tag' => 'Generate d-tag without timestamp (for wiki articles)',
+            'normalize_d_tag' => 'Apply NIP-54 normalization rules to d-tag'
         ];
     }
 }

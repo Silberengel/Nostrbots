@@ -1,4 +1,4 @@
-# Nostrbots
+a # Nostrbots
 
 A modern, extensible PHP framework for publishing various types of Nostr events with automation support.
 
@@ -9,6 +9,8 @@ A modern, extensible PHP framework for publishing various types of Nostr events 
 - ✅ **Extensible Event System**: Support for multiple Nostr event kinds with easy extensibility
 - ✅ **NIP-23 Long-form Content** (kind 30023): Articles and blog posts with Markdown support
 - ✅ **NIP Curated Publications** (kinds 30040/30041): Organized content collections with indices and sections
+- ✅ **NIP-54 Wiki Articles** (kind 30818): Collaborative wiki content with Asciidoc and wikilinks
+- ✅ **Content Replacement**: Reuse d-tags to replace/update existing articles
 - ✅ **Flexible Configuration**: YAML-based configuration with content file loading
 - ✅ **Relay Management**: Smart relay testing and failover with category-based selection
 - ✅ **Key Management**: Secure private key handling with validation
@@ -23,6 +25,7 @@ A modern, extensible PHP framework for publishing various types of Nostr events 
 | 30023 | Long-form Content | Articles and blog posts in Markdown | NIP-23 |
 | 30040 | Publication Index | Table of contents for curated publications | NKBIP-01 |
 | 30041 | Publication Content | Sections/chapters for curated publications | NKBIP-01 |
+| 30818 | Wiki Article | Collaborative wiki articles with Asciidoc | NIP-54 |
 
 *More event kinds can be easily added through the extensible architecture.*
 
@@ -130,6 +133,31 @@ content_files:
 wikilinks:
   - term: "relay"
     definition: "Server that stores and forwards messages"
+```
+
+### Wiki Articles (30818)
+
+Collaborative wiki content with Asciidoc:
+
+```yaml
+event_kind: 30818
+title: "Nostr Protocol"
+static_d_tag: true      # No timestamp in d-tag
+normalize_d_tag: true   # Apply NIP-54 normalization
+content_files:
+  asciidoc: "path/to/wiki-article.adoc"
+```
+
+### Replacing Existing Content
+
+Update any existing article by reusing its d-tag:
+
+```yaml
+event_kind: 30023
+title: "Updated Article Title"
+reuse_d_tag: "original-article-d-tag-here"
+content_files:
+  markdown: "path/to/updated-content.md"
 ```
 
 ## Relay Configuration

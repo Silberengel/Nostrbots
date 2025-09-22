@@ -38,6 +38,19 @@ references:
     id: "event_id_here"
     relay: "wss://relay.example.com"
 
+# D-tag options (choose one):
+# Option 1: Auto-generate with timestamp (default)
+# d-tag will be: "getting-started-with-nostr-1640995200"
+
+# Option 2: Use custom d-tag
+# d-tag: "my-custom-article-id"
+
+# Option 3: Reuse existing d-tag to replace content
+# reuse_d_tag: "getting-started-with-nostr-1640995200"
+
+# Option 4: Static d-tag (no timestamp)
+# static_d_tag: true
+
 # Optional: Custom tags
 custom_tags:
   - ["client", "nostrbots"]

@@ -1,0 +1,147 @@
+= Nostr Protocol
+
+The **Nostr Protocol** (Notes and Other Stuff Transmitted by Relays) is a simple, open protocol that enables global, decentralized, and censorship-resistant social media.
+
+== Overview
+
+[[Nostr]] was designed to address the fundamental problems with centralized social media platforms by creating a truly decentralized alternative that puts users in control of their data and identity.
+
+.Key Features
+* *Decentralized*: No single point of failure or control
+* *Censorship-resistant*: Content distributed across multiple [[relays]]  
+* *Simple*: Minimal protocol that's easy to implement
+* *Extensible*: Can be extended through [[NIPs]] (Nostr Implementation Possibilities)
+
+== Architecture
+
+The Nostr protocol consists of two main components:
+
+=== Clients
+[[Clients]] are applications that users interact with to create, read, and manage content. Examples include:
+
+* Web applications
+* Mobile apps  
+* Desktop applications
+* Command-line tools
+
+=== Relays
+[[Relays]] are servers that store and forward Nostr events. Key characteristics:
+
+* Simple WebSocket servers
+* Store events temporarily or permanently
+* Can implement custom policies
+* Users can connect to multiple relays simultaneously
+
+== Events
+
+Everything in Nostr is an "event" - a JSON message containing:
+
+[source,json]
+----
+{
+  "id": "event_id_hash",
+  "pubkey": "author_public_key", 
+  "created_at": 1234567890,
+  "kind": 1,
+  "tags": [],
+  "content": "Hello Nostr!",
+  "sig": "signature"
+}
+----
+
+=== Event Kinds
+
+Different event kinds serve different purposes:
+
+.Common Event Kinds
+[cols="1,3"]
+|===
+|Kind |Purpose
+
+|1 |Short text notes (like tweets)
+|3 |Contact lists  
+|7 |Reactions (likes, etc.)
+|30023 |[[Long-form content]] (articles)
+|30818 |[[Wiki articles]]
+|===
+
+== Cryptographic Identity  
+
+Users have cryptographic identities consisting of:
+
+* **Private key** (nsec): Secret key for signing events
+* **Public key** (npub): Public identity shared with others
+
+This cryptographic foundation ensures:
+
+* Authenticity: Events are cryptographically signed
+* Ownership: No central authority can take away your identity  
+* Portability: Your identity works across all Nostr applications
+
+== Network Effects
+
+The Nostr network benefits from several positive feedback loops:
+
+=== Relay Diversity
+* More relays → Better censorship resistance
+* Competition between relays → Better service quality
+* Geographic distribution → Better global access
+
+=== Client Competition  
+* Multiple clients → Innovation and user choice
+* Open protocol → Easy to build new clients
+* Interoperability → Users not locked into one app
+
+== Challenges and Limitations
+
+While powerful, Nostr faces several challenges:
+
+=== Spam and Abuse
+Without central moderation, dealing with spam and abuse requires:
+
+* Client-side filtering
+* Web-of-trust mechanisms
+* Relay-level policies
+
+=== Scalability
+As the network grows, considerations include:
+
+* Storage requirements for relays
+* Bandwidth usage
+* Event discovery and search
+
+=== User Experience
+Making decentralized systems user-friendly requires:
+
+* Simplified key management
+* Intuitive client interfaces  
+* Reliable relay connections
+
+== Future Development
+
+The Nostr ecosystem continues to evolve through:
+
+* New [[NIPs]] extending functionality
+* Improved client applications
+* Enhanced relay implementations
+* Growing developer community
+
+== See Also
+
+* [[Relays]] - Server infrastructure
+* [[NIPs]] - Protocol extensions  
+* [[Clients]] - User applications
+* [[Cryptography]] - Security foundations
+* [[Decentralization]] - Core principles
+
+== External Links
+
+* https://nostr.com[Official Nostr Website]
+* https://github.com/nostr-protocol/nips[NIP Repository]
+* https://nostr-resources.com[Community Resources]
+
+---
+
+_This article is part of the collaborative Nostr wiki. Feel free to fork and improve it!_
+
+footnote:[Protocol specification available at https://github.com/nostr-protocol/nips]

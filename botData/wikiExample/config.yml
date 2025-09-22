@@ -1,0 +1,57 @@
+# Wiki Article Bot Configuration (NIP-54)
+# This bot creates collaborative wiki articles with Asciidoc content
+
+bot_name: "Wiki Article Bot"
+bot_description: "Creates and updates collaborative wiki articles using NIP-54"
+
+# Event kind (30818 for wiki articles)
+event_kind: 30818
+
+# Nostr identity configuration
+npub:
+  environment_variable: "NOSTR_BOT_KEY1"
+  public_key: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+
+# Relay configuration
+relays: "favorite-relays"
+
+# Article metadata (required)
+title: "Nostr Protocol"
+
+# Optional metadata
+summary: "A simple protocol for decentralized social networking"
+topics: ["nostr", "protocol", "decentralization", "social-media"]
+
+# Content files to load
+content_files:
+  asciidoc: "botData/wikiExample/nostr-protocol.adoc"
+
+# D-tag handling options (choose one):
+
+# Option 1: Auto-generate normalized d-tag from title (default behavior)
+# The title "Nostr Protocol" will become "nostr-protocol"
+
+# Option 2: Use a custom d-tag (must follow NIP-54 normalization rules)
+# d-tag: "nostr-protocol"
+
+# Option 3: Reuse an existing d-tag to replace/update an existing article
+# reuse_d_tag: "nostr-protocol"
+
+# Option 4: Static d-tag generation (no timestamp, useful for wikis)
+static_d_tag: true
+normalize_d_tag: true
+
+# Optional: Fork from another article
+# fork_from:
+#   event_id: "event_id_of_original_article"
+#   address: "30818:pubkey:original-d-tag"
+
+# Optional: Defer to a "better" version
+# defer_to:
+#   event_id: "event_id_of_better_version"  
+#   address: "30818:pubkey:better-d-tag"
+
+# Custom tags
+custom_tags:
+  - ["client", "nostrbots"]
+  - ["lang", "en"]

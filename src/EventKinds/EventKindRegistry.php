@@ -24,6 +24,7 @@ class EventKindRegistry
         self::register(30023, LongFormContent::class);
         self::register(30040, PublicationIndex::class);
         self::register(30041, PublicationContent::class);
+        self::register(30818, WikiArticle::class);
     }
 
     /**
