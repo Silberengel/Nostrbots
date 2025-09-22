@@ -301,22 +301,29 @@ async function renderContent(content, filePath) {
     
     try {
         if (extension === 'md' || extension === 'markdown') {
-            // Render Markdown
-            const { marked } = await import('marked');
-            return marked.parse(content);
+            // Render Markdown using marked (loaded via script tag)
+            if (typeof marked !== 'undefined') {
+                return marked.parse(content);
+            } else {
+                return `<div class="error">Markdown renderer not loaded</div>`;
+            }
         } else if (extension === 'adoc' || extension === 'asciidoc') {
-            // Render Asciidoc
-            const Asciidoctor = (await import('asciidoctor')).default();
-            return Asciidoctor.convert(content, {
-                safe: 'safe',
-                backend: 'html5',
-                doctype: 'article',
-                attributes: {
-                    'showtitle': true,
-                    'icons': 'font',
-                    'source-highlighter': 'highlight.js'
-                }
-            });
+            // Render Asciidoc using asciidoctor (loaded via script tag)
+            if (typeof Asciidoctor !== 'undefined') {
+                const asciidoctor = Asciidoctor();
+                return asciidoctor.convert(content, {
+                    safe: 'safe',
+                    backend: 'html5',
+                    doctype: 'article',
+                    attributes: {
+                        'showtitle': true,
+                        'icons': 'font',
+                        'source-highlighter': 'highlight.js'
+                    }
+                });
+            } else {
+                return `<div class="error">Asciidoc renderer not loaded</div>`;
+            }
         } else {
             // Fallback to plain text with basic formatting
             return `<pre>${escapeHtml(content)}</pre>`;

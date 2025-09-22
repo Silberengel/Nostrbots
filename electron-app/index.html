@@ -125,6 +125,17 @@
         </footer>
     </div>
 
+    <!-- Load rendering libraries -->
+    <script src="node_modules/marked/marked.min.js"></script>
+    <script src="node_modules/asciidoctor/dist/browser/asciidoctor.min.js"></script>
+    
+    <!-- Load test utilities (only in dev mode) -->
+    <script>
+        if (window.location.search.includes('dev=true')) {
+            document.write('<script src="test-rendering.js"><\/script>');
+        }
+    </script>
+    
     <script src="renderer.js"></script>
 </body>
 </html>

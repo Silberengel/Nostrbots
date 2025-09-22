@@ -422,6 +422,17 @@ h3 {
     color: #2d3748;
 }
 
+/* Error styling */
+.error {
+    background: #fed7d7;
+    color: #c53030;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #feb2b2;
+    font-weight: 500;
+    margin: 10px 0;
+}
+
 /* Results */
 .results-section {
     background: #f0fff4;

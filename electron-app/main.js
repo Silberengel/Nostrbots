@@ -18,7 +18,10 @@ function createWindow() {
     title: 'Nostrbots Desktop - Document Parser'
   });
 
-  mainWindow.loadFile('index.html');
+  // Load with dev flag if in development mode
+  const isDev = process.argv.includes('--dev');
+  const url = isDev ? 'index.html?dev=true' : 'index.html';
+  mainWindow.loadFile(url);
 
   // Open DevTools in development
   if (process.argv.includes('--dev')) {
