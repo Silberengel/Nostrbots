@@ -29,6 +29,7 @@ function showHelp(): void
     echo "  --dry-run     Validate configuration without publishing events" . PHP_EOL;
     echo "  --verbose     Enable verbose output and detailed error reporting" . PHP_EOL;
     echo "  --profile     Enable performance profiling and memory monitoring" . PHP_EOL;
+    echo "  --test        Use test relays for safe testing (overrides config)" . PHP_EOL;
     echo "  --help        Show this help message" . PHP_EOL . PHP_EOL;
     echo "Supported Event Kinds:" . PHP_EOL;
     
@@ -42,7 +43,8 @@ function showHelp(): void
     echo PHP_EOL . "Examples:" . PHP_EOL;
     echo "  php nostrbots.php myArticleBot" . PHP_EOL;
     echo "  php nostrbots.php myPublicationBot --dry-run" . PHP_EOL;
-    echo "  php nostrbots.php myBot --verbose" . PHP_EOL . PHP_EOL;
+    echo "  php nostrbots.php myBot --verbose" . PHP_EOL;
+    echo "  php nostrbots.php myBot --test --verbose" . PHP_EOL . PHP_EOL;
 }
 
 function main(array $argv): int
@@ -60,6 +62,7 @@ function main(array $argv): int
     $dryRun = in_array('--dry-run', $argv);
     $verbose = in_array('--verbose', $argv);
     $profile = in_array('--profile', $argv);
+    $testMode = in_array('--test', $argv);
     
     // Initialize error handling and performance monitoring
     $errorHandler = new ErrorHandler($verbose);
@@ -100,6 +103,14 @@ function main(array $argv): int
         // Create and configure bot
         $bot = new NostrBot();
         $bot->loadConfig($configFile);
+        
+        // Override test mode if --test flag is provided
+        if ($testMode) {
+            $config = $bot->getConfig();
+            $config['test_mode'] = true;
+            $bot->loadConfig($config);
+            echo "🧪 Test mode enabled - will use test relays" . PHP_EOL;
+        }
 
         if ($verbose) {
             echo "Configuration loaded:" . PHP_EOL;

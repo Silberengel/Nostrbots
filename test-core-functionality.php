@@ -98,13 +98,19 @@ function testRelayManager(): void
     
     try {
         $relayManager = new RelayManager();
-        $relays = $relayManager->getRelays('write');
         
-        if (is_array($relays) && count($relays) > 0) {
-            echo "  ✅ Relay discovery working correctly" . PHP_EOL;
-            echo "  📊 Found " . count($relays) . " relays" . PHP_EOL;
+        // Test regular relays
+        $relays = $relayManager->getRelays('write');
+        echo "  📊 Found " . count($relays) . " working relays" . PHP_EOL;
+        
+        // Test test relays specifically
+        $testRelays = $relayManager->getTestRelays();
+        echo "  🧪 Found " . count($testRelays) . " working test relays" . PHP_EOL;
+        
+        if (is_array($testRelays) && count($testRelays) > 0) {
+            echo "  ✅ Test relay discovery working correctly" . PHP_EOL;
         } else {
-            echo "  ⚠️  No relays found (may be expected)" . PHP_EOL;
+            echo "  ⚠️  No test relays found (may be expected)" . PHP_EOL;
         }
     } catch (\Exception $e) {
         echo "  ⚠️  Relay test failed: " . $e->getMessage() . PHP_EOL;

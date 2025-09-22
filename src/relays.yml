@@ -5,6 +5,7 @@ favorite-relays:
   - wss://thecitadel.nostr1.com
   - wss://theforest.nostr1.com
   - wss://christpill.nostr1.com
+  - ws://localhost:7777
 
 more-relays:
   - wss://hotrightnow.nostr1.com
@@ -17,4 +18,5 @@ more-relays:
   - wss://nostrelites.org
 
 test-relays:
-  - ws://localhost:8080
+  - wss://freelay.sovbit.host
+  - ws://localhost:7777

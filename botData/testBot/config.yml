@@ -1,0 +1,65 @@
+# Test Bot Configuration
+# This bot is configured to use test relays for safe testing
+
+bot_name: "Test Bot"
+bot_description: "A bot for testing Nostrbots functionality with test relays"
+
+# Event configuration
+event_kind: 30023  # Long-form content
+
+# Test mode - uses test-relays from relays.yml
+test_mode: true
+
+# Key configuration
+npub:
+  environment_variable: NOSTR_BOT_KEY1
+  public_key: npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6
+
+# Content configuration
+title: "Test Article"
+summary: "This is a test article for verifying Nostrbots functionality"
+image: "https://i.nostr.build/test.jpg"
+
+# Topics
+topics:
+  - test
+  - nostrbots
+  - verification
+
+# Content files
+content_files:
+  markdown: "botData/testBot/test-content.md"
+
+# Notification settings
+create_notification: true
+notification_text: "Test article published"
+
+# Custom tags
+custom_tags:
+  - ["client", "nostrbots"]
+  - ["lang", "en"]
+  - ["test", "true"]
+
+# Validation settings
+validate_after_publish: true
+min_relay_success: 1
+
+# Content (inline for testing)
+content:
+  markdown: |
+    # Test Article
+
+    This is a test article to verify that Nostrbots is working correctly with test relays.
+
+    ## Test Features
+
+    - ✅ Test relay connectivity
+    - ✅ Event publishing
+    - ✅ Validation system
+    - ✅ Error handling
+
+    ## Test Results
+
+    If you can see this article, the test was successful!
+
+    **Test completed at:** {{ timestamp }}

@@ -17,6 +17,7 @@ use Symfony\Component\Yaml\Yaml;
 class RelayManager
 {
     private const DEFAULT_RELAY = 'wss://thecitadel.nostr1.com';
+    private const TEST_FALLBACK_RELAY = 'wss://freelay.sovbit.host';
     private const RELAY_CONFIG_FILE = __DIR__ . '/../relays.yml';
 
     /**
@@ -102,11 +103,19 @@ class RelayManager
         }
 
         if (empty($workingRelays)) {
-            echo "No working relays found, using default relay" . PHP_EOL;
+            echo "No working relays found, trying fallback relays..." . PHP_EOL;
+            
+            // Try default relay first
             if ($this->testRelay(self::DEFAULT_RELAY)) {
                 $workingRelays[] = self::DEFAULT_RELAY;
+                echo "Using default relay: " . self::DEFAULT_RELAY . PHP_EOL;
+            } 
+            // Try test fallback relay
+            elseif ($this->testRelay(self::TEST_FALLBACK_RELAY)) {
+                $workingRelays[] = self::TEST_FALLBACK_RELAY;
+                echo "Using test fallback relay: " . self::TEST_FALLBACK_RELAY . PHP_EOL;
             } else {
-                throw new \RuntimeException("Default relay is also not working. Cannot continue.");
+                throw new \RuntimeException("No working relays found, including fallback relays. Cannot continue.");
             }
         }
 
@@ -189,16 +198,31 @@ class RelayManager
     /**
      * Get relays for a specific operation type
      * 
-     * @param string $operation 'read', 'write', or 'both'
+     * @param string $operation 'read', 'write', 'both', or 'test'
      * @return array Array of relay URLs
      */
     public function getRelays(string $operation = 'both'): array
     {
+        if ($operation === 'test') {
+            return $this->getTestRelays();
+        }
+        
         $relays = $this->getRelayList('all');
         
         // For now, return all relays for all operations
         // In the future, this could be enhanced to filter based on relay capabilities
         return $this->testRelayList($relays);
+    }
+
+    /**
+     * Get test relays specifically
+     * 
+     * @return array Array of test relay URLs
+     */
+    public function getTestRelays(): array
+    {
+        $testRelays = $this->getRelayList('test-relays');
+        return $this->testRelayList($testRelays);
     }
 
     /**

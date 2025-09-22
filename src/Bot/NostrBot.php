@@ -259,6 +259,11 @@ class NostrBot implements BotInterface
      */
     private function getRelays(): array
     {
+        // Check if we're in test mode
+        if ($this->config['test_mode'] ?? false) {
+            return $this->relayManager->getTestRelays();
+        }
+        
         $relayConfig = $this->config['relays'] ?? 'all';
         return $this->relayManager->getActiveRelays($relayConfig);
     }
