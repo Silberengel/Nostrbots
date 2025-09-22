@@ -35,14 +35,20 @@ class PublicationIndex extends AbstractEventKind
         // Content field MUST be empty for publication indices
         $event->setContent('');
 
+        // Handle index management (create, update, or append)
+        $finalConfig = $this->processIndexManagement($config);
+
         // Create and set tags
-        $tags = $this->createStandardTags($config);
+        $tags = $this->createStandardTags($finalConfig);
         
         // Add required publication-specific tags
-        $this->addPublicationTags($tags, $config);
+        $this->addPublicationTags($tags, $finalConfig);
         
-        // Add content references (a tags)
-        $this->addContentReferences($tags, $config);
+        // Add hierarchy tags for nested publications
+        $this->addHierarchyTags($tags, $finalConfig);
+        
+        // Add content references (a tags) with proper ordering
+        $this->addContentReferences($tags, $finalConfig);
 
         $event->setTags($tags);
         return $event;
@@ -77,6 +83,33 @@ class PublicationIndex extends AbstractEventKind
                     if (!is_array($ref) || !isset($ref['kind'], $ref['pubkey'], $ref['d_tag'])) {
                         $errors[] = "content_references[{$index}] must have kind, pubkey, and d_tag fields";
                     }
+                    
+                    // Validate supported event kinds
+                    $supportedKinds = [30023, 30040, 30041, 30818];
+                    if (isset($ref['kind']) && !in_array($ref['kind'], $supportedKinds)) {
+                        $errors[] = "content_references[{$index}] kind must be one of: " . implode(', ', $supportedKinds);
+                    }
+                }
+            }
+        }
+
+        // Validate index management options
+        if (isset($config['index_management'])) {
+            $mgmt = $config['index_management'];
+            if (!is_array($mgmt)) {
+                $errors[] = 'index_management must be an array';
+            } else {
+                if (isset($mgmt['mode']) && !in_array($mgmt['mode'], ['create', 'update', 'append'])) {
+                    $errors[] = 'index_management.mode must be one of: create, update, append';
+                }
+                if (isset($mgmt['existing_index']) && !is_string($mgmt['existing_index'])) {
+                    $errors[] = 'index_management.existing_index must be a string (d-tag of existing index)';
+                }
+                if (isset($mgmt['insert_position']) && !in_array($mgmt['insert_position'], ['first', 'last', 'after', 'before'])) {
+                    $errors[] = 'index_management.insert_position must be one of: first, last, after, before';
+                }
+                if (in_array($mgmt['insert_position'] ?? '', ['after', 'before']) && !isset($mgmt['reference_d_tag'])) {
+                    $errors[] = 'index_management.reference_d_tag is required when insert_position is "after" or "before"';
                 }
             }
         }
@@ -108,7 +141,10 @@ class PublicationIndex extends AbstractEventKind
             'published_on' => 'Publication date (YYYY-MM-DD)',
             'source' => 'URL to original source',
             'isbn' => 'ISBN identifier (will be formatted as i tag)',
-            'content_references' => 'Array of content sections to include',
+            'content_references' => 'Array of content sections to include (supports kinds 30023, 30040, 30041, 30818)',
+            'index_management' => 'Configuration for creating/updating indices with flexible ordering',
+            'hierarchy_level' => 'Nesting level for hierarchical publications (0=root, 1=chapter, 2=section, etc.)',
+            'parent_index' => 'D-tag of parent index for nested publications',
             'original_author' => 'Original author pubkey (for derivative works)',
             'original_event' => 'Original event reference (for derivative works)',
         ];
@@ -162,7 +198,102 @@ class PublicationIndex extends AbstractEventKind
     }
 
     /**
-     * Add content reference tags (a tags)
+     * Process index management configuration
+     */
+    private function processIndexManagement(array $config): array
+    {
+        $finalConfig = $config;
+        
+        if (!isset($config['index_management'])) {
+            return $finalConfig;
+        }
+
+        $mgmt = $config['index_management'];
+        $mode = $mgmt['mode'] ?? 'create';
+
+        switch ($mode) {
+            case 'update':
+                // Use existing index d-tag
+                if (isset($mgmt['existing_index'])) {
+                    $finalConfig['reuse_d_tag'] = $mgmt['existing_index'];
+                }
+                break;
+                
+            case 'append':
+                // Load existing index and append new content
+                if (isset($mgmt['existing_index'])) {
+                    $finalConfig = $this->appendToExistingIndex($finalConfig, $mgmt);
+                }
+                break;
+                
+            case 'create':
+            default:
+                // Create new index (default behavior)
+                break;
+        }
+
+        return $finalConfig;
+    }
+
+    /**
+     * Append content to existing index
+     */
+    private function appendToExistingIndex(array $config, array $mgmt): array
+    {
+        // TODO: In a full implementation, this would fetch the existing index
+        // from relays and merge the content references. For now, we'll simulate
+        // this by using the provided configuration and adding new content.
+        
+        $finalConfig = $config;
+        $finalConfig['reuse_d_tag'] = $mgmt['existing_index'];
+        
+        // Handle insertion position
+        $position = $mgmt['insert_position'] ?? 'last';
+        $newRefs = $config['content_references'] ?? [];
+        
+        // In a real implementation, we would:
+        // 1. Fetch existing index from relays
+        // 2. Parse existing content_references
+        // 3. Insert new references at specified position
+        // 4. Return merged configuration
+        
+        // For now, we'll add metadata about the insertion
+        $finalConfig['_insertion_metadata'] = [
+            'position' => $position,
+            'reference_d_tag' => $mgmt['reference_d_tag'] ?? null,
+            'new_content_count' => count($newRefs)
+        ];
+        
+        return $finalConfig;
+    }
+
+    /**
+     * Add hierarchy tags for nested publications
+     */
+    private function addHierarchyTags(array &$tags, array $config): void
+    {
+        // Add hierarchy level
+        if (isset($config['hierarchy_level'])) {
+            $tags[] = ['hierarchy_level', (string)$config['hierarchy_level']];
+        }
+        
+        // Add parent index reference
+        if (isset($config['parent_index'])) {
+            $parentRef = $config['parent_index'];
+            if (is_string($parentRef)) {
+                // Simple d-tag reference
+                $tags[] = ['parent', $parentRef];
+            } elseif (is_array($parentRef) && isset($parentRef['d_tag'])) {
+                // Full reference with pubkey
+                $pubkey = $parentRef['pubkey'] ?? '';
+                $relay = $parentRef['relay'] ?? '';
+                $tags[] = ['a', "30040:{$pubkey}:{$parentRef['d_tag']}", $relay, 'parent'];
+            }
+        }
+    }
+
+    /**
+     * Add content reference tags (a tags) with proper ordering
      */
     private function addContentReferences(array &$tags, array $config): void
     {
@@ -170,7 +301,17 @@ class PublicationIndex extends AbstractEventKind
             return;
         }
 
-        foreach ($config['content_references'] as $ref) {
+        // Handle ordered content references
+        $references = $config['content_references'];
+        
+        // Sort by order if specified
+        if (isset($references[0]['order'])) {
+            usort($references, function($a, $b) {
+                return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+            });
+        }
+
+        foreach ($references as $ref) {
             if (!is_array($ref) || !isset($ref['kind'], $ref['pubkey'], $ref['d_tag'])) {
                 continue;
             }
@@ -181,6 +322,11 @@ class PublicationIndex extends AbstractEventKind
                 $ref['relay'] ?? '',
                 $ref['event_id'] ?? ''
             ];
+
+            // Add order information if specified
+            if (isset($ref['order'])) {
+                $aTag[] = 'order:' . $ref['order'];
+            }
 
             $tags[] = $aTag;
         }

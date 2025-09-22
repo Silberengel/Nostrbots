@@ -1,0 +1,77 @@
+# Bible Publication Index - Root Level
+# This creates the main Bible index with books as content references
+
+bot_name: "Bible Publisher"
+bot_description: "Creates hierarchical Bible publication with books, chapters, and verses"
+
+# Event kind (30040 for publication index)
+event_kind: 30040
+
+# Nostr identity configuration
+npub:
+  environment_variable: "NOSTR_BOT_KEY1"
+  public_key: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+
+# Relay configuration
+relays: "favorite-relays"
+
+# Publication metadata
+title: "The Holy Bible"
+author: "Various Authors"
+summary: "The complete Bible organized as a hierarchical Nostr publication"
+type: "book"
+version: "King James Version"
+published_by: "Nostr Bible Project"
+source: "https://www.gutenberg.org/ebooks/10"
+
+# Hierarchy configuration
+hierarchy_level: 0  # Root level
+static_d_tag: true  # Use consistent d-tag: "the-holy-bible"
+
+# Topics
+topics: ["bible", "scripture", "christianity", "religion"]
+
+# Content references - Bible books (mix of content types)
+content_references:
+  # Old Testament books as nested indices (30040)
+  - kind: 30040
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "genesis"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 1
+  - kind: 30040
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "exodus"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 2
+  - kind: 30040
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "psalms"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 19
+    
+  # New Testament books
+  - kind: 30040
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "matthew"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 40
+  - kind: 30040
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "john"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 43
+    
+  # Special sections as articles (30023)
+  - kind: 30023
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "bible-introduction"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 0
+
+# Custom tags
+custom_tags:
+  - ["client", "nostrbots"]
+  - ["lang", "en"]
+  - ["translation", "kjv"]
+  - ["license", "public-domain"]

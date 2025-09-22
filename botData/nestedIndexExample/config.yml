@@ -1,0 +1,82 @@
+# Nested Index Example - Creating Sub-sections
+# This shows how to create hierarchical publication structures
+
+bot_name: "Nested Index Bot"
+bot_description: "Creates nested publication indices for hierarchical content organization"
+
+# Event kind (30040 for publication index)
+event_kind: 30040
+
+# Nostr identity configuration
+npub:
+  environment_variable: "NOSTR_BOT_KEY1"
+  public_key: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+
+# Relay configuration
+relays: "favorite-relays"
+
+# Publication metadata
+title: "Advanced Programming Techniques"
+auto_update: true
+author: "Tech Team"
+summary: "A detailed section covering advanced programming concepts and patterns"
+type: "documentation"
+
+# Hierarchy configuration
+hierarchy_level: 2  # Sub-section level (0=root, 1=chapter, 2=section, etc.)
+parent_index:
+  d_tag: "programming-masterclass"  # Parent publication
+  pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+  relay: "wss://thecitadel.nostr1.com"
+
+# Topics
+topics: ["programming", "advanced", "techniques", "patterns"]
+
+# Content references - Mixed content types in hierarchical order
+content_references:
+  # Introduction article
+  - kind: 30023
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "advanced-programming-intro"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 1
+    
+  # Design patterns sub-index (nested even deeper)
+  - kind: 30040
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "design-patterns-collection"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 2
+    
+  # Individual content sections
+  - kind: 30041
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "memory-management-section"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 3
+    
+  - kind: 30041
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "concurrency-patterns-section"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 4
+    
+  # Wiki reference pages
+  - kind: 30818
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "performance-optimization"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 5
+    
+  - kind: 30818
+    pubkey: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+    d_tag: "debugging-techniques"
+    relay: "wss://thecitadel.nostr1.com"
+    order: 6
+
+# Custom tags
+custom_tags:
+  - ["client", "nostrbots"]
+  - ["lang", "en"]
+  - ["section", "advanced-techniques"]
+  - ["level", "intermediate-advanced"]

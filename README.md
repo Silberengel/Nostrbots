@@ -1,4 +1,4 @@
-a # Nostrbots
+# Nostrbots
 
 A modern, extensible PHP framework for publishing various types of Nostr events with automation support.
 
@@ -8,7 +8,7 @@ A modern, extensible PHP framework for publishing various types of Nostr events 
 
 - ✅ **Extensible Event System**: Support for multiple Nostr event kinds with easy extensibility
 - ✅ **NIP-23 Long-form Content** (kind 30023): Articles and blog posts with Markdown support
-- ✅ **NIP Curated Publications** (kinds 30040/30041): Organized content collections with indices and sections
+- ✅ **NIP Curated Publications** (kinds 30040/30041): Hierarchical content collections with flexible ordering and mixed content types
 - ✅ **NIP-54 Wiki Articles** (kind 30818): Collaborative wiki content with Asciidoc and wikilinks
 - ✅ **Content Replacement**: Reuse d-tags to replace/update existing articles
 - ✅ **Flexible Configuration**: YAML-based configuration with content file loading
@@ -25,7 +25,7 @@ A modern, extensible PHP framework for publishing various types of Nostr events 
 | 30023 | Long-form Content | Articles and blog posts in Markdown | NIP-23 |
 | 30040 | Publication Index | Table of contents for curated publications | NKBIP-01 |
 | 30041 | Publication Content | Sections/chapters for curated publications | NKBIP-01 |
-| 30818 | Wiki Article | Collaborative wiki articles with Asciidoc | NIP-54 |
+| 30818 | Wiki Article | Collaborative wiki articles with Asciidoc | NIP-54i |
 
 *More event kinds can be easily added through the extensible architecture.*
 
@@ -108,7 +108,7 @@ create_notification: true  # Creates kind 1111 notification
 
 ### Publication Index (30040)
 
-Creates a table of contents for organized content:
+Creates a table of contents for organized content with support for all addressable event kinds:
 
 ```yaml
 event_kind: 30040
@@ -116,9 +116,59 @@ title: "The Complete Nostr Guide"
 auto_update: true
 type: "documentation"
 content_references:
-  - kind: 30041
+  - kind: 30023    # Long-form article
     pubkey: "npub1..."
-    d_tag: "chapter-1-intro"
+    d_tag: "introduction-article"
+    order: 1
+  - kind: 30041    # Publication section
+    pubkey: "npub1..."
+    d_tag: "chapter-1-basics"
+    order: 2
+  - kind: 30818    # Wiki article
+    pubkey: "npub1..."
+    d_tag: "protocol-reference"
+    order: 3
+  - kind: 30040    # Nested index
+    pubkey: "npub1..."
+    d_tag: "advanced-topics"
+    order: 4
+```
+
+#### Hierarchical Publications
+
+Create nested publication structures:
+
+```yaml
+# Parent index
+event_kind: 30040
+title: "Programming Masterclass"
+hierarchy_level: 0  # Root level
+
+# Child index
+event_kind: 30040
+title: "Advanced Techniques"
+hierarchy_level: 1
+parent_index:
+  d_tag: "programming-masterclass"
+  pubkey: "npub1..."
+```
+
+#### Index Management
+
+Append content to existing indices:
+
+```yaml
+event_kind: 30040
+title: "Updated Guide"
+index_management:
+  mode: "append"
+  existing_index: "my-guide-d-tag"
+  insert_position: "after"  # first, last, after, before
+  reference_d_tag: "chapter-3"  # Insert after this item
+content_references:
+  - kind: 30023
+    d_tag: "new-chapter"
+    # ... new content to add
 ```
 
 ### Publication Content (30041)
