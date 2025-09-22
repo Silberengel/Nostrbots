@@ -1,0 +1,30 @@
+= Test Document with Discrete Headers
+
+This is the main content.
+
+== Regular Section 1
+
+This is a regular section that should create a section.
+
+[discrete]
+== Discrete Header
+
+This discrete header should NOT create a section. It should be treated as content.
+
+[discrete]
+=== Another Discrete Header
+
+This is another discrete header that should also be content.
+
+== Regular Section 2
+
+This is another regular section that should create a section.
+
+[discrete]
+==== Discrete Level 4 Header
+
+This discrete header should also be content, not a section.
+
+== Final Section
+
+This is the final regular section.

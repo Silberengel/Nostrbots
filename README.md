@@ -31,7 +31,23 @@ A modern, extensible PHP framework for publishing various types of Nostr events 
 
 ## Quick Start
 
-### 1. Install Dependencies
+### Option 1: Desktop Application (Recommended for Non-Technical Users)
+
+For a user-friendly GUI experience:
+
+```bash
+cd electron-app
+./install.sh
+npm start
+```
+
+See the [Desktop App README](electron-app/README.md) for details.
+
+### Option 2: Command Line Interface
+
+For developers and automation:
+
+#### 1. Install Dependencies
 
 ```bash
 composer install

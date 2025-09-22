@@ -129,7 +129,8 @@ class DocumentParser
         $foundNonTitleHeader = false;
 
         foreach ($lines as $lineNum => $line) {
-            $headerLevel = $this->getHeaderLevel($line);
+            $previousLine = ($lineNum > 0) ? $lines[$lineNum - 1] : null;
+            $headerLevel = $this->getHeaderLevel($line, $previousLine);
             
             if ($headerLevel > 0) {
                 // Handle preamble if we haven't found a non-title header yet
@@ -244,14 +245,19 @@ class DocumentParser
 
     /**
      * Get header level from a line (1-6, or 0 if not a header)
+     * Also checks if the header is discrete (should not create sections)
      */
-    private function getHeaderLevel(string $line): int
+    private function getHeaderLevel(string $line, ?string $previousLine = null): int
     {
         $line = trim($line);
         
         if ($this->format === 'asciidoc') {
             // Asciidoc: = (level 1), == (level 2), === (level 3), etc.
             if (preg_match('/^(=+)\s+(.+)$/', $line, $matches)) {
+                // Check if this is a discrete header
+                if ($previousLine && trim($previousLine) === '[discrete]') {
+                    return 0; // Discrete headers don't create sections
+                }
                 return strlen($matches[1]);
             }
         } else {

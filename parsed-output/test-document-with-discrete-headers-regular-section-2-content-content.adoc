@@ -1,0 +1,6 @@
+This is another regular section that should create a section.
+
+[discrete]
+==== Discrete Level 4 Header
+
+This discrete header should also be content, not a section.

@@ -1,0 +1,11 @@
+This is a regular section that should create a section.
+
+[discrete]
+== Discrete Header
+
+This discrete header should NOT create a section. It should be treated as content.
+
+[discrete]
+=== Another Discrete Header
+
+This is another discrete header that should also be content.
