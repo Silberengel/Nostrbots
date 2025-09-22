@@ -127,11 +127,12 @@ class DocumentParser
                 $section = [
                     'level' => $headerLevel,
                     'title' => $headerText,
-                    'slug' => $this->generateSlug($headerText),
+                    'slug' => '', // Will be set after processing hierarchy
                     'content' => [],
                     'line_start' => $lineNum,
                     'line_end' => null,
-                    'children' => []
+                    'children' => [],
+                    'parent_slug' => null
                 ];
 
                 // Close previous section and extract its content
@@ -163,6 +164,9 @@ class DocumentParser
         if (!$foundFirstHeader && !empty($preambleContent)) {
             $this->preamble = trim(implode("\n", $preambleContent));
         }
+
+        // Process hierarchical d-tags after all sections are parsed
+        $this->generateHierarchicalSlugs();
     }
 
     /**
@@ -219,6 +223,51 @@ class DocumentParser
         $slug = preg_replace('/-+/', '-', $slug);
         
         return $slug;
+    }
+
+    /**
+     * Generate hierarchical d-tags for all sections
+     */
+    private function generateHierarchicalSlugs(): void
+    {
+        $parentStack = []; // Stack to track parent slugs at each level
+        $parentStack[0] = $this->baseSlug; // Root level is the document slug
+
+        foreach ($this->sections as &$section) {
+            $level = $section['level'];
+            $basicSlug = $this->generateSlug($section['title']);
+            
+            // Build hierarchical slug by combining with parent slugs
+            $hierarchicalParts = [];
+            
+            // Add all parent slugs up to current level
+            for ($i = 1; $i < $level; $i++) {
+                if (isset($parentStack[$i])) {
+                    $hierarchicalParts[] = $parentStack[$i];
+                }
+            }
+            
+            // Add current section slug
+            $hierarchicalParts[] = $basicSlug;
+            
+            // Create full hierarchical slug
+            $section['slug'] = implode('-', $hierarchicalParts);
+            
+            // Update parent stack for this level and clear deeper levels
+            $parentStack[$level] = $basicSlug;
+            for ($i = $level + 1; $i <= 6; $i++) {
+                unset($parentStack[$i]);
+            }
+            
+            // Set parent reference
+            if ($level > 1 && isset($parentStack[$level - 1])) {
+                // Build parent slug from all parts except the current one
+                $parentParts = array_slice($hierarchicalParts, 0, -1);
+                $section['parent_slug'] = empty($parentParts) ? $this->baseSlug : implode('-', $parentParts);
+            } else {
+                $section['parent_slug'] = $this->baseSlug;
+            }
+        }
     }
 
     /**
@@ -468,7 +517,7 @@ class DocumentParser
             'summary' => 'Index section: ' . $section['title'],
             'type' => 'documentation',
             'hierarchy_level' => $section['level'] - 1,
-            'parent_index' => $this->baseSlug,
+            'parent_index' => $section['parent_slug'],
             'static_d_tag' => true,
             'd-tag' => $section['slug'],
             'content_references' => $contentReferences,

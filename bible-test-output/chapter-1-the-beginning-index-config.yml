@@ -8,27 +8,33 @@ npub:
   environment_variable: NOSTR_BOT_KEY1
   public_key: npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6
 relays: favorite-relays
-title: Chapter 1
+title: The Beginning
 auto_update: true
-summary: "Index section: Chapter 1"
+summary: "Index section: The Beginning"
 type: documentation
-hierarchy_level: 1
-parent_index: the-book-of-genesis
+hierarchy_level: 2
+parent_index: chapter-1
 static_d_tag: true
-d-tag: chapter-1
+d-tag: chapter-1-the-beginning
 content_references:
   -
-    kind: 30040
+    kind: 30041
     pubkey: npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6
-    d_tag: chapter-1-the-beginning
+    d_tag: chapter-1-the-beginning-verse-1
     relay: "wss://thecitadel.nostr1.com"
     order: 0
   -
-    kind: 30040
+    kind: 30041
     pubkey: npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6
-    d_tag: chapter-1-the-first-day
+    d_tag: chapter-1-the-beginning-verse-2
     relay: "wss://thecitadel.nostr1.com"
     order: 1
+  -
+    kind: 30041
+    pubkey: npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6
+    d_tag: chapter-1-the-beginning-verse-3
+    relay: "wss://thecitadel.nostr1.com"
+    order: 2
 topics:
   - document
   - index
@@ -44,4 +50,4 @@ custom_tags:
     1: index
   -
     0: section_level
-    1: 2
+    1: 3
