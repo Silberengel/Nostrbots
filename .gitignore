@@ -1,3 +1,19 @@
+# Dependencies
 /vendor
-composer.locknode_modules/
-electron-app/node_modules/
+composer.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/

@@ -259,7 +259,7 @@ php -r "require 'src/bootstrap.php'; \$rm = new Nostrbots\Utils\RelayManager(); 
 ## Documentation
 
 - [Complete Direct Publishing Guide](docs/DIRECT_PUBLISHING.md) - Detailed documentation
-- [Relay Selection Guide](RELAY_SELECTION.md) - Relay configuration and selection
+- [Relay Selection Guide](docs/RELAY_SELECTION.md) - Relay configuration and selection
 
 ## License
 
