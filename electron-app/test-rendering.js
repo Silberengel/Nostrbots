@@ -37,24 +37,23 @@ This is a *test* document.
 * Item 1
 * Item 2
 
-[source,javascript]
+[discrete]
+== Discrete Header
+
+This is a discrete header that doesn't create a section break.
+
 ----
 console.log("Hello World");
 ----
 `;
 
-    if (typeof Asciidoctor !== 'undefined') {
-        const asciidoctor = Asciidoctor();
-        const rendered = asciidoctor.convert(testContent, {
-            safe: 'safe',
-            backend: 'html5',
-            doctype: 'article'
-        });
+    if (typeof simpleAsciidocRenderer !== 'undefined') {
+        const rendered = simpleAsciidocRenderer(testContent);
         console.log('✅ Asciidoc rendering works');
         console.log('Rendered HTML:', rendered);
         return rendered;
     } else {
-        console.error('❌ Asciidoctor library not loaded');
+        console.error('❌ Simple Asciidoc renderer not loaded');
         return null;
     }
 }

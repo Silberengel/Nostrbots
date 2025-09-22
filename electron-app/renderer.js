@@ -308,19 +308,9 @@ async function renderContent(content, filePath) {
                 return `<div class="error">Markdown renderer not loaded</div>`;
             }
         } else if (extension === 'adoc' || extension === 'asciidoc') {
-            // Render Asciidoc using asciidoctor (loaded via script tag)
-            if (typeof Asciidoctor !== 'undefined') {
-                const asciidoctor = Asciidoctor();
-                return asciidoctor.convert(content, {
-                    safe: 'safe',
-                    backend: 'html5',
-                    doctype: 'article',
-                    attributes: {
-                        'showtitle': true,
-                        'icons': 'font',
-                        'source-highlighter': 'highlight.js'
-                    }
-                });
+            // Render Asciidoc using simple renderer
+            if (typeof simpleAsciidocRenderer !== 'undefined') {
+                return simpleAsciidocRenderer(content);
             } else {
                 return `<div class="error">Asciidoc renderer not loaded</div>`;
             }
