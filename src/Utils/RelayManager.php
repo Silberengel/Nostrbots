@@ -185,4 +185,151 @@ class RelayManager
 
         return $categories;
     }
+
+    /**
+     * Get relays for a specific operation type
+     * 
+     * @param string $operation 'read', 'write', or 'both'
+     * @return array Array of relay URLs
+     */
+    public function getRelays(string $operation = 'both'): array
+    {
+        $relays = $this->getRelayList('all');
+        
+        // For now, return all relays for all operations
+        // In the future, this could be enhanced to filter based on relay capabilities
+        return $this->testRelayList($relays);
+    }
+
+    /**
+     * Publish an event to relays with retry logic
+     * 
+     * @param \Swentel\Nostr\Event $event The event to publish
+     * @param array $relays Array of relay URLs
+     * @param int $minSuccessCount Minimum number of successful publications
+     * @return array Results of publication attempts
+     */
+    public function publishWithRetry(\Swentel\Nostr\Event $event, array $relays, int $minSuccessCount = 1): array
+    {
+        $results = [];
+        $successCount = 0;
+        $retryManager = RetryManager::forRelays();
+
+        foreach ($relays as $relayUrl) {
+            $results[$relayUrl] = $retryManager->execute(
+                function() use ($event, $relayUrl) {
+                    return $this->publishToRelay($event, $relayUrl);
+                },
+                "Publishing to {$relayUrl}"
+            );
+
+            if ($results[$relayUrl]) {
+                $successCount++;
+            }
+        }
+
+        if ($successCount < $minSuccessCount) {
+            throw new \RuntimeException(
+                "Failed to publish to minimum required relays. " .
+                "Required: {$minSuccessCount}, Successful: {$successCount}"
+            );
+        }
+
+        return $results;
+    }
+
+    /**
+     * Publish an event to a single relay
+     * 
+     * @param \Swentel\Nostr\Event $event The event to publish
+     * @param string $relayUrl The relay URL
+     * @return bool True if successful
+     */
+    private function publishToRelay(\Swentel\Nostr\Event $event, string $relayUrl): bool
+    {
+        try {
+            $relay = new Relay($relayUrl);
+            $relay->connect();
+            
+            $result = $relay->publish($event);
+            $relay->disconnect();
+            
+            if ($result) {
+                echo "✅ Published to {$relayUrl}" . PHP_EOL;
+                return true;
+            } else {
+                echo "❌ Failed to publish to {$relayUrl}" . PHP_EOL;
+                return false;
+            }
+        } catch (\Exception $e) {
+            echo "❌ Error publishing to {$relayUrl}: " . $e->getMessage() . PHP_EOL;
+            return false;
+        }
+    }
+
+    /**
+     * Query events from relays with retry logic
+     * 
+     * @param array $filters Array of filters to apply
+     * @param array $relays Array of relay URLs
+     * @return array Array of events
+     */
+    public function queryWithRetry(array $filters, array $relays): array
+    {
+        $allEvents = [];
+        $retryManager = RetryManager::forRelays();
+
+        foreach ($relays as $relayUrl) {
+            try {
+                $events = $retryManager->execute(
+                    function() use ($filters, $relayUrl) {
+                        return $this->queryFromRelay($filters, $relayUrl);
+                    },
+                    "Querying from {$relayUrl}"
+                );
+                
+                $allEvents = array_merge($allEvents, $events);
+            } catch (\Exception $e) {
+                echo "⚠️  Failed to query from {$relayUrl}: " . $e->getMessage() . PHP_EOL;
+            }
+        }
+
+        // Remove duplicates based on event ID
+        $uniqueEvents = [];
+        $seenIds = [];
+        
+        foreach ($allEvents as $event) {
+            $eventId = $event->getId();
+            if (!in_array($eventId, $seenIds)) {
+                $uniqueEvents[] = $event;
+                $seenIds[] = $eventId;
+            }
+        }
+
+        return $uniqueEvents;
+    }
+
+    /**
+     * Query events from a single relay
+     * 
+     * @param array $filters Array of filters to apply
+     * @param string $relayUrl The relay URL
+     * @return array Array of events
+     */
+    private function queryFromRelay(array $filters, string $relayUrl): array
+    {
+        try {
+            $relay = new Relay($relayUrl);
+            $relay->connect();
+            
+            $events = $relay->query($filters);
+            $relay->disconnect();
+            
+            echo "📥 Retrieved " . count($events) . " events from {$relayUrl}" . PHP_EOL;
+            return $events;
+        } catch (\Exception $e) {
+            echo "❌ Error querying from {$relayUrl}: " . $e->getMessage() . PHP_EOL;
+            throw $e;
+        }
+    }
 }

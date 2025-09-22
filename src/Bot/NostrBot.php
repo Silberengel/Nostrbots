@@ -5,6 +5,7 @@ namespace Nostrbots\Bot;
 use Nostrbots\EventKinds\EventKindRegistry;
 use Nostrbots\Utils\RelayManager;
 use Nostrbots\Utils\KeyManager;
+use Nostrbots\Utils\ValidationManager;
 use swentel\nostr\Sign\Sign;
 use swentel\nostr\Message\EventMessage;
 use swentel\nostr\Relay\Relay;
@@ -21,6 +22,7 @@ class NostrBot implements BotInterface
     private array $config = [];
     private RelayManager $relayManager;
     private KeyManager $keyManager;
+    private ValidationManager $validationManager;
 
     public function __construct()
     {
@@ -29,6 +31,7 @@ class NostrBot implements BotInterface
         
         $this->relayManager = new RelayManager();
         $this->keyManager = new KeyManager();
+        $this->validationManager = new ValidationManager($this->relayManager);
     }
 
     public function getName(): string
@@ -132,27 +135,26 @@ class NostrBot implements BotInterface
             // Sign the event
             $this->signEvent($event);
 
-            // Publish the event
+            // Publish the event with retry logic
             $relays = $this->getRelays();
+            $minSuccessCount = $this->config['min_relay_success'] ?? 1;
+            
+            echo "📡 Publishing to " . count($relays) . " relays (minimum {$minSuccessCount} required)..." . PHP_EOL;
+            
+            $publishResults = $this->relayManager->publishWithRetry($event, $relays, $minSuccessCount);
+            
             $publishedCount = 0;
-
-            foreach ($relays as $relayUrl) {
-                try {
-                    $success = $this->publishEvent($event, $relayUrl);
-                    if ($success) {
-                        $result->addPublishedEvent(
-                            $event->getId(),
-                            $event->getKind(),
-                            $relayUrl,
-                            ['title' => $this->config['title'] ?? 'Untitled']
-                        );
-                        $publishedCount++;
-                        echo "Published to {$relayUrl}" . PHP_EOL;
-                    } else {
-                        $result->addWarning("Failed to publish to {$relayUrl}");
-                    }
-                } catch (\Exception $e) {
-                    $result->addWarning("Error publishing to {$relayUrl}: " . $e->getMessage());
+            foreach ($publishResults as $relayUrl => $success) {
+                if ($success) {
+                    $result->addPublishedEvent(
+                        $event->getId(),
+                        $event->getKind(),
+                        $relayUrl,
+                        ['title' => $this->config['title'] ?? 'Untitled']
+                    );
+                    $publishedCount++;
+                } else {
+                    $result->addWarning("Failed to publish to {$relayUrl}");
                 }
             }
 
@@ -161,23 +163,41 @@ class NostrBot implements BotInterface
                 return $result->finalize();
             }
 
+            // Validate the published event if enabled
+            if ($this->config['validate_after_publish'] ?? true) {
+                echo "🔍 Validating published event..." . PHP_EOL;
+                $validationSuccess = $this->validationManager->validateEvent($event);
+                if (!$validationSuccess) {
+                    $result->addWarning("Event validation failed - event may not be properly propagated");
+                }
+            }
+
             // Handle post-processing (additional events)
             $additionalEvents = $handler->postProcess($event, $this->config);
             foreach ($additionalEvents as $additionalEvent) {
                 $this->signEvent($additionalEvent);
-                foreach ($relays as $relayUrl) {
-                    try {
-                        $success = $this->publishEvent($additionalEvent, $relayUrl);
-                        if ($success) {
-                            $result->addPublishedEvent(
-                                $additionalEvent->getId(),
-                                $additionalEvent->getKind(),
-                                $relayUrl,
-                                ['type' => 'additional_event']
-                            );
-                        }
-                    } catch (\Exception $e) {
-                        $result->addWarning("Error publishing additional event to {$relayUrl}: " . $e->getMessage());
+                
+                echo "📡 Publishing additional event (kind {$additionalEvent->getKind()})..." . PHP_EOL;
+                $additionalResults = $this->relayManager->publishWithRetry($additionalEvent, $relays, $minSuccessCount);
+                
+                foreach ($additionalResults as $relayUrl => $success) {
+                    if ($success) {
+                        $result->addPublishedEvent(
+                            $additionalEvent->getId(),
+                            $additionalEvent->getKind(),
+                            $relayUrl,
+                            ['type' => 'additional_event']
+                        );
+                    } else {
+                        $result->addWarning("Failed to publish additional event to {$relayUrl}");
+                    }
+                }
+                
+                // Validate additional events if enabled
+                if ($this->config['validate_after_publish'] ?? true) {
+                    $validationSuccess = $this->validationManager->validateEvent($additionalEvent);
+                    if (!$validationSuccess) {
+                        $result->addWarning("Additional event validation failed");
                     }
                 }
             }
@@ -243,24 +263,6 @@ class NostrBot implements BotInterface
         return $this->relayManager->getActiveRelays($relayConfig);
     }
 
-    /**
-     * Publish an event to a specific relay
-     */
-    private function publishEvent($event, string $relayUrl): bool
-    {
-        try {
-            $eventMessage = new EventMessage($event);
-            $relay = new Relay($relayUrl);
-            $relay->setMessage($eventMessage);
-            $result = $relay->send();
-            
-            // Consider it successful if we don't get an exception
-            // The relay library doesn't provide clear success/failure indication
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
 
     /**
      * Generate viewing links for the published event

@@ -15,6 +15,8 @@ require __DIR__ . '/src/bootstrap.php';
 
 use Nostrbots\Bot\NostrBot;
 use Nostrbots\EventKinds\EventKindRegistry;
+use Nostrbots\Utils\ErrorHandler;
+use Nostrbots\Utils\PerformanceManager;
 
 function showHelp(): void
 {
@@ -25,7 +27,8 @@ function showHelp(): void
     echo "  bot_folder    Name of the folder in botData/ containing bot configuration" . PHP_EOL . PHP_EOL;
     echo "Options:" . PHP_EOL;
     echo "  --dry-run     Validate configuration without publishing events" . PHP_EOL;
-    echo "  --verbose     Enable verbose output" . PHP_EOL;
+    echo "  --verbose     Enable verbose output and detailed error reporting" . PHP_EOL;
+    echo "  --profile     Enable performance profiling and memory monitoring" . PHP_EOL;
     echo "  --help        Show this help message" . PHP_EOL . PHP_EOL;
     echo "Supported Event Kinds:" . PHP_EOL;
     
@@ -56,37 +59,44 @@ function main(array $argv): int
     $botFolder = $argv[1];
     $dryRun = in_array('--dry-run', $argv);
     $verbose = in_array('--verbose', $argv);
-
-    // Validate bot folder
-    $botPath = __DIR__ . '/botData/' . $botFolder;
-    if (!is_dir($botPath)) {
-        echo "Error: Bot folder '{$botFolder}' not found in botData/" . PHP_EOL;
-        echo "Available bot folders:" . PHP_EOL;
-        
-        $botDataDir = __DIR__ . '/botData';
-        if (is_dir($botDataDir)) {
-            $folders = array_filter(scandir($botDataDir), function($item) use ($botDataDir) {
-                return $item !== '.' && $item !== '..' && is_dir($botDataDir . '/' . $item);
-            });
-            foreach ($folders as $folder) {
-                echo "  - {$folder}" . PHP_EOL;
-            }
-        }
-        return 1;
-    }
-
-    // Look for configuration file
-    $configFile = $botPath . '/config.yml';
-    if (!file_exists($configFile)) {
-        echo "Error: Configuration file 'config.yml' not found in {$botFolder}/" . PHP_EOL;
-        return 1;
-    }
-
-    echo "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
-    echo "🤖 Welcome to Nostrbots!" . PHP_EOL;
-    echo "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL . PHP_EOL;
-
+    $profile = in_array('--profile', $argv);
+    
+    // Initialize error handling and performance monitoring
+    $errorHandler = new ErrorHandler($verbose);
+    $performanceManager = new PerformanceManager($profile);
+    
     try {
+        $performanceManager->startTimer('bot_execution');
+
+        // Validate bot folder
+        $botPath = __DIR__ . '/botData/' . $botFolder;
+        if (!is_dir($botPath)) {
+            echo "Error: Bot folder '{$botFolder}' not found in botData/" . PHP_EOL;
+            echo "Available bot folders:" . PHP_EOL;
+            
+            $botDataDir = __DIR__ . '/botData';
+            if (is_dir($botDataDir)) {
+                $folders = array_filter(scandir($botDataDir), function($item) use ($botDataDir) {
+                    return $item !== '.' && $item !== '..' && is_dir($botDataDir . '/' . $item);
+                });
+                foreach ($folders as $folder) {
+                    echo "  - {$folder}" . PHP_EOL;
+                }
+            }
+            return 1;
+        }
+
+        // Look for configuration file
+        $configFile = $botPath . '/config.yml';
+        if (!file_exists($configFile)) {
+            echo "Error: Configuration file 'config.yml' not found in {$botFolder}/" . PHP_EOL;
+            return 1;
+        }
+
+        echo "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
+        echo "🤖 Welcome to Nostrbots!" . PHP_EOL;
+        echo "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL . PHP_EOL;
+
         // Create and configure bot
         $bot = new NostrBot();
         $bot->loadConfig($configFile);
@@ -173,13 +183,40 @@ function main(array $argv): int
         echo $result->isSuccess() ? "🎉 Bot execution completed successfully!" : "💥 Bot execution failed!";
         echo PHP_EOL . "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
 
+        // Performance monitoring
+        $performanceManager->endTimer('bot_execution');
+        if ($profile) {
+            echo PHP_EOL;
+            $performanceManager->printPerformanceReport();
+        }
+
+        // Error summary
+        if ($errorHandler->hasErrors() || $errorHandler->hasWarnings()) {
+            echo PHP_EOL;
+            $errorHandler->printErrorSummary();
+        }
+
         return $result->isSuccess() ? 0 : 1;
 
     } catch (\Exception $e) {
+        $errorHandler->addError("Fatal error: " . $e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
         echo "💥 Fatal error: " . $e->getMessage() . PHP_EOL;
         if ($verbose) {
             echo "Stack trace:" . PHP_EOL . $e->getTraceAsString() . PHP_EOL;
         }
+        
+        // Performance monitoring even on error
+        if ($profile) {
+            $performanceManager->endTimer('bot_execution');
+            echo PHP_EOL;
+            $performanceManager->printPerformanceReport();
+        }
+        
         return 1;
     }
 }
