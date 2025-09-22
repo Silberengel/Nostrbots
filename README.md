@@ -388,24 +388,6 @@ php nostrbots.php myBot --dry-run
 php -r "require 'src/bootstrap.php'; $rm = new Nostrbots\Utils\RelayManager(); var_dump($rm->testRelay('wss://thecitadel.nostr1.com'));"
 ```
 
-## Migration from v1
-
-The v2 architecture is completely rewritten. To migrate:
-
-1. Update your bot configurations to the new YAML format
-2. Move content to separate files (recommended)
-3. Update your command-line calls to use `nostrbots.php`
-4. Regenerate keys using the new key generator if needed
-
-## Contributing
-
-Contributions are welcome! Please:
-
-1. Follow PSR-4 autoloading standards
-2. Add tests for new event kinds
-3. Update documentation
-4. Ensure backward compatibility where possible
-
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
