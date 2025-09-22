@@ -1,0 +1,15 @@
+= The Complete and Comprehensive Technical Documentation for Advanced Software Engineering Practices
+
+This is a very detailed technical guide with an extremely long title.
+
+== Chapter One With A Very Long Title That Should Be Trimmed
+
+This chapter has a very long title to test the trimming functionality.
+
+=== Section One With An Even Longer Title That Definitely Needs Trimming
+
+This section has an even longer title.
+
+==== Subsection With Maximum Length Title That Will Test All Limits
+
+This is the content that should get the -content suffix.

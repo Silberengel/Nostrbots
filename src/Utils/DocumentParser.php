@@ -226,7 +226,7 @@ class DocumentParser
     }
 
     /**
-     * Generate hierarchical d-tags for all sections
+     * Generate hierarchical d-tags for all sections with global uniqueness
      */
     private function generateHierarchicalSlugs(): void
     {
@@ -237,10 +237,10 @@ class DocumentParser
             $level = $section['level'];
             $basicSlug = $this->generateSlug($section['title']);
             
-            // Build hierarchical slug by combining with parent slugs
-            $hierarchicalParts = [];
+            // Build hierarchical slug starting with document base for global uniqueness
+            $hierarchicalParts = [$this->baseSlug]; // Always start with document slug
             
-            // Add all parent slugs up to current level
+            // Add parent slugs up to current level (trimmed for length)
             for ($i = 1; $i < $level; $i++) {
                 if (isset($parentStack[$i])) {
                     $hierarchicalParts[] = $parentStack[$i];
@@ -250,8 +250,13 @@ class DocumentParser
             // Add current section slug
             $hierarchicalParts[] = $basicSlug;
             
-            // Create full hierarchical slug
-            $section['slug'] = implode('-', $hierarchicalParts);
+            // Create full hierarchical slug with length management
+            $section['slug'] = $this->createManagedSlug($hierarchicalParts, false);
+            
+            // For content sections (at content level), add '-content' suffix
+            if ($level === $this->contentLevel) {
+                $section['content_slug'] = $this->createManagedSlug($hierarchicalParts, true);
+            }
             
             // Update parent stack for this level and clear deeper levels
             $parentStack[$level] = $basicSlug;
@@ -259,15 +264,110 @@ class DocumentParser
                 unset($parentStack[$i]);
             }
             
-            // Set parent reference
-            if ($level > 1 && isset($parentStack[$level - 1])) {
+            // Set parent reference (always includes document base for uniqueness)
+            if ($level > 1) {
                 // Build parent slug from all parts except the current one
                 $parentParts = array_slice($hierarchicalParts, 0, -1);
-                $section['parent_slug'] = empty($parentParts) ? $this->baseSlug : implode('-', $parentParts);
+                $section['parent_slug'] = $this->createManagedSlug($parentParts, false);
             } else {
                 $section['parent_slug'] = $this->baseSlug;
             }
         }
+    }
+
+    /**
+     * Create a managed slug with length limits and optional content suffix
+     */
+    private function createManagedSlug(array $parts, bool $isContent): string
+    {
+        $maxLength = 70; // Maximum d-tag length
+        $contentSuffix = $isContent ? '-content' : '';
+        $suffixLength = strlen($contentSuffix);
+        $availableLength = $maxLength - $suffixLength;
+        
+        // Try full slug first
+        $fullSlug = implode('-', $parts);
+        if (strlen($fullSlug) <= $availableLength) {
+            return $fullSlug . $contentSuffix;
+        }
+        
+        // Need to trim parts to fit
+        $trimmedParts = $this->trimPartsToFit($parts, $availableLength);
+        return implode('-', $trimmedParts) . $contentSuffix;
+    }
+
+    /**
+     * Trim slug parts to fit within length limit while preserving meaning
+     */
+    private function trimPartsToFit(array $parts, int $maxLength): array
+    {
+        $partCount = count($parts);
+        if ($partCount === 0) return $parts;
+        
+        // Calculate maximum length per part (with hyphens)
+        $maxPerPart = max(3, floor(($maxLength - ($partCount - 1)) / $partCount));
+        
+        $trimmedParts = [];
+        foreach ($parts as $index => $part) {
+            if ($index === 0 || $index === count($parts) - 1) {
+                // Keep document name and final section more intact
+                $trimmedParts[] = $this->trimPart($part, min(strlen($part), $maxPerPart + 5));
+            } else {
+                // Trim middle parts more aggressively
+                $trimmedParts[] = $this->trimPart($part, min(strlen($part), $maxPerPart));
+            }
+        }
+        
+        // Final check and adjustment if still too long
+        $result = implode('-', $trimmedParts);
+        if (strlen($result) > $maxLength) {
+            // More aggressive trimming needed
+            $trimmedParts = array_map(function($part, $index) use ($partCount) {
+                if ($index === 0) return substr($part, 0, 12); // Document name
+                if ($index === $partCount - 1) return substr($part, 0, 10); // Final section
+                return substr($part, 0, 6); // Middle parts
+            }, $trimmedParts, array_keys($trimmedParts));
+            
+            // Final safety check
+            $result = implode('-', $trimmedParts);
+            if (strlen($result) > $maxLength) {
+                // Emergency truncation
+                $result = substr($result, 0, $maxLength);
+                // Try to end at a word boundary
+                $lastDash = strrpos($result, '-');
+                if ($lastDash !== false && $lastDash > $maxLength * 0.8) {
+                    $result = substr($result, 0, $lastDash);
+                }
+            }
+            return explode('-', $result);
+        }
+        
+        return $trimmedParts;
+    }
+
+    /**
+     * Trim a single part while preserving readability
+     */
+    private function trimPart(string $part, int $maxLength): string
+    {
+        if (strlen($part) <= $maxLength) {
+            return $part;
+        }
+        
+        // Try to break at word boundaries or meaningful points
+        if ($maxLength >= 6) {
+            // Look for natural break points
+            $breakPoints = ['-', '_'];
+            foreach ($breakPoints as $breakPoint) {
+                $pos = strrpos(substr($part, 0, $maxLength), $breakPoint);
+                if ($pos !== false && $pos >= 3) {
+                    return substr($part, 0, $pos);
+                }
+            }
+        }
+        
+        // Simple truncation as fallback
+        return substr($part, 0, $maxLength);
     }
 
     /**
@@ -333,7 +433,7 @@ class DocumentParser
      */
     private function generatePreambleConfig(string $outputDir): string
     {
-        $slug = $this->baseSlug . '-preamble';
+        $slug = $this->baseSlug . '-preamble-content'; // Always add -content for actual content
         $configPath = $outputDir . '/' . $slug . '-config.yml';
         $contentPath = $outputDir . '/' . $slug . '-content.' . ($this->format === 'asciidoc' ? 'adoc' : 'md');
 
@@ -384,7 +484,7 @@ class DocumentParser
             $contentReferences[] = [
                 'kind' => $this->contentKind,
                 'pubkey' => 'npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6',
-                'd_tag' => $this->baseSlug . '-preamble',
+                'd_tag' => $this->baseSlug . '-preamble-content',
                 'relay' => 'wss://thecitadel.nostr1.com',
                 'order' => $order++
             ];
@@ -395,10 +495,14 @@ class DocumentParser
         foreach ($this->sections as $section) {
             if ($section['level'] === $topLevel) {
                 $kind = ($section['level'] === $this->contentLevel) ? $this->contentKind : 30040;
+                // Use content_slug for content sections, regular slug for indices
+                $dTag = ($section['level'] === $this->contentLevel && isset($section['content_slug'])) 
+                    ? $section['content_slug'] 
+                    : $section['slug'];
                 $contentReferences[] = [
                     'kind' => $kind,
                     'pubkey' => 'npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6',
-                    'd_tag' => $section['slug'],
+                    'd_tag' => $dTag,
                     'relay' => 'wss://thecitadel.nostr1.com',
                     'order' => $order++
                 ];
@@ -439,8 +543,10 @@ class DocumentParser
      */
     private function generateContentSection(array $section, string $outputDir): string
     {
-        $configPath = $outputDir . '/' . $section['slug'] . '-config.yml';
-        $contentPath = $outputDir . '/' . $section['slug'] . '-content.' . ($this->format === 'asciidoc' ? 'adoc' : 'md');
+        // Use content_slug for actual content sections (includes -content suffix)
+        $slug = $section['content_slug'] ?? $section['slug'] . '-content';
+        $configPath = $outputDir . '/' . $slug . '-config.yml';
+        $contentPath = $outputDir . '/' . $slug . '-content.' . ($this->format === 'asciidoc' ? 'adoc' : 'md');
 
         // Write content file
         file_put_contents($contentPath, $section['content']);
@@ -457,7 +563,7 @@ class DocumentParser
             'title' => $section['title'],
             'summary' => 'Content section: ' . $section['title'],
             'static_d_tag' => true,
-            'd-tag' => $section['slug'],
+            'd-tag' => $slug,
             'content_files' => [
                 ($this->format === 'asciidoc' ? 'asciidoc' : 'markdown') => $contentPath
             ],
@@ -492,10 +598,14 @@ class DocumentParser
                 $isChild = $this->isDirectChild($section, $childSection);
                 if ($isChild) {
                     $kind = ($childSection['level'] === $this->contentLevel) ? $this->contentKind : 30040;
+                    // Use content_slug for content sections, regular slug for indices
+                    $dTag = ($childSection['level'] === $this->contentLevel && isset($childSection['content_slug'])) 
+                        ? $childSection['content_slug'] 
+                        : $childSection['slug'];
                     $contentReferences[] = [
                         'kind' => $kind,
                         'pubkey' => 'npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6',
-                        'd_tag' => $childSection['slug'],
+                        'd_tag' => $dTag,
                         'relay' => 'wss://thecitadel.nostr1.com',
                         'order' => $order++
                     ];
