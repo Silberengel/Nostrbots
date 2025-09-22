@@ -1,13 +1,11 @@
----
-
-# You can edit this list, 
-# to get different collections of relays for different use cases.
+# Relay Configuration for Nostrbots
+# You can edit this list to create different collections of relays for different use cases.
 
 favorite-relays:
   - wss://thecitadel.nostr1.com
-  - ws://localhost:8080
   - wss://theforest.nostr1.com
   - wss://christpill.nostr1.com
+
 more-relays:
   - wss://hotrightnow.nostr1.com
   - wss://nostr.sovbit.host
@@ -17,4 +15,6 @@ more-relays:
   - wss://nostr21.com
   - wss://wheat.happytavern.co
   - wss://nostrelites.org
-  - wss://elites.nostrati.org
+
+test-relays:
+  - ws://localhost:8080

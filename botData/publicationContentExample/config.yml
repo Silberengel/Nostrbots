@@ -1,0 +1,52 @@
+# Publication Content Bot Configuration (kind 30041)
+# This bot creates publication content sections (chapters, episodes, etc.)
+
+bot_name: "Publication Content Bot"
+bot_description: "Creates publication content sections for curated publications"
+
+# Event kind (30041 for publication content)
+event_kind: 30041
+
+# Nostr identity configuration
+npub:
+  environment_variable: "NOSTR_BOT_KEY1"
+  public_key: "npub1r0r9c7upagp9s5vmxqkcjymj4mqwqw2g8m029j7pgthr2u2yl5dsn9a3r6"
+
+# Relay configuration
+relays: "favorite-relays"
+
+# Section metadata (required)
+title: "Chapter 1: Introduction to Nostr"
+
+# Optional metadata
+summary: "An introduction to the Nostr protocol and its core concepts"
+image: "https://i.nostr.build/chapter1-intro.jpg"
+topics: ["nostr", "introduction", "basics"]
+
+# Content files to load
+content_files:
+  content: "botData/publicationContentExample/chapter1.md"
+
+# Optional: Wikilinks for terms in the content
+wikilinks:
+  - term: "relay"
+    definition: "A server that stores and forwards Nostr messages"
+    relay: "wss://thecitadel.nostr1.com"
+    reference: ""
+  - term: "npub"
+    definition: "Public key in bech32 format used as Nostr identity"
+    relay: "wss://thecitadel.nostr1.com"
+    reference: ""
+  - term: "NIP"
+    definition: "Nostr Implementation Possibility - protocol extensions"
+    relay: "wss://thecitadel.nostr1.com"
+    reference: ""
+
+# Custom d-tag (will be auto-generated if not provided)
+d-tag: "nostr-guide-introduction"
+
+# Custom tags
+custom_tags:
+  - ["client", "nostrbots"]
+  - ["lang", "en"]
+  - ["part", "1"]

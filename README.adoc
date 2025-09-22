@@ -9,23 +9,17 @@ THIS REPO IS NOT YET RELEASED! WORK IN PROGRESS.
 
 == About
 
-This is a Nostr microapp that allows you to publish `kind 30023` *long-form notes*, with or without an associated `kind 1111` *comment* or `kind 01` *notification*. It also helps you to run *bots* from a https://www.jenkins.io/[Jenkins] automation server, that publishes those notes, according to a schedule or other trigger.
+This is a Nostr microapp that allows you to publish `kind 30023` *long-form markdown notes* or `kind 30041` *long-form Asciidoc notes*. It also helps you to run *bots* from a https://www.jenkins.io/[Jenkins] automation server, that publishes those notes, according to a schedule or other trigger.
 
-.Nostrbot use case diagram
-image::https://raw.githubusercontent.com/ShadowySupercode/gitcitadel/refs/heads/master/plantUML/Nostrbots/Nostrbots%20Use%20Case.png[Nostrbots Use Case, 500]
+You are given the option to add an update of a 30040 index note that is to contain the 30023 or 30041 note, so that you can update online magazines or blogs.
 
-You could, for instance, have a *release bot* that sends out a notification of a new software release, when that build passes. Or you could have a *test failed bot*, that warns you on Nostr, if an automated test fails.
-
-Other possible applications are newsletters, software testing, relay/server testing, or preparing articles in advance and then sending them off at some later time.
+Some possible applications are newsletters, release notes,software testing, relay/server testing, or preparing articles in advance and then sending them off at some later time.
 
 === Features
 
-* [x] setup npub login
-* [x] setup article bot
-** [ ] add article notifications
-** [ ] add article comments
-* [ ] setup comment bot
-* [ ] setup notification bot
+* [ ] setup npub login
+* [ ] setup article bot
+* [ ] add index event replacement
 
 == Setup
 
@@ -33,9 +27,8 @@ This repository contains an example bot (located in the `/botData/anExampleBot` 
 
 AnExampleBot:
 
-1. publishes an article to the public OtherStuff relay https://thecitadel.nostr1.com[wss://thecitadel.nostr1.com], and then 
-2. publishes a comment or notification with the `naddr` for the article embedded (if so selected), and then 
-3. prints out hyperlinks, to view both events on https://njump.me/[Njump].
+1. publishes an article to the public OtherStuff relay https://thecitadel.nostr1.com[wss://thecitadel.nostr1.com] 
+2. prints out hyperlinks, to view both events on https://njump.me/[Njump].
 
 === Command-line instructions
 
@@ -93,10 +86,3 @@ These will usually function like simple cron jobs, so set the `build periodicall
 
 .build trigger
 image::https://i.nostr.build/lfSR00ng8qTZs2WA.png[trigger, 500]
-
-== Documentation
-
-If you are interested in how it works, under the hood, I have some technical documentation.
-
-.class diagram
-image::https://raw.githubusercontent.com/ShadowySupercode/gitcitadel/refs/heads/master/plantUML/Nostrbots/Nostrbots%20Class%20Diagram.png[class diagram, 500]

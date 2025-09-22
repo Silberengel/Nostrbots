@@ -6,9 +6,10 @@
         "bitwasp/bech32": "^0.0.1",
         "phrity/websocket": "^3.0",
         "simplito/elliptic-php": "^1.0",
-        "uma/phpecc": "^0.1.3",
+        "mdanter/ecc": "^1.0",
         "swentel/nostr-php": "^1.4.1",
-        "textalk/websocket": "^1.5"
+        "textalk/websocket": "^1.5",
+        "symfony/yaml": "^7.3"
   
     },
     "require-dev": {
