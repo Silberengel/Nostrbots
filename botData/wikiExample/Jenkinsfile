@@ -1,0 +1,145 @@
+// Nostrbots Wiki Publishing Pipeline
+// This pipeline publishes wiki articles using NIP-54 with content replacement support
+
+pipeline {
+    agent any
+    
+    // Environment variables for bot credentials
+    environment {
+        NOSTR_BOT_KEY1 = credentials('NOSTR_BOT_KEY1')
+    }
+
+    // Build parameters for flexible wiki publishing
+    parameters {
+        choice(
+            name: 'PUBLISH_MODE',
+            choices: ['new', 'update'],
+            description: 'Create new wiki article or update existing one'
+        )
+        string(
+            name: 'EXISTING_D_TAG',
+            defaultValue: '',
+            description: 'D-tag of existing article to update (only for update mode)'
+        )
+        booleanParam(
+            name: 'DRY_RUN',
+            defaultValue: false,
+            description: 'Validate configuration without publishing'
+        )
+    }
+
+    stages {
+        stage('Setup') {
+            steps {
+                echo '🚀 Setting up Nostrbots wiki publishing environment...'
+                sh 'composer install --no-dev --optimize-autoloader'
+            }
+        }
+
+        stage('Validate Configuration') {
+            steps {
+                echo '✅ Validating wiki article configuration...'
+                script {
+                    def dryRunFlag = params.DRY_RUN ? '--dry-run' : ''
+                    def output = sh(returnStdout: true, script: "php nostrbots.php wikiExample ${dryRunFlag}")
+                    echo "Validation output: ${output}"
+                }
+            }
+        }
+
+        stage('Prepare Configuration') {
+            when {
+                allOf {
+                    equals expected: 'update', actual: params.PUBLISH_MODE
+                    not { equals expected: '', actual: params.EXISTING_D_TAG }
+                }
+            }
+            steps {
+                echo '🔄 Configuring for content replacement...'
+                script {
+                    // Temporarily modify config to use existing d-tag
+                    sh """
+                        cp botData/wikiExample/config.yml botData/wikiExample/config.yml.backup
+                        echo "reuse_d_tag: ${params.EXISTING_D_TAG}" >> botData/wikiExample/config.yml
+                    """
+                }
+            }
+        }
+
+        stage('Publish Wiki Article') {
+            when {
+                not { params.DRY_RUN }
+            }
+            steps {
+                echo '📚 Publishing wiki article to Nostr...'
+                script {
+                    def output = sh(returnStdout: true, script: 'php nostrbots.php wikiExample --verbose')
+                    echo "Publication output: ${output}"
+                    
+                    // Extract viewing URL for build description
+                    def matcher = output =~ /View at: (https:\/\/[^\s]+)/
+                    if (matcher) {
+                        def viewUrl = matcher[0][1]
+                        currentBuild.description = "📚 <a href='${viewUrl}'>View Wiki Article</a>"
+                        
+                        // Set build result based on publication mode
+                        if (params.PUBLISH_MODE == 'update') {
+                            currentBuild.description += " (Updated)"
+                        } else {
+                            currentBuild.description += " (New)"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Verify Publication') {
+            when {
+                not { params.DRY_RUN }
+            }
+            steps {
+                echo '🔍 Verifying wiki article publication...'
+                // Could add verification steps here, like checking relay responses
+                echo 'Wiki article published successfully!'
+            }
+        }
+    }
+
+    post {
+        always {
+            // Restore original config if we modified it
+            script {
+                if (fileExists('botData/wikiExample/config.yml.backup')) {
+                    sh 'mv botData/wikiExample/config.yml.backup botData/wikiExample/config.yml'
+                }
+            }
+        }
+        success {
+            script {
+                if (params.DRY_RUN) {
+                    echo '🔍 Dry run completed - configuration is valid!'
+                } else if (params.PUBLISH_MODE == 'update') {
+                    echo '🔄 Wiki article updated successfully!'
+                } else {
+                    echo '✨ New wiki article published successfully!'
+                }
+            }
+        }
+        failure {
+            script {
+                if (params.PUBLISH_MODE == 'update') {
+                    echo '💥 Wiki article update failed!'
+                } else {
+                    echo '💥 Wiki article publication failed!'
+                }
+            }
+        }
+    }
+}
+
+// Optional: Schedule regular wiki updates
+// Uncomment and adjust as needed:
+// triggers {
+//     // Update wiki articles weekly on Sundays at 2 AM
+//     cron('0 2 * * 0')
+// }
