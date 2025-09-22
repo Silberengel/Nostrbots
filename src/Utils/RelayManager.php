@@ -24,31 +24,37 @@ class RelayManager
      * Get active relays based on configuration
      * 
      * @param string|array $relayConfig Relay configuration (category name, URL, or array)
+     * @param string $fallbackType 'production' or 'test' to determine fallback relay
      * @return array Array of working relay URLs
      */
-    public function getActiveRelays(string|array $relayConfig): array
+    public function getActiveRelays(string|array $relayConfig, string $fallbackType = 'production'): array
     {
         if (is_array($relayConfig)) {
-            return $this->testRelayList($relayConfig);
+            return $this->testRelayList($relayConfig, $fallbackType);
         }
 
         if (str_starts_with($relayConfig, 'wss://') || str_starts_with($relayConfig, 'ws://')) {
             // Single relay URL
-            return $this->testRelayList([$relayConfig]);
+            return $this->testRelayList([$relayConfig], $fallbackType);
         }
 
-        // Relay category or 'all'
+        // Relay category - determine fallback type based on category
+        $categoryFallbackType = $fallbackType;
+        if ($relayConfig === 'test' || $relayConfig === 'test-relays') {
+            $categoryFallbackType = 'test';
+        }
+        
         $relays = $this->getRelayList($relayConfig);
-        return $this->testRelayList($relays);
+        return $this->testRelayList($relays, $categoryFallbackType);
     }
 
     /**
      * Get relay list from configuration file
      * 
-     * @param string $category Category name or 'all' for all relays
+     * @param string $category Category name, 'all' for all relays, or 'default' for default-relays
      * @return array Array of relay URLs
      */
-    public function getRelayList(string $category = 'all'): array
+    public function getRelayList(string $category = 'default'): array
     {
         if (!file_exists(self::RELAY_CONFIG_FILE)) {
             echo "Relay configuration file not found, using default relay" . PHP_EOL;
@@ -67,6 +73,7 @@ class RelayManager
             return [self::DEFAULT_RELAY];
         }
 
+        // Handle special categories
         if ($category === 'all') {
             // Flatten all relay categories
             $allRelays = [];
@@ -78,21 +85,41 @@ class RelayManager
             return array_unique($allRelays);
         }
 
+        if ($category === 'default') {
+            // Use default-relays section
+            if (isset($relays['default-relays']) && is_array($relays['default-relays'])) {
+                return $relays['default-relays'];
+            }
+            echo "default-relays section not found, using fallback relay" . PHP_EOL;
+            return [self::DEFAULT_RELAY];
+        }
+
+        if ($category === 'test') {
+            // Use test-relays section
+            if (isset($relays['test-relays']) && is_array($relays['test-relays'])) {
+                return $relays['test-relays'];
+            }
+            echo "test-relays section not found, using test fallback relay" . PHP_EOL;
+            return [self::TEST_FALLBACK_RELAY];
+        }
+
+        // Handle legacy category names for backward compatibility
         if (isset($relays[$category]) && is_array($relays[$category])) {
             return $relays[$category];
         }
 
-        echo "Relay category '{$category}' not found, using all relays" . PHP_EOL;
-        return $this->getRelayList('all');
+        echo "Relay category '{$category}' not found, using default relays" . PHP_EOL;
+        return $this->getRelayList('default');
     }
 
     /**
      * Test a list of relays and return only the working ones
      * 
      * @param array $relays Array of relay URLs to test
+     * @param string $fallbackType 'production' or 'test' to determine fallback relay
      * @return array Array of working relay URLs
      */
-    public function testRelayList(array $relays): array
+    public function testRelayList(array $relays, string $fallbackType = 'production'): array
     {
         $workingRelays = [];
 
@@ -103,19 +130,16 @@ class RelayManager
         }
 
         if (empty($workingRelays)) {
-            echo "No working relays found, trying fallback relays..." . PHP_EOL;
+            echo "No working relays found, trying fallback relay..." . PHP_EOL;
             
-            // Try default relay first
-            if ($this->testRelay(self::DEFAULT_RELAY)) {
-                $workingRelays[] = self::DEFAULT_RELAY;
-                echo "Using default relay: " . self::DEFAULT_RELAY . PHP_EOL;
-            } 
-            // Try test fallback relay
-            elseif ($this->testRelay(self::TEST_FALLBACK_RELAY)) {
-                $workingRelays[] = self::TEST_FALLBACK_RELAY;
-                echo "Using test fallback relay: " . self::TEST_FALLBACK_RELAY . PHP_EOL;
+            $fallbackRelay = ($fallbackType === 'test') ? self::TEST_FALLBACK_RELAY : self::DEFAULT_RELAY;
+            $fallbackName = ($fallbackType === 'test') ? 'test fallback' : 'production fallback';
+            
+            if ($this->testRelay($fallbackRelay)) {
+                $workingRelays[] = $fallbackRelay;
+                echo "Using {$fallbackName} relay: " . $fallbackRelay . PHP_EOL;
             } else {
-                throw new \RuntimeException("No working relays found, including fallback relays. Cannot continue.");
+                throw new \RuntimeException("No working relays found, including {$fallbackName} relay. Cannot continue.");
             }
         }
 
@@ -207,11 +231,11 @@ class RelayManager
             return $this->getTestRelays();
         }
         
-        $relays = $this->getRelayList('all');
+        $relays = $this->getRelayList('default');
         
-        // For now, return all relays for all operations
+        // For now, return default relays for all operations
         // In the future, this could be enhanced to filter based on relay capabilities
-        return $this->testRelayList($relays);
+        return $this->testRelayList($relays, 'production');
     }
 
     /**
@@ -221,8 +245,8 @@ class RelayManager
      */
     public function getTestRelays(): array
     {
-        $testRelays = $this->getRelayList('test-relays');
-        return $this->testRelayList($testRelays);
+        $testRelays = $this->getRelayList('test');
+        return $this->testRelayList($testRelays, 'test');
     }
 
     /**

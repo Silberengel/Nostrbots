@@ -107,7 +107,7 @@ class NostrBot implements BotInterface
         return $errors;
     }
 
-    public function run(): BotResult
+    public function run(bool $dryRun = false): BotResult
     {
         $result = new BotResult();
 
@@ -132,7 +132,14 @@ class NostrBot implements BotInterface
             // Create the main event
             $event = $handler->createEvent($this->config, $this->config['content'] ?? []);
 
-            // Sign the event
+            // Handle dry run vs actual publishing
+            if ($dryRun) {
+                echo "🔍 Dry run mode - configuration is valid, no events will be published" . PHP_EOL;
+                $result->setSuccess(true);
+                return $result->finalize();
+            }
+
+            // Sign the event (only for actual publishing)
             $this->signEvent($event);
 
             // Publish the event with retry logic
@@ -264,8 +271,8 @@ class NostrBot implements BotInterface
             return $this->relayManager->getTestRelays();
         }
         
-        $relayConfig = $this->config['relays'] ?? 'all';
-        return $this->relayManager->getActiveRelays($relayConfig);
+        $relayConfig = $this->config['relays'] ?? 'default';
+        return $this->relayManager->getActiveRelays($relayConfig, 'production');
     }
 
 

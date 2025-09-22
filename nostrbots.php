@@ -130,13 +130,8 @@ function main(array $argv): int
 
         echo "✅ Configuration validation passed" . PHP_EOL . PHP_EOL;
 
-        if ($dryRun) {
-            echo "🔍 Dry run mode - configuration is valid, no events will be published" . PHP_EOL;
-            return 0;
-        }
-
         // Run the bot
-        $result = $bot->run();
+        $result = $bot->run($dryRun);
 
         // Display results
         echo PHP_EOL . "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;

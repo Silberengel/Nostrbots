@@ -1,22 +1,8 @@
 # Relay Configuration for Nostrbots
-# You can edit this list to create different collections of relays for different use cases.
 
-favorite-relays:
+default-relays:
   - wss://thecitadel.nostr1.com
-  - wss://theforest.nostr1.com
-  - wss://christpill.nostr1.com
-  - ws://localhost:7777
-
-more-relays:
-  - wss://hotrightnow.nostr1.com
-  - wss://nostr.sovbit.host
-  - wss://nostr.land
-  - wss://nostr.wine
-  - wss://greensoul.space
-  - wss://nostr21.com
-  - wss://wheat.happytavern.co
-  - wss://nostrelites.org
+  - wss://freelay.sovbit.host
 
 test-relays:
-  - wss://freelay.sovbit.host
   - ws://localhost:7777
