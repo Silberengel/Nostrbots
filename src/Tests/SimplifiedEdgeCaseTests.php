@@ -116,7 +116,7 @@ This should fail.';
             $result = $this->parseDocumentWithTempFile($content, 3, '30041');
             throw new \Exception("Should have thrown exception for multiple document headers");
         } catch (\Exception $e) {
-            if (strpos($e->getMessage(), 'multiple document headers') !== false) {
+            if (strpos($e->getMessage(), 'H1 headers') !== false) {
                 echo "  ✅ Correctly caught multiple document headers" . PHP_EOL . PHP_EOL;
             } else {
                 throw new \Exception("Wrong error message: " . $e->getMessage());
@@ -138,7 +138,7 @@ Chapter content.';
             $result = $this->parseDocumentWithTempFile($content, 3, '30041');
             throw new \Exception("Should have thrown exception for missing document title");
         } catch (\Exception $e) {
-            if (strpos($e->getMessage(), 'exactly one document title') !== false) {
+            if (strpos($e->getMessage(), 'before the H1 header') !== false) {
                 echo "  ✅ Correctly caught missing document title" . PHP_EOL . PHP_EOL;
             } else {
                 throw new \Exception("Wrong error message: " . $e->getMessage());

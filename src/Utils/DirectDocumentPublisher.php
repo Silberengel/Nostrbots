@@ -190,9 +190,20 @@ class DirectDocumentPublisher
                 'd_tag' => $section['d_tag']
             ];
         } else {
+            // Get the actual error messages from the bot result
+            $errors = $result->getErrors();
+            $errorMessage = 'Failed to publish event';
+            if (!empty($errors)) {
+                $errorMessages = [];
+                foreach ($errors as $error) {
+                    $errorMessages[] = $error['message'];
+                }
+                $errorMessage = implode('; ', $errorMessages);
+            }
+            
             return [
                 'success' => false,
-                'error' => 'Failed to publish event'
+                'error' => $errorMessage
             ];
         }
     }
@@ -212,12 +223,20 @@ class DirectDocumentPublisher
      */
     private function buildEventConfig(array $section, array $metadata, array $publishedEventIds, string $relayConfig = ''): array
     {
+        // Handle relay configuration properly - convert comma-separated string back to array if needed
+        $relayConfig = $this->currentRelayConfig ?: 'favorite-relays';
+        if ($this->isRelayUrl($relayConfig)) {
+            // If it's a comma-separated string of URLs, convert to array
+            $relayConfig = array_map('trim', explode(',', $relayConfig));
+            $relayConfig = array_filter($relayConfig, function($url) { return !empty(trim($url)); });
+        }
+        
         $config = [
             'bot_name' => 'Direct Document Publisher',
             'bot_description' => 'Published from document: ' . $section['title'],
             'event_kind' => $section['event_kind'],
             'environment_variable' => 'NOSTR_BOT_KEY',
-            'relays' => $this->currentRelayConfig ?: 'favorite-relays', // Use stored relay config
+            'relays' => $relayConfig, // Use properly formatted relay config
             'title' => $section['title'],
             'auto_update' => $metadata['auto_update'] ?? true,
             'summary' => $metadata['summary'] ?? '',
@@ -227,6 +246,16 @@ class DirectDocumentPublisher
             'd-tag' => $section['d_tag'],
             'validate_after_publish' => true
         ];
+        
+        // Add author metadata if present
+        if (isset($metadata['author'])) {
+            $config['author'] = $metadata['author'];
+        }
+        
+        // Add publication date metadata if present
+        if (isset($metadata['publication_date'])) {
+            $config['publication_date'] = $metadata['publication_date'];
+        }
         
         // Add content references for index events (30040) with relay hints
         if ($section['event_kind'] === 30040 && isset($section['content_references'])) {

@@ -55,16 +55,34 @@ EOF
 composer install
 ```
 
-### 3. Generate Key
+### 3. Generate Nostr Key
+
+Generate a new Nostr key pair for the bot:
 
 ```bash
-php manage-keys.php generate
+# Generate key and show full instructions
+php generate-key.php
+
+# Generate key and get just the export command
+php generate-key.php --export
+
+# Generate key quietly (for scripts)
+php generate-key.php --quiet
 ```
 
 ### 4. Set Environment Variable
 
+The key generator will provide you with the exact export command. For example:
+
 ```bash
-export NOSTR_BOT_KEY=your_hex_private_key_here
+export NOSTR_BOT_KEY=93cb7676d74e0377aa0bb0133830de5d635198212e5d5f607829da2dce6bccb1
+```
+
+Or you can run the export command directly:
+
+```bash
+# Copy the output from generate-key.php --export
+$(php generate-key.php --export)
 ```
 
 ### 5. Publish
@@ -332,6 +350,36 @@ php src/Tests/DirectDocumentPublisherTest.php
 # Test document parsing
 php nostrbots.php publish examples/simple-guide.adoc --dry-run --verbose
 ```
+
+## Utilities
+
+### Key Generator (`generate-key.php`)
+
+The key generator script helps you create new Nostr key pairs for the bot:
+
+```bash
+# Show help
+php generate-key.php --help
+
+# Generate key with full instructions
+php generate-key.php
+
+# Generate key for specific slot
+php generate-key.php --slot 1
+
+# Get just the export command
+php generate-key.php --export
+
+# Quiet mode for scripts
+php generate-key.php --quiet
+```
+
+**Features:**
+- Generates cryptographically secure Nostr key pairs
+- Supports multiple key slots (NOSTR_BOT_KEY1 through NOSTR_BOT_KEY10)
+- Provides both hex and bech32 formats
+- Includes setup instructions and shell profile integration
+- Safe for automation with `--quiet` mode
 
 ## Development
 

@@ -20,6 +20,7 @@ class DocumentParser
     private string $documentTitle = '';
     private string $baseSlug = '';
     private string $relays = '';
+    private array $metadataLines = [];
 
     /**
      * Parse a document and return hierarchical structure for direct publishing
@@ -110,6 +111,7 @@ class DocumentParser
         $this->preamble = null;
         $this->documentTitle = '';
         $this->baseSlug = '';
+        $this->metadataLines = [];
         // contentLevel and contentKind will be set later in applyContentLevelAndKind
     }
 
@@ -135,18 +137,55 @@ class DocumentParser
         $preambleContent = [];
         $inPreamble = true;
         $foundFirstEmptyLine = false;
+        $h1Count = 0; // Count H1 headers to ensure exactly one
+        $foundH1 = false; // Track if we've found the H1 header
+        $lineNumber = 0; // Track line number for better error messages
             
         foreach ($lines as $line) {
-            if ($this->isDocumentTitle($line)) {
-                $this->documentTitle = $this->extractHeaderText($line);
-                $this->baseSlug = $this->generateSlug($this->documentTitle);
+            $lineNumber++;
+            $trimmedLine = trim($line);
+            
+            // Skip empty lines at the beginning
+            if (!$foundH1 && empty($trimmedLine)) {
                 continue;
             }
+            
+            if ($this->isDocumentTitle($line)) {
+                $h1Count++;
+                if ($h1Count === 1) {
+                    // First H1 header - this is the document title
+                    $this->documentTitle = $this->extractHeaderText($line);
+                    $this->baseSlug = $this->generateSlug($this->documentTitle);
+                    $foundH1 = true;
+                } else {
+                    // Multiple H1 headers - this is an error
+                    $formatName = $this->format === 'asciidoc' ? 'AsciiDoc' : 'Markdown';
+                    $headerFormat = $this->format === 'asciidoc' ? '= Title' : '# Title';
+                    throw new \InvalidArgumentException(
+                        "Invalid {$formatName} document structure: Document must have exactly one H1 level header ({$headerFormat}). " .
+                        "Found {$h1Count} H1 headers. Only the first H1 header is used as the document title for generating d-tags."
+                    );
+                }
+                continue;
+            }
+            
+            // If we encounter non-empty content before finding H1, that's an error
+            if (!$foundH1 && !empty($trimmedLine)) {
+                $formatName = $this->format === 'asciidoc' ? 'AsciiDoc' : 'Markdown';
+                $headerFormat = $this->format === 'asciidoc' ? '= Title' : '# Title';
+                throw new \InvalidArgumentException(
+                    "Invalid {$formatName} document structure: Document must start with an H1 level header ({$headerFormat}). " .
+                    "Found content on line {$lineNumber} before the H1 header: '{$trimmedLine}'"
+                );
+            }
 
-            // Skip everything after document title until first empty line (metadata)
+            // Collect metadata lines after document title until first empty line
             if (!$foundFirstEmptyLine) {
                 if (trim($line) === '') {
                     $foundFirstEmptyLine = true;
+                } else {
+                    // This is a metadata line, collect it for later processing
+                    $this->metadataLines[] = $line;
                 }
                 continue;
             }
@@ -194,9 +233,15 @@ class DocumentParser
             $this->preamble = trim(implode("\n", $preambleContent));
         }
 
-        // Validate document structure
+        // Validate document structure - ensure exactly one H1 header exists
         if (empty($this->documentTitle)) {
-            throw new \InvalidArgumentException("Invalid document structure: Document must have exactly one document title (level 1 header). Found 0 document headers.");
+            $formatName = $this->format === 'asciidoc' ? 'AsciiDoc' : 'Markdown';
+            $headerFormat = $this->format === 'asciidoc' ? '= Title' : '# Title';
+            throw new \InvalidArgumentException(
+                "Invalid {$formatName} document structure: Document must have exactly one H1 level header ({$headerFormat}) at the beginning. " .
+                "The H1 header is required because it provides the document title and base for generating d-tags for replaceable events. " .
+                "Found 0 H1 headers."
+            );
         }
     }
 
@@ -240,10 +285,10 @@ class DocumentParser
                 $allContent .= $section['content'];
             }
             
-            // Convert AsciiDoc to Markdown if needed for 30023 content
-            if ($this->contentKind === '30023' && $this->format === 'asciidoc') {
-                $allContent = $this->convertAsciiDocToMarkdown($allContent);
-            }
+        // Convert AsciiDoc to Markdown if needed for 30023 content
+        if ($this->contentKind === '30023' && $this->format === 'asciidoc') {
+            $allContent = $this->convertAsciiDocToMarkdown($allContent);
+        }
             
             $structure['content_sections'][] = [
                 'title' => $this->documentTitle,
@@ -264,6 +309,11 @@ class DocumentParser
             foreach ($this->sections as $section) {
                 $allContent .= "\n\n" . str_repeat('#', $section['level']) . ' ' . $section['title'] . "\n\n";
                 $allContent .= $section['content'];
+            }
+            
+            // Convert AsciiDoc to Markdown if needed for 30023 content
+            if ($this->contentKind === '30023' && $this->format === 'asciidoc') {
+                $allContent = $this->convertAsciiDocToMarkdown($allContent);
             }
             
             $structure['content_sections'][] = [
@@ -650,6 +700,7 @@ class DocumentParser
      */
     private function extractDocumentMetadata(): array
     {
+        
         $metadata = [
             'auto_update' => true,
             'summary' => 'Generated from document: ' . $this->documentTitle,
@@ -659,34 +710,59 @@ class DocumentParser
         // Store relay information separately for later use
         $this->relays = 'favorite-relays';
         
-        // Parse the document content to extract metadata
-        $lines = explode("\n", $this->documentContent);
+        // Parse the collected metadata lines
         $inHeader = true;
-        $documentTitle = null;
+        $documentTitle = $this->documentTitle; // Use the already extracted title
         $authorLine = null;
         $revisionLine = null;
+        $foundH1 = true; // We already found H1 in parseDocumentStructure
         
-        foreach ($lines as $line) {
+        
+        // Process the collected metadata lines
+        foreach ($this->metadataLines as $line) {
             $originalLine = $line;
             $line = trim($line);
             
             // Skip empty lines and comments
             if (empty($line) || strpos($line, '//') === 0) {
-                if (empty($line) && $inHeader) {
-                    $inHeader = false; // First empty line ends header
+                continue;
+            }
+            
+            // Skip document title lines since we already extracted the title
+            if ($this->isDocumentTitle($line)) {
+                continue;
+            }
+            
+            // Parse Markdown format metadata (**Key:** Value) - accept any key
+            if (preg_match('/^\*\*([^*]+):\*\*\s*(.+)$/', $line, $matches)) {
+                $key = strtolower(trim($matches[1]));
+                $value = trim($matches[2]);
+                
+                
+                // Handle special cases that need to be stored separately (like relays)
+                if ($key === 'relays' || $key === 'relay') {
+                    $this->relays = $value;
+                    continue;
                 }
-                continue;
-            }
-            
-            // Stop processing if we're past the header
-            if (!$inHeader) {
-                break;
-            }
-            
-            // Check for document title (= Title)
-            if (preg_match('/^=+\s+(.+)$/', $line, $matches)) {
-                $documentTitle = trim($matches[1]);
-                continue;
+                
+                // Handle comma-separated values by splitting them into separate entries
+                if (strpos($value, ',') !== false) {
+                    $values = array_map('trim', explode(',', $value));
+                    $values = array_filter($values, function($v) { return !empty($v); });
+                    foreach ($values as $singleValue) {
+                        if (!isset($metadata[$key])) {
+                            $metadata[$key] = [];
+                        }
+                        $metadata[$key][] = $singleValue;
+                    }
+                } else {
+                    // Single value
+                    if (!isset($metadata[$key])) {
+                        $metadata[$key] = [];
+                    }
+                    $metadata[$key][] = $value;
+                }
+                continue; // Skip to next line after processing Markdown metadata
             }
             
             // Check for author line (Name <email> or Name)
@@ -728,6 +804,7 @@ class DocumentParser
             $metadata = $this->parseRevisionLine($revisionLine, $metadata);
         }
         
+        
         return $metadata;
     }
     
@@ -738,6 +815,7 @@ class DocumentParser
     {
         $value = trim($value);
         
+        // Handle flexible key mapping - if it's not a known key, store it as-is
         switch ($key) {
             // Content structure
             case 'content_level':
@@ -1152,6 +1230,7 @@ class DocumentParser
         $this->preamble = null;
         $this->documentTitle = '';
         $this->baseSlug = '';
+        $this->metadataLines = [];
     }
 
     /**
@@ -1159,48 +1238,36 @@ class DocumentParser
      */
     private function convertAsciiDocToMarkdown(string $content): string
     {
-        // Convert AsciiDoc headers to Markdown headers
+        // Convert AsciiDoc admonitions to Markdown blockquotes (MUST be done before headers)
+        $content = preg_replace('/\[NOTE\]\s*\n====\s*\n(.*?)\n====/s', "> **Note:**\n> $1", $content);
+        $content = preg_replace('/\[TIP\]\s*\n====\s*\n(.*?)\n====/s', "> **Tip:**\n> $1", $content);
+        $content = preg_replace('/\[WARNING\]\s*\n====\s*\n(.*?)\n====/s', "> **Warning:**\n> $1", $content);
+        $content = preg_replace('/\[IMPORTANT\]\s*\n====\s*\n(.*?)\n====/s', "> **Important:**\n> $1", $content);
+        
+        // Convert AsciiDoc code blocks [source,language] to Markdown ```language
+        $content = preg_replace('/\[source,([^\]]+)\]\s*\n----\s*\n(.*?)\n----/s', "```$1\n$2\n```", $content);
+        $content = preg_replace('/\[source\]\s*\n----\s*\n(.*?)\n----/s', "```\n$1\n```", $content);
+        
+        // Convert AsciiDoc blockquotes [quote]...____ to Markdown blockquotes
+        $content = preg_replace('/\[quote\]\s*\n____\s*\n(.*?)\n____/s', '> $1', $content);
+        
+        // Convert AsciiDoc headers to Markdown headers (after admonitions)
         $content = preg_replace('/^=+\s+(.+)$/m', '# $1', $content);
         
-        // Convert AsciiDoc bold **text** to Markdown **text**
-        $content = preg_replace('/\*\*([^*]+)\*\*/', '**$1**', $content);
+        // Convert AsciiDoc links https://example.com[text] to Markdown [text](https://example.com)
+        $content = preg_replace('/(https?:\/\/[^\s\[]+)\[([^\]]+)\]/', '[$2]($1)', $content);
+        
+        // Convert AsciiDoc images image:filename[alt text] to Markdown ![alt text](filename)
+        $content = preg_replace('/image:([^[]+)\[([^\]]*)\]/', '![$2]($1)', $content);
         
         // Convert AsciiDoc italic __text__ to Markdown *text*
         $content = preg_replace('/__([^_]+)__/', '*$1*', $content);
         
         // Convert AsciiDoc monospace +text+ to Markdown `text`
-        $content = preg_replace('/\+([^+]+)\+/', '`$1`', $content);
-        
-        // Convert AsciiDoc links [text](url) to Markdown [text](url)
-        $content = preg_replace('/\[([^\]]+)\]\(([^)]+)\)/', '[$1]($2)', $content);
-        
-        // Convert AsciiDoc images image:filename[alt text] to Markdown ![alt text](filename)
-        $content = preg_replace('/image:([^[]+)\[([^\]]*)\]/', '![$2]($1)', $content);
-        
-        // Convert AsciiDoc unordered lists - item to Markdown - item
-        $content = preg_replace('/^- (.+)$/m', '- $1', $content);
+        $content = preg_replace('/\+([^+\n\r]+)\+/', '`$1`', $content);
         
         // Convert AsciiDoc ordered lists . item to Markdown 1. item
         $content = preg_replace('/^\. (.+)$/m', '1. $1', $content);
-        
-        // Convert AsciiDoc blockquotes [quote] to Markdown >
-        $content = preg_replace('/^\[quote\]\s*$/m', '>', $content);
-        $content = preg_replace('/^(.+)$/m', '> $1', $content);
-        
-        // Convert AsciiDoc code blocks [source,language] to Markdown ```language
-        $content = preg_replace('/\[source,([^\]]+)\]/', '```$1', $content);
-        $content = preg_replace('/\[source\]/', '```', $content);
-        
-        // Convert AsciiDoc tables (basic conversion)
-        // This is a simplified conversion - complex tables may need more work
-        $content = preg_replace('/\|===/', '|', $content);
-        $content = preg_replace('/\|/', '|', $content);
-        
-        // Clean up any remaining AsciiDoc-specific syntax
-        $content = preg_replace('/\[NOTE\]/', '> **Note:**', $content);
-        $content = preg_replace('/\[TIP\]/', '> **Tip:**', $content);
-        $content = preg_replace('/\[WARNING\]/', '> **Warning:**', $content);
-        $content = preg_replace('/\[IMPORTANT\]/', '> **Important:**', $content);
         
         return $content;
     }

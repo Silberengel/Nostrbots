@@ -44,6 +44,24 @@ class LongFormContent extends AbstractEventKind
         // Create and set tags
         $tags = $this->createStandardTags($config);
         
+        // Add all metadata as tags (support multiple values for each key)
+        foreach ($config as $key => $value) {
+            // Skip non-metadata keys
+            if (in_array($key, ['bot_name', 'bot_description', 'event_kind', 'environment_variable', 'relays', 'title', 'auto_update', 'summary', 'type', 'hierarchy_level', 'static_d_tag', 'd-tag', 'validate_after_publish', 'content_references', 'content'])) {
+                continue;
+            }
+            
+            if (is_array($value)) {
+                // Multiple values - create individual tags
+                foreach ($value as $singleValue) {
+                    $tags[] = [$key, $singleValue];
+                }
+            } else {
+                // Single value
+                $tags[] = [$key, $value];
+            }
+        }
+        
         // Add NIP-27 references if provided
         if (isset($config['references']) && is_array($config['references'])) {
             foreach ($config['references'] as $ref) {

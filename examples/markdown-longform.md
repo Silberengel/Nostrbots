@@ -1,7 +1,7 @@
 # Markdown Longform Content Test
-
 **Author:** Test Author  
 **Date:** 2024-01-01
+**Relays:** test-relays
 
 This is a test document in Markdown format for testing 30023 (Long-form Content) event kind.
 
