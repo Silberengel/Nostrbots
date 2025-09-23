@@ -3,7 +3,7 @@
 /**
  * Nostrbots - Direct Document Publishing for Nostr
  * 
- * Usage: php nostrbots.php publish <document> [options]
+ * Usage: php nostrbots.php [publish] <document> [options]
  * 
  * Options:
  *   --dry-run     Validate configuration without publishing
@@ -28,7 +28,7 @@ function showHelp(): void
 {
     echo "Nostrbots - Direct Document Publishing for Nostr" . PHP_EOL;
     echo "===============================================" . PHP_EOL . PHP_EOL;
-    echo "Usage: php nostrbots.php publish <document> [options]" . PHP_EOL . PHP_EOL;
+    echo "Usage: php nostrbots.php [publish] <document> [options]" . PHP_EOL . PHP_EOL;
     echo "Arguments:" . PHP_EOL;
     echo "  document      Path to document file (.adoc or .md)" . PHP_EOL . PHP_EOL;
     echo "Options:" . PHP_EOL;
@@ -48,8 +48,8 @@ function showHelp(): void
     }
     
     echo PHP_EOL . "Examples:" . PHP_EOL;
-    echo "  # Basic publishing" . PHP_EOL;
-    echo "  php nostrbots.php publish my-document.adoc" . PHP_EOL;
+    echo "  # Basic publishing (both forms work)" . PHP_EOL;
+    echo "  php nostrbots.php my-document.adoc" . PHP_EOL;
     echo "  php nostrbots.php publish my-document.md" . PHP_EOL . PHP_EOL;
     echo "  # With custom options" . PHP_EOL;
     echo "  php nostrbots.php publish my-document.adoc --content-level 1" . PHP_EOL;
@@ -82,23 +82,22 @@ function parseArguments(array $argv): array
         exit(0);
     }
 
-    // Check if this is the publish command
-    if ($argv[1] !== 'publish') {
-        echo "Error: Invalid command. Use 'publish' to publish documents." . PHP_EOL;
-        echo "Usage: php nostrbots.php publish <document> [options]" . PHP_EOL;
-        echo "Run 'php nostrbots.php --help' for more information." . PHP_EOL;
-        exit(1);
-    }
-    
-    // Check if document path is provided
-    if ($argc < 3) {
-        echo "Error: Document path required for publishing" . PHP_EOL;
-        echo "Usage: php nostrbots.php publish <document> [options]" . PHP_EOL;
-        exit(1);
+    // Check if first argument is a subcommand or document path
+    if ($argv[1] === 'publish') {
+        // Explicit publish command
+        if ($argc < 3) {
+            echo "Error: Document path required for publishing" . PHP_EOL;
+            echo "Usage: php nostrbots.php publish <document> [options]" . PHP_EOL;
+            exit(1);
+        }
+        $documentPath = $argv[2];
+    } else {
+        // Treat first argument as document path (implicit publish)
+        $documentPath = $argv[1];
     }
     
     return [
-        'document_path' => $argv[2],
+        'document_path' => $documentPath,
         'dry_run' => in_array('--dry-run', $argv),
         'verbose' => in_array('--verbose', $argv),
         'profile' => in_array('--profile', $argv),
