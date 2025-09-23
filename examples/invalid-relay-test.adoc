@@ -1,0 +1,12 @@
+= Invalid Relay Test Document
+John Doe <john@example.com>
+v1.0, 2024-01-15, Test version
+:description: This document tests invalid relay category handling
+:relays: invalid-category-name
+:lang: en
+
+This document should fail because it specifies an invalid relay category.
+
+== Introduction
+
+This section should not be processed due to the invalid relay category.

@@ -22,7 +22,7 @@ class DirectDocumentPublisherTest
         mkdir($this->testDir, 0755, true);
     }
 
-    public function runAllTests(): void
+    public function runTests(): void
     {
         echo "🧪 Running DirectDocumentPublisher Tests" . PHP_EOL;
         echo "=========================================" . PHP_EOL . PHP_EOL;
@@ -49,7 +49,7 @@ relays: test-relays
 auto_update: true
 summary: Test document with metadata
 type: test
-hierarchy_level: 0
+content_level: 0
 
 This is the preamble content.
 
@@ -78,7 +78,13 @@ Section 1.1 content.';
                 if (isset($result['metadata'])) {
                     echo "  📋 Metadata extracted:" . PHP_EOL;
                     foreach ($result['metadata'] as $key => $value) {
-                        $displayValue = is_bool($value) ? ($value ? 'true' : 'false') : $value;
+                        if (is_bool($value)) {
+                            $displayValue = $value ? 'true' : 'false';
+                        } elseif (is_array($value)) {
+                            $displayValue = '[' . implode(', ', $value) . ']';
+                        } else {
+                            $displayValue = $value;
+                        }
                         echo "    - {$key}: {$displayValue}" . PHP_EOL;
                     }
                 }
@@ -122,7 +128,7 @@ Section 1.1 content.';
                 // Check that defaults were applied
                 if (isset($result['metadata'])) {
                     echo "  📋 Default metadata applied:" . PHP_EOL;
-                    echo "    - relays: {$result['metadata']['relays']}" . PHP_EOL;
+                    echo "    - relays: " . ($result['structure']['relays'] ?? 'default') . PHP_EOL;
                     echo "    - auto_update: " . ($result['metadata']['auto_update'] ? 'true' : 'false') . PHP_EOL;
                     echo "    - type: {$result['metadata']['type']}" . PHP_EOL;
                 }
@@ -227,5 +233,5 @@ Test chapter content.';
 // Run tests if called directly
 if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_NAME'])) {
     $test = new DirectDocumentPublisherTest();
-    $test->runAllTests();
+    $test->runTests();
 }

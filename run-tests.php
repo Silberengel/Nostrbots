@@ -3,65 +3,74 @@
 /**
  * Test Runner for Nostrbots
  * 
- * Runs comprehensive tests including edge cases, performance tests, and integration tests
+ * Runs comprehensive tests for the direct publishing system
  */
 
 require __DIR__ . '/src/bootstrap.php';
-
-use Nostrbots\Tests\EdgeCaseTests;
-use Nostrbots\Utils\ErrorHandler;
-use Nostrbots\Utils\PerformanceManager;
 
 function runTests(): void
 {
     echo "🧪 Nostrbots Test Suite" . PHP_EOL;
     echo "=======================" . PHP_EOL . PHP_EOL;
     
-    $errorHandler = new ErrorHandler(true);
-    $performanceManager = new PerformanceManager(true);
-    
     try {
-        $performanceManager->startTimer('test_suite');
+        // Run simplified edge case tests
+        echo "🔬 Running Simplified Edge Case Tests..." . PHP_EOL;
+        $simplifiedEdgeCaseTests = new \Nostrbots\Tests\SimplifiedEdgeCaseTests();
+        $simplifiedEdgeCaseTests->runTests();
+        echo PHP_EOL;
         
-        // Run edge case tests
-        echo "🔬 Running Edge Case Tests..." . PHP_EOL;
-        $performanceManager->startTimer('edge_case_tests');
+        // Run direct document publisher tests
+        echo "📄 Running Direct Document Publisher Tests..." . PHP_EOL;
+        $directDocumentPublisherTest = new \Nostrbots\Tests\DirectDocumentPublisherTest();
+        $directDocumentPublisherTest->runTests();
+        echo PHP_EOL;
         
-        $edgeCaseTests = new EdgeCaseTests();
-        $edgeCaseTests->runAllTests();
+        // Run content level tests
+        echo "📊 Running Content Level Tests..." . PHP_EOL;
+        $contentLevelTest = new \Nostrbots\Tests\ContentLevelTest();
+        $contentLevelTest->runTests();
         
-        $performanceManager->endTimer('edge_case_tests');
+        // Run complex hierarchical tests
+        echo "🏗️  Running Complex Hierarchical Tests..." . PHP_EOL;
+        $complexHierarchicalTest = new \Nostrbots\Tests\ComplexHierarchicalTest();
+        $complexHierarchicalTest->runTests();
+        echo PHP_EOL;
+
+        // Run event kind tests
+        echo "🎭 Running Event Kind Tests..." . PHP_EOL;
+        $eventKindTest = new \Nostrbots\Tests\EventKindTest();
+        $eventKindTest->runTests();
+        echo PHP_EOL;
+
+        // Run header priority tests
+        echo "📋 Running Header Priority Tests..." . PHP_EOL;
+        $headerPriorityTest = new \Nostrbots\Tests\HeaderPriorityTest();
+        $headerPriorityTest->runTests();
+        echo PHP_EOL;
+
+        // Run AsciiDoc header format tests
+        echo "📄 Running AsciiDoc Header Format Tests..." . PHP_EOL;
+        $asciidocHeaderTest = new \Nostrbots\Tests\AsciiDocHeaderTest();
+        $asciidocHeaderTest->runTests();
+        echo PHP_EOL;
+        
+        // Run relay configuration tests
+        echo "📡 Running Relay Configuration Tests..." . PHP_EOL;
+        $relayConfigTest = new \Nostrbots\Tests\RelayConfigurationTest();
+        $relayConfigTest->runTests();
+        echo PHP_EOL;
         
         // Run performance tests
-        echo PHP_EOL . "⚡ Running Performance Tests..." . PHP_EOL;
-        $performanceManager->startTimer('performance_tests');
-        
+        echo "⚡ Running Performance Tests..." . PHP_EOL;
         runPerformanceTests();
+        echo PHP_EOL;
         
-        $performanceManager->endTimer('performance_tests');
-        
-        // Run integration tests
-        echo PHP_EOL . "🔗 Running Integration Tests..." . PHP_EOL;
-        $performanceManager->startTimer('integration_tests');
-        
-        runIntegrationTests();
-        
-        $performanceManager->endTimer('integration_tests');
-        
-        $performanceManager->endTimer('test_suite');
-        
-        echo PHP_EOL . "📊 Test Suite Performance Report:" . PHP_EOL;
-        $performanceManager->printPerformanceReport();
-        
-        echo PHP_EOL . "✅ All tests completed!" . PHP_EOL;
+        echo "✅ All tests completed successfully!" . PHP_EOL;
         
     } catch (\Exception $e) {
-        $errorHandler->addError("Test suite failed: " . $e->getMessage());
         echo "❌ Test suite failed: " . $e->getMessage() . PHP_EOL;
-        
-        if ($errorHandler->hasErrors()) {
-            $errorHandler->printErrorSummary();
-        }
+        exit(1);
     }
 }
 
@@ -96,35 +105,6 @@ function runPerformanceTests(): void
         echo "    ⚠️  High memory usage detected" . PHP_EOL;
     } else {
         echo "    ✅ Memory usage within acceptable limits" . PHP_EOL;
-    }
-}
-
-function runIntegrationTests(): void
-{
-    echo "  🔗 Testing bot configuration loading..." . PHP_EOL;
-    
-    // Test configuration loading
-    $configPath = __DIR__ . '/botData/longFormExample/config.yml';
-    if (file_exists($configPath)) {
-        try {
-            $bot = new \Nostrbots\Bot\NostrBot();
-            $bot->loadConfig($configPath);
-            echo "    ✅ Configuration loaded successfully" . PHP_EOL;
-        } catch (\Exception $e) {
-            echo "    ❌ Configuration loading failed: " . $e->getMessage() . PHP_EOL;
-        }
-    } else {
-        echo "    ⚠️  Test configuration not found" . PHP_EOL;
-    }
-    
-    echo "  🔗 Testing relay connectivity..." . PHP_EOL;
-    
-    try {
-        $relayManager = new \Nostrbots\Utils\RelayManager();
-        $relays = $relayManager->getRelays('write');
-        echo "    ✅ Found " . count($relays) . " working relays" . PHP_EOL;
-    } catch (\Exception $e) {
-        echo "    ⚠️  Relay connectivity test failed: " . $e->getMessage() . PHP_EOL;
     }
 }
 

@@ -162,9 +162,17 @@ class PublicationIndex extends AbstractEventKind
      */
     private function addPublicationTags(array &$tags, array $config): void
     {
-        // Add author tag
+        // Add author tags (support multiple authors)
         if (isset($config['author'])) {
-            $tags[] = ['author', $config['author']];
+            if (is_array($config['author'])) {
+                // Multiple authors - create individual tags
+                foreach ($config['author'] as $author) {
+                    $tags[] = ['author', $author];
+                }
+            } else {
+                // Single author
+                $tags[] = ['author', $config['author']];
+            }
         }
 
         // Add auto-update tag (required)

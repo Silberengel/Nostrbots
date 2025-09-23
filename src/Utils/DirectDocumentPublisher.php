@@ -17,6 +17,7 @@ class DirectDocumentPublisher
     private NostrBot $bot;
     private array $publishedEvents = [];
     private array $errors = [];
+    private string $currentRelayConfig = '';
 
     public function __construct()
     {
@@ -28,15 +29,17 @@ class DirectDocumentPublisher
      * Publish a document directly from file
      * 
      * @param string $documentPath Path to the document file
-     * @param int $contentLevel Header level that becomes content sections (1-6)
-     * @param string $contentKind Kind of content to generate ('30023', '30041', '30818')
+     * @param int|null $contentLevel Header level that becomes content sections (1-6), null to use file/default
+     * @param string|null $contentKind Kind of content to generate ('30023', '30041', '30818'), null to use file/default
      * @param bool $dryRun If true, don't actually publish
      * @return array Results with published events and any errors
      */
-    public function publishDocument(string $documentPath, int $contentLevel, string $contentKind, bool $dryRun = false): array
+    public function publishDocument(string $documentPath, ?int $contentLevel = null, ?string $contentKind = null, bool $dryRun = false): array
     {
         echo "📄 Publishing document: " . basename($documentPath) . PHP_EOL;
-        echo "📊 Content level: {$contentLevel}, Content kind: {$contentKind}" . PHP_EOL . PHP_EOL;
+        $levelDisplay = $contentLevel ?? 'file/default';
+        $kindDisplay = $contentKind ?? 'file/default';
+        echo "📊 Content level: {$levelDisplay}, Content kind: {$kindDisplay}" . PHP_EOL . PHP_EOL;
 
         try {
             $structure = $this->parseDocument($documentPath, $contentLevel, $contentKind);
@@ -59,12 +62,57 @@ class DirectDocumentPublisher
     /**
      * Parse document into hierarchical structure
      */
-    private function parseDocument(string $documentPath, int $contentLevel, string $contentKind): array
+    private function parseDocument(string $documentPath, ?int $contentLevel, ?string $contentKind): array
     {
         echo "🔍 Parsing document structure..." . PHP_EOL;
         $structure = $this->parser->parseDocumentForDirectPublishing($documentPath, $contentLevel, $contentKind);
+        
+        // Determine relay configuration with proper priority
+        $structure['relays'] = $this->determineRelayConfiguration($this->parser->getRelays());
+        
         echo "✅ Document parsed successfully!" . PHP_EOL;
         return $structure;
+    }
+    
+    /**
+     * Determine relay configuration with proper priority:
+     * 1. Document metadata relays (if specified)
+     * 2. Appropriate relays.yml section
+     * 3. Default fallback
+     */
+    private function determineRelayConfiguration(string $documentRelays): string
+    {
+        // If document specifies actual relay URLs, use them
+        if (!empty($documentRelays) && $this->isRelayUrl($documentRelays)) {
+            echo "📡 Using document-specified relay URLs: {$documentRelays}" . PHP_EOL;
+            $this->currentRelayConfig = $documentRelays;
+            return $documentRelays;
+        }
+        
+        // If document specifies a category name, parse the relays from that category
+        if (!empty($documentRelays) && !$this->isRelayUrl($documentRelays)) {
+            try {
+                $relayManager = new \Nostrbots\Utils\RelayManager();
+                $relayList = $relayManager->getRelayList($documentRelays);
+                
+                if (empty($relayList)) {
+                    throw new \InvalidArgumentException("Relay category '{$documentRelays}' is empty or not found in relays.yml configuration.");
+                }
+                
+                $relayUrls = implode(',', $relayList);
+                echo "📡 Using relays from category '{$documentRelays}': {$relayUrls}" . PHP_EOL;
+                $this->currentRelayConfig = $relayUrls;
+                return $relayUrls;
+                
+            } catch (\Exception $e) {
+                throw new \InvalidArgumentException("Invalid relay category '{$documentRelays}' specified in document. Error: " . $e->getMessage());
+            }
+        }
+        
+        // Fallback to default relays
+        echo "📡 Using default relay configuration" . PHP_EOL;
+        $this->currentRelayConfig = 'favorite-relays';
+        return 'favorite-relays';
     }
 
     /**
@@ -74,7 +122,9 @@ class DirectDocumentPublisher
     {
         echo "📋 Title: {$structure['document_title']}" . PHP_EOL;
         echo "📊 Found " . count($structure['content_sections']) . " content sections" . PHP_EOL;
-        echo "📊 Found " . count($structure['index_sections']) . " index sections" . PHP_EOL;
+        
+        $indexCount = count($structure['index_sections']);
+        echo "📊 Found {$indexCount} index sections" . PHP_EOL;
         echo "📊 Total events to publish: " . count($structure['publish_order']) . PHP_EOL . PHP_EOL;
     }
 
@@ -99,7 +149,7 @@ class DirectDocumentPublisher
             echo "📝 Publishing: {$section['title']}" . PHP_EOL;
             
             try {
-                $config = $this->buildEventConfig($section, $structure['metadata'], $publishedEventIds);
+                $config = $this->buildEventConfig($section, $structure['metadata'], $publishedEventIds, $structure['relays']);
                 $result = $this->publishEvent($config, $section);
                 
                 if ($result['success']) {
@@ -123,6 +173,10 @@ class DirectDocumentPublisher
      */
     private function publishEvent(array $config, array $section): array
     {
+        // Format content based on event kind
+        $content = $this->formatContentForEventKind($section['content'], $section['event_kind']);
+        $config['content'] = $content;
+        
         $this->bot->loadConfig($config);
         $result = $this->bot->run(false); // false = not dry run
         
@@ -156,26 +210,25 @@ class DirectDocumentPublisher
     /**
      * Build event configuration from section and metadata
      */
-    private function buildEventConfig(array $section, array $metadata, array $publishedEventIds): array
+    private function buildEventConfig(array $section, array $metadata, array $publishedEventIds, string $relayConfig = ''): array
     {
         $config = [
             'bot_name' => 'Direct Document Publisher',
             'bot_description' => 'Published from document: ' . $section['title'],
             'event_kind' => $section['event_kind'],
             'environment_variable' => 'NOSTR_BOT_KEY',
-            'relays' => $metadata['relays'],
+            'relays' => $this->currentRelayConfig ?: 'favorite-relays', // Use stored relay config
             'title' => $section['title'],
-            'auto_update' => $metadata['auto_update'],
-            'summary' => $metadata['summary'],
-            'type' => $metadata['type'],
-            'hierarchy_level' => $metadata['hierarchy_level'],
+            'auto_update' => $metadata['auto_update'] ?? true,
+            'summary' => $metadata['summary'] ?? '',
+            'type' => $metadata['type'] ?? 'documentation',
+            'hierarchy_level' => $metadata['hierarchy_level'] ?? 0,
             'static_d_tag' => true,
             'd-tag' => $section['d_tag'],
-            'content' => $section['content'] ?? '',
             'validate_after_publish' => true
         ];
-
-        // Add content references for index events
+        
+        // Add content references for index events (30040) with relay hints
         if ($section['event_kind'] === 30040 && isset($section['content_references'])) {
             $config['content_references'] = $this->updateContentReferencesWithEventIds(
                 $section['content_references'], 
@@ -187,13 +240,39 @@ class DirectDocumentPublisher
     }
 
     /**
-     * Update content references with actual published event IDs
+     * Format content based on event kind requirements
+     */
+    private function formatContentForEventKind(string $content, string $eventKind): array
+    {
+        switch ($eventKind) {
+            case '30023': // Long-form Content (Markdown)
+                return ['markdown' => $content];
+            case '30040': // Publication Index (no content, just metadata)
+                return []; // No content for index events
+            case '30041': // Publication Content (AsciiDoc)
+                return ['asciidoc' => $content];
+            case '30818': // Wiki Article (AsciiDoc)
+                return ['asciidoc' => $content];
+            default:
+                return ['content' => $content];
+        }
+    }
+
+    /**
+     * Update content references with actual published event IDs and relay hints
      */
     private function updateContentReferencesWithEventIds(array $contentReferences, array $publishedEventIds): array
     {
         foreach ($contentReferences as &$reference) {
             if (isset($publishedEventIds[$reference['d_tag']])) {
                 $reference['event_id'] = $publishedEventIds[$reference['d_tag']];
+            }
+            
+            // Add relay hints if we have actual relay URLs
+            if (!empty($this->currentRelayConfig) && $this->isRelayUrl($this->currentRelayConfig)) {
+                $relayUrls = array_map('trim', explode(',', $this->currentRelayConfig));
+                $relayUrls = array_filter($relayUrls, function($url) { return !empty(trim($url)); });
+                $reference['relay'] = implode(',', $relayUrls);
             }
         }
         return $contentReferences;
@@ -224,7 +303,8 @@ class DirectDocumentPublisher
             'publish_order' => $structure['publish_order'],
             'content_sections' => count($structure['content_sections']),
             'index_sections' => count($structure['index_sections']),
-            'total_events' => count($structure['publish_order'])
+            'total_events' => count($structure['publish_order']),
+            'structure' => $structure // Include full structure for testing
         ];
     }
 
@@ -243,6 +323,15 @@ class DirectDocumentPublisher
             'total_published' => count($this->publishedEvents),
             'total_expected' => count($structure['publish_order'])
         ];
+    }
+    
+    /**
+     * Check if a string contains actual relay URLs (not category names)
+     */
+    private function isRelayUrl(string $relayConfig): bool
+    {
+        // If it contains 'wss://' or 'ws://', it's likely a relay URL
+        return strpos($relayConfig, 'wss://') !== false || strpos($relayConfig, 'ws://') !== false;
     }
 
     /**

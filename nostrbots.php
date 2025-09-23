@@ -35,7 +35,7 @@ function showHelp(): void
     echo "  --dry-run     Validate configuration without publishing events" . PHP_EOL;
     echo "  --verbose     Enable verbose output and detailed error reporting" . PHP_EOL;
     echo "  --profile     Enable performance profiling and memory monitoring" . PHP_EOL;
-    echo "  --content-level <n>  Header level that becomes content sections (default: 4)" . PHP_EOL;
+    echo "  --content-level <n>  Header level that becomes content sections (default: 0)" . PHP_EOL;
     echo "  --content-kind <kind> Content kind (30023, 30041, 30818, default: 30041)" . PHP_EOL;
     echo "  --help        Show this help message" . PHP_EOL . PHP_EOL;
     echo "Supported Event Kinds:" . PHP_EOL;
@@ -52,7 +52,7 @@ function showHelp(): void
     echo "  php nostrbots.php publish my-document.adoc" . PHP_EOL;
     echo "  php nostrbots.php publish my-document.md" . PHP_EOL . PHP_EOL;
     echo "  # With custom options" . PHP_EOL;
-    echo "  php nostrbots.php publish my-document.adoc --content-level 3" . PHP_EOL;
+    echo "  php nostrbots.php publish my-document.adoc --content-level 1" . PHP_EOL;
     echo "  php nostrbots.php publish my-document.adoc --content-kind 30023" . PHP_EOL . PHP_EOL;
     echo "  # Testing and debugging" . PHP_EOL;
     echo "  php nostrbots.php publish my-document.adoc --dry-run --verbose" . PHP_EOL;
@@ -110,25 +110,25 @@ function parseArguments(array $argv): array
 /**
  * Parse content level from arguments
  */
-function parseContentLevel(array $argv): int
+function parseContentLevel(array $argv): ?int
 {
     $contentLevelIndex = array_search('--content-level', $argv);
     if ($contentLevelIndex !== false && isset($argv[$contentLevelIndex + 1])) {
         return (int)$argv[$contentLevelIndex + 1];
     }
-    return 4; // default
+    return null; // Use file headers or defaults
 }
 
 /**
  * Parse content kind from arguments
  */
-function parseContentKind(array $argv): string
+function parseContentKind(array $argv): ?string
 {
     $contentKindIndex = array_search('--content-kind', $argv);
     if ($contentKindIndex !== false && isset($argv[$contentKindIndex + 1])) {
         return $argv[$contentKindIndex + 1];
     }
-    return '30041'; // default
+    return null; // Use file headers or defaults
 }
 
 /**
@@ -160,8 +160,10 @@ function displayPublishingHeader(array $args): void
     
     if ($args['verbose']) {
         echo "Document: {$args['document_path']}" . PHP_EOL;
-        echo "Content Level: {$args['content_level']}" . PHP_EOL;
-        echo "Content Kind: {$args['content_kind']}" . PHP_EOL;
+        $levelDisplay = $args['content_level'] ?? 'file/default';
+        $kindDisplay = $args['content_kind'] ?? 'file/default';
+        echo "Content Level: {$levelDisplay}" . PHP_EOL;
+        echo "Content Kind: {$kindDisplay}" . PHP_EOL;
         echo "Dry Run: " . ($args['dry_run'] ? 'Yes' : 'No') . PHP_EOL . PHP_EOL;
     }
 }

@@ -5,7 +5,7 @@ relays: favorite-relays
 auto_update: true
 summary: A simple example guide demonstrating direct document publishing
 type: tutorial
-hierarchy_level: 0
+content_level: 2
 
 This is a simple example document that demonstrates the new direct publishing approach. No configuration files needed!
 

@@ -91,7 +91,7 @@ relays: favorite-relays          # Relay category (required)
 auto_update: true               # Allow updates (optional, default: true)
 summary: Brief description      # Short description (optional)
 type: article                   # Content type (optional, default: documentation)
-hierarchy_level: 0              # Hierarchy level (optional, default: 0)
+content_level: 0              # Hierarchy level (optional, default: 0)
 
 Your document content starts here...
 
@@ -152,13 +152,108 @@ More content here.
 
 ### Content Levels
 
-The `--content-level` parameter determines which headers become content sections:
+The `--content-level` parameter determines the publication structure:
 
-- **Level 4 (default)**: Sections (`====`) become content, chapters and parts become indices
-- **Level 3**: Chapters (`===`) become content, parts become indices  
-- **Level 2**: Parts (`==`) become content, only main title becomes index
+- **Level 0 (default)**: Flat article - single content event, no indexes
+- **Level 1+**: Hierarchical publication - multiple content events with index events (30040)
 
-This creates the appropriate mix of content events (30041) and index events (30040).
+For content-level > 0, the `--content-kind` parameter determines the content event type:
+- **30041 (default)**: Publication content (book-style or blog-style)
+- **30023**: Long-form content (magazine-style) 
+- **30818**: Wiki articles (documentation-style)
+
+Examples:
+```bash
+# Flat article (default)
+php nostrbots.php publish article.adoc
+php nostrbots.php publish article.md
+
+# Hierarchical publication with book-style content
+php nostrbots.php publish book.adoc --content-level 2
+
+# Hierarchical publication with magazine-style content (30023 requires content-level > 0)
+php nostrbots.php publish magazine.adoc --content-level 2 --content-kind 30023
+
+# Hierarchical publication with documentation-style content
+php nostrbots.php publish docs.adoc --content-level 3 --content-kind 30818
+
+# Invalid examples (will throw errors):
+# php nostrbots.php publish article.md --content-level 2  # Markdown cannot have content-level
+# php nostrbots.php publish article.md --content-kind 30023  # Markdown always uses 30023 automatically
+# php nostrbots.php publish article.md --content-kind 30041  # 30041 requires AsciiDoc source
+# php nostrbots.php publish article.md --content-kind 30818  # 30818 requires AsciiDoc source
+# php nostrbots.php publish article.adoc --content-kind 30023  # 30023 requires content-level > 0
+```
+
+### Event Kind Requirements
+
+Different event kinds have specific content format requirements:
+
+#### 30023 - Long-form Content (Markdown)
+- **Content Format**: Markdown (converted from AsciiDoc source)
+- **Source Format**: AsciiDoc only (`.adoc` files)
+- **Use Case**: Articles, tutorials, CMS systems
+- **Structure**: Flat article (1 content event, 0 indexes)
+- **Conversion**: Automatically converts AsciiDoc syntax to GitHub Markdown
+- **Example**:
+```bash
+php nostrbots.php publish article.adoc --content-kind 30023
+```
+
+#### 30040 - Publication Index
+- **Content Format**: No content (metadata only)
+- **Use Case**: Table of contents for hierarchical publications
+- **Structure**: Part of publication system (typically used with 30041)
+- **Auto-generated**: Created automatically based on document structure
+
+#### 30041 - Publication Content
+- **Content Format**: AsciiDoc only
+- **Source Format**: AsciiDoc only (`.adoc` files)
+- **Use Case**: Individual sections/chapters of publications OR flat articles (called "notes")
+- **Structure**: 
+  - **Flat article**: 1 content event, 0 indexes (when used alone)
+  - **Publication**: Multiple content events with indexes (when used with 30040)
+- **Default**: Used when no specific content kind is specified for AsciiDoc files
+
+#### 30818 - Wiki Article
+- **Content Format**: AsciiDoc only
+- **Source Format**: AsciiDoc only (`.adoc` files)
+- **Use Case**: Collaborative wiki pages with wikilinks
+- **Structure**: Flat article (1 content event, 0 indexes)
+- **Example**:
+```bash
+php nostrbots.php publish wiki-article.adoc --content-kind 30818
+```
+
+### Content Format Detection
+
+Nostrbots automatically detects content format based on file extension:
+- `.md` files → Markdown content
+- `.adoc` files → AsciiDoc content
+
+The appropriate content format is automatically passed to the event kind handler.
+
+### Format and Content Level Constraints
+
+- **Markdown files (`.md`)**: Always flat articles (content-level 0) with 30023 (Long-form Content), no additional parameters allowed
+- **AsciiDoc files (`.adoc`)**: Can use any content-level (0-6) with any content-kind
+- **30023 (Long-form Content)**: Always Markdown format (from .md files or converted from .adoc files)
+- **30041 (Publication Content)**: Always AsciiDoc format
+- **30818 (Wiki Article)**: Always AsciiDoc format
+
+### AsciiDoc to Markdown Conversion
+
+When using 30023 with AsciiDoc source files, the content is automatically converted to GitHub Markdown format:
+
+- Headers: `= Title` → `# Title`
+- Bold: `**text**` → `**text**`
+- Italic: `__text__` → `*text*`
+- Monospace: `+text+` → `` `text` ``
+- Images: `image:file.png[alt]` → `![alt](file.png)`
+- Links: `[text](url)` → `[text](url)`
+- Lists: `- item` → `- item`
+- Code blocks: `[source,lang]` → ` ```lang`
+- Admonitions: `[NOTE]` → `> **Note:**`
 
 ## Examples
 
