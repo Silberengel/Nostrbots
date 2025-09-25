@@ -1,0 +1,30 @@
+{
+  "name": "Daily Office Bot",
+  "description": "Publishes Catholic Daily Office readings at 6am and 6pm UTC",
+  "version": "1.0.0",
+  "author": "Catholic Bot",
+  "schedule": ["06:00", "18:00"],
+  "relays": [
+    "wss://thecitadel.nostr1.com",
+    "wss://orly-relay.imwald.eu"
+  ],
+  "content_kind": "30023",
+  "content_level": 0,
+  "auto_update": true,
+  "settings": {
+    "timezone": "UTC",
+    "language": "en",
+    "liturgical_calendar": "roman_catholic",
+    "include_psalms": true,
+    "include_readings": true,
+    "include_prayers": true
+  },
+  "templates": {
+    "morning": "templates/morning-office.adoc",
+    "evening": "templates/evening-office.adoc"
+  },
+  "output": {
+    "directory": "output",
+    "filename_pattern": "daily-office-{date}-{time}.adoc"
+  }
+}

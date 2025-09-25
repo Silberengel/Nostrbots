@@ -1,0 +1,55 @@
+= Morning Prayer - {date}
+author: Daily Office Bot
+version: 1.0
+relays: daily-office-relays
+auto_update: true
+summary: Catholic Daily Office - Morning Prayer for {date}
+type: prayer
+liturgical_season: {season}
+liturgical_color: {color}
+prayer_time: 6:00 AM UTC
+
+**{liturgical_date}**
+*Liturgical Season: {season}*
+*Liturgical Color: {color}*
+
+== Opening Prayer
+
+O God, come to my assistance.
+O Lord, make haste to help me.
+
+Glory to the Father, and to the Son, and to the Holy Spirit,
+as it was in the beginning, is now, and will be for ever. Amen.
+
+== Psalm of the Day
+
+{psalm}
+
+== Scripture Reading
+
+{reading}
+
+== Intercessions
+
+Let us pray to the Lord, who is our light and our salvation:
+
+- For the Church, that she may be a beacon of hope in the world
+- For all who are suffering, that they may find comfort and strength
+- For our families and communities, that we may grow in love and unity
+- For peace in our world, that all conflicts may be resolved through justice
+
+== Closing Prayer
+
+Almighty and eternal God,
+you have brought us safely to this new day.
+Preserve us now by your mighty power,
+that we may not fall into sin,
+nor be overcome by adversity;
+and in all we do,
+direct us to the fulfilling of your purpose;
+through Jesus Christ our Lord. Amen.
+
+== Blessing
+
+May the Lord bless us, protect us from all evil,
+and bring us to everlasting life. Amen.

@@ -1,0 +1,82 @@
+= Evening Prayer - {date}
+author: Daily Office Bot
+version: 1.0
+relays: daily-office-relays
+auto_update: true
+summary: Catholic Daily Office - Evening Prayer for {date}
+type: prayer
+liturgical_season: {season}
+liturgical_color: {color}
+prayer_time: 6:00 PM UTC
+
+**{liturgical_date}**
+*Liturgical Season: {season}*
+*Liturgical Color: {color}*
+
+== Opening Prayer
+
+O God, come to my assistance.
+O Lord, make haste to help me.
+
+Glory to the Father, and to the Son, and to the Holy Spirit,
+as it was in the beginning, is now, and will be for ever. Amen.
+
+== Psalm of Thanksgiving
+
+{psalm}
+
+== Scripture Reading
+
+{reading}
+
+== Magnificat
+
+My soul proclaims the greatness of the Lord,
+my spirit rejoices in God my Savior,
+for he has looked with favor on his lowly servant.
+
+From this day all generations will call me blessed:
+the Almighty has done great things for me,
+and holy is his Name.
+
+He has mercy on those who fear him
+in every generation.
+He has shown the strength of his arm,
+he has scattered the proud in their conceit.
+
+He has cast down the mighty from their thrones,
+and has lifted up the lowly.
+He has filled the hungry with good things,
+and the rich he has sent away empty.
+
+He has come to the help of his servant Israel
+for he has remembered his promise of mercy,
+the promise he made to our fathers,
+to Abraham and his children for ever.
+
+Glory to the Father, and to the Son, and to the Holy Spirit,
+as it was in the beginning, is now, and will be for ever. Amen.
+
+== Intercessions
+
+Let us pray to the Lord, who is our light and our salvation:
+
+- For all who have died today, that they may rest in peace
+- For our families and loved ones, that they may be protected through the night
+- For those who work through the night, that they may be safe and blessed
+- For the Church throughout the world, that she may be a sign of hope
+
+== Closing Prayer
+
+Lord, as we prepare for rest,
+we thank you for the blessings of this day.
+Watch over us through the night,
+and grant us peaceful sleep.
+May we wake refreshed and ready
+to serve you in the new day;
+through Jesus Christ our Lord. Amen.
+
+== Blessing
+
+May the Lord grant us a peaceful night
+and a perfect end. Amen.

@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  nostrbots:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nostrbots:latest
+    container_name: nostrbots
+    volumes:
+      # Mount bot configurations
+      - ./bots:/app/bots
+      # Mount logs directory
+      - ./logs:/app/logs
+      # Mount temporary files
+      - ./tmp:/app/tmp
+    environment:
+      # Nostr bot key (set this in your .env file)
+      - NOSTR_BOT_KEY=${NOSTR_BOT_KEY}
+      # Optional: Set timezone
+      - TZ=UTC
+    networks:
+      - nostrbots-network
+    # Default command - show help
+    command: ["help"]
+    
+  # Development service with live reload
+  nostrbots-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nostrbots:dev
+    container_name: nostrbots-dev
+    volumes:
+      # Mount entire project for development
+      - .:/app
+      # Mount bot configurations
+      - ./bots:/app/bots
+      # Mount logs directory
+      - ./logs:/app/logs
+    environment:
+      - NOSTR_BOT_KEY=${NOSTR_BOT_KEY}
+      - TZ=UTC
+      # Development mode
+      - APP_ENV=development
+    networks:
+      - nostrbots-network
+    # Keep container running for development
+    command: ["tail", "-f", "/dev/null"]
+    
+  # Scheduled execution service
+  nostrbots-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nostrbots:scheduler
+    container_name: nostrbots-scheduler
+    volumes:
+      - ./bots:/app/bots
+      - ./logs:/app/logs
+      - ./tmp:/app/tmp
+    environment:
+      - NOSTR_BOT_KEY=${NOSTR_BOT_KEY}
+      - TZ=UTC
+    networks:
+      - nostrbots-network
+    # Run scheduled bots every hour
+    command: ["schedule"]
+    # Restart policy for continuous operation
+    restart: unless-stopped
+    # Health check
+    healthcheck:
+      test: ["CMD", "php", "nostrbots.php", "--help"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  nostrbots-network:
+    driver: bridge
+
+# Optional: Add volumes for persistent data
+volumes:
+  nostrbots-logs:
+    driver: local
+  nostrbots-tmp:
+    driver: local

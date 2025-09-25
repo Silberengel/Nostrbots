@@ -1,419 +1,277 @@
 # Nostrbots
 
-A streamlined PHP tool for publishing content directly to Nostr from AsciiDoc and Markdown documents.
-
-> **🚀 Version 2.0** - Complete rewrite with direct document publishing!
+A PHP tool for publishing content to Nostr from AsciiDoc and Markdown documents, with support for automated bots and scheduled publishing.
 
 ## Features
 
-- 🚀 **Direct Document Publishing**: Publish directly from AsciiDoc/Markdown files - no config files needed!
-- ✅ **Self-Contained Documents**: Metadata embedded in document headers
-- ✅ **Hierarchical Publications**: Support for complex nested structures
-- ✅ **Multiple Event Kinds**: 30023 (Long-form), 30040/30041 (Publications), 30818 (Wiki)
-- ✅ **Smart Publishing Order**: Content → indices → main index
-- ✅ **Comprehensive Validation**: Document structure validation with detailed error reporting
-- ✅ **Rich CLI Interface**: Beautiful output with execution summaries
+- **Direct Publishing**: Publish from AsciiDoc/Markdown files with embedded metadata
+- **Multiple Event Kinds**: 30023 (Long-form), 30040/30041 (Publications), 30818 (Wiki)
+- **Bot System**: Automated content generation and scheduled publishing
+- **Docker Support**: Containerized deployment with Jenkins CI/CD
+- **Test Environment**: Safe testing with throwaway keys and test relays
 
 ## Supported Event Kinds
 
-| Kind  | Name | Description | NIP |
-|-------|------|-------------|-----|
-| 30023 | Long-form Content | Articles and blog posts | NIP-23 |
-| 30040 | Publication Index | Table of contents for publications | NKBIP-01 |
-| 30041 | Publication Content | Sections/chapters for publications | NKBIP-01 |
-| 30818 | Wiki Article | Collaborative wiki articles | NIP-54 |
+| Kind  | Name | Description |
+|-------|------|-------------|
+| 30023 | Long-form Content | Articles and blog posts (Markdown) |
+| 30040 | Publication Index | Table of contents for publications |
+| 30041 | Publication Content | Sections/chapters (AsciiDoc) |
+| 30818 | Wiki Article | Collaborative wiki articles |
 
-## Quick Start
+## Installation
 
-### 1. Create Your Document
+### With Docker (Recommended)
 
 ```bash
-cat > my-article.adoc << 'EOF'
-= My First Nostr Article
-author: Your Name
-version: 1.0
-relays: favorite-relays
-auto_update: true
-summary: My first article published to Nostr
-type: article
+# Clone and build
+git clone <repository-url>
+cd Nostrbots
+docker build -t nostrbots .
 
-This is the introduction to my article.
-
-== Chapter 1
-
-Chapter content here.
-
-=== Section 1.1
-
-More detailed content.
-EOF
+# Test immediately
+./test-hello-world.sh
 ```
 
-### 2. Install Dependencies
+### Without Docker
 
 ```bash
+# Install dependencies
 composer install
-```
 
-### 3. Generate Nostr Key
-
-Generate a new Nostr key pair for the bot:
-
-```bash
-# Generate key and show full instructions
-php generate-key.php
-
-# Generate key and get just the export command
+# Generate Nostr key (or use your own)
 php generate-key.php --export
 
-# Generate key quietly (for scripts)
-php generate-key.php --quiet
+# Set environment variable
+export NOSTR_BOT_KEY=your_private_key_here
+
+# Test publishing
+php nostrbots.php publish examples/simple-guide.adoc --dry-run --verbose
 ```
 
-### 4. Set Environment Variable
+## Quick Test
 
-The key generator will provide you with the exact export command. For example:
+Try the Hello World bot immediately:
 
 ```bash
-export NOSTR_BOT_KEY=93cb7676d74e0377aa0bb0133830de5d635198212e5d5f607829da2dce6bccb1
+./test-hello-world.sh
 ```
 
-Or you can run the export command directly:
+This will:
+- Generate a test Nostr key
+- Create a "Hello World" article
+- Publish to test relays
+- Verify everything works
+
+## Bot System
+
+### Create a Bot
 
 ```bash
-# Copy the output from generate-key.php --export
-$(php generate-key.php --export)
+# Create a new bot
+./scripts/setup-bot.sh my-bot --schedule "06:00,18:00" --relays "wss://relay1.com,wss://relay2.com"
+
+# Test your bot
+docker run --rm -v $(pwd)/bots:/app/bots nostrbots run-bot --bot my-bot --dry-run --verbose
 ```
 
-### 5. Publish
+### Bot Structure
+
+```
+bots/
+├── hello-world/             # Test bot
+│   ├── config.json          # Bot configuration
+│   ├── generate-content.php # Content generator
+│   └── output/              # Generated articles
+└── daily-office/            # Catholic Daily Office bot
+    ├── config.json
+    ├── generate-content.php
+    └── templates/
+```
+
+## Jenkins CI/CD
+
+Set up automated bot execution with local ORLY relay:
 
 ```bash
-# Test first with dry run
-php nostrbots.php publish my-article.adoc --dry-run --verbose
+# Basic Jenkins setup
+./scripts/setup-local-jenkins.sh
 
-# Publish for real
-php nostrbots.php publish my-article.adoc --verbose
+# Full setup with pipeline + ORLY relay
+./scripts/setup-local-jenkins.sh --build-nostrbots --setup-pipeline
 ```
 
-**That's it!** No configuration files, no complex setup - just your content and one command.
+This will:
+- Install and configure Jenkins
+- Build Nostrbots Docker image
+- Install ORLY relay from [next.orly.dev](https://github.com/mleku/next.orly.dev)
+- Configure ORLY with the same key as your bot
+- Set up complete CI/CD pipeline
+- Create comprehensive test scripts
 
-## Document Format
+Then visit: http://localhost:8080 (admin/admin)
 
-Your document should include metadata in the header (after the title):
+### Complete Pipeline Test
+
+Test the entire system with one command:
+
+```bash
+./test-complete-pipeline.sh
+```
+
+This tests:
+- ORLY relay startup and configuration
+- Hello World bot publishing to local relay
+- End-to-end workflow verification
+
+## Catholic Daily Office Bot
+
+The Daily Office bot demonstrates a real-world application, publishing Catholic liturgical content twice daily.
+
+### Configuration
+
+```json
+{
+  "name": "Daily Office Bot",
+  "schedule": ["06:00", "18:00"],
+  "relays": [
+    "wss://thecitadel.nostr1.com",
+    "wss://orly-relay.imwald.eu"
+  ],
+  "content_kind": "30023"
+}
+```
+
+### How It Works
+
+1. **Liturgical Calendar**: Tracks Catholic seasons (Advent, Christmas, Lent, Easter, Ordinary Time)
+2. **Time-Based Content**: Generates different content for morning (6am) vs evening (6pm) prayers
+3. **Dynamic Content**: Includes daily psalms, scripture readings, and intercessions
+4. **Seasonal Adaptation**: Content varies based on liturgical season and color
+
+### Content Structure
+
+**Morning Prayer (6am UTC)**:
+- Opening prayer and Gloria
+- Psalm of the day
+- Scripture reading
+- Intercessions
+- Closing prayer and blessing
+
+**Evening Prayer (6pm UTC)**:
+- Opening prayer and Gloria
+- Psalm of thanksgiving
+- Scripture reading
+- Magnificat (Mary's song)
+- Intercessions
+- Closing prayer and blessing
+
+### Example Output
 
 ```asciidoc
-= Document Title
-author: Your Name               # Author name (optional)
-version: 1.0                    # Version number (optional)
-relays: favorite-relays          # Relay category (required)
-auto_update: true               # Allow updates (optional, default: true)
-summary: Brief description      # Short description (optional)
-type: article                   # Content type (optional, default: documentation)
-content_level: 0              # Hierarchy level (optional, default: 0)
+= Morning Prayer - Monday, January 15, 2024
+author: Daily Office Bot
+relays: daily-office-relays
+summary: Catholic Daily Office - Morning Prayer for Monday, January 15, 2024
+liturgical_season: Ordinary Time
+liturgical_color: Green
+prayer_time: 6:00 AM UTC
 
-Your document content starts here...
+**Monday of the Second Week in Ordinary Time**
+*Liturgical Season: Ordinary Time*
+*Liturgical Color: Green*
 
-== Chapter 1
-Chapter content...
+== Opening Prayer
 
-=== Section 1.1
-More content...
+O God, come to my assistance.
+O Lord, make haste to help me.
+
+Glory to the Father, and to the Son, and to the Holy Spirit,
+as it was in the beginning, is now, and will be for ever. Amen.
+
+== Psalm of the Day
+
+Psalm 95: Come, let us sing to the Lord; let us shout for joy to the Rock of our salvation.
+
+== Scripture Reading
+
+Matthew 5:14-16: 'You are the light of the world. A city built on a hill cannot be hid.'
+
+== Intercessions
+
+Let us pray to the Lord, who is our light and our salvation:
+
+- For the Church, that she may be a beacon of hope in the world
+- For all who are suffering, that they may find comfort and strength
+- For our families and communities, that we may grow in love and unity
+- For peace in our world, that all conflicts may be resolved through justice
+
+== Closing Prayer
+
+Almighty and eternal God,
+you have brought us safely to this new day.
+Preserve us now by your mighty power,
+that we may not fall into sin,
+nor be overcome by adversity;
+and in all we do,
+direct us to the fulfilling of your purpose;
+through Jesus Christ our Lord. Amen.
+
+== Blessing
+
+May the Lord bless us, protect us from all evil,
+and bring us to everlasting life. Amen.
 ```
 
-## Command Options
+## Command Line Usage
 
 ```bash
 # Basic publishing
 php nostrbots.php publish document.adoc
 
-# With custom content level (header level that becomes content sections)
-php nostrbots.php publish document.adoc --content-level 3
+# With options
+php nostrbots.php publish document.adoc --content-level 3 --content-kind 30023 --dry-run --verbose
 
-# With custom content kind
-php nostrbots.php publish document.adoc --content-kind 30023
-
-# Dry run to test without publishing
-php nostrbots.php publish document.adoc --dry-run --verbose
-
-# Full options
-php nostrbots.php publish document.adoc --content-level 4 --content-kind 30041 --dry-run --verbose
+# Bot management
+docker run --rm -v $(pwd)/bots:/app/bots nostrbots list-bots
+docker run --rm -v $(pwd)/bots:/app/bots nostrbots run-bot --bot daily-office --dry-run
 ```
 
-## How It Works
+## Document Format
 
-Nostrbots uses a streamlined approach that eliminates configuration files:
-
-1. **Parse Document**: Reads AsciiDoc/Markdown files and extracts metadata from headers
-2. **Build Structure**: Creates hierarchical event structure in memory
-3. **Publish Events**: Publishes in dependency order (content → indices → main index)
-
-### Document Structure
-
-Documents are organized hierarchically using headers:
+Include metadata in your document header:
 
 ```asciidoc
-= Main Document Title          # Level 1 - Main index
+= Document Title
 author: Your Name
-version: 1.0
 relays: favorite-relays
+summary: Brief description
+type: article
 
-Preamble content here.
+Your content here...
 
-== Part I: Getting Started     # Level 2 - Part index
-=== Chapter 1: Basics          # Level 3 - Chapter index
-==== Section 1.1: Concepts    # Level 4 - Content section (if content-level=4)
-Actual content here.
-
-==== Section 1.2: Examples    # Level 4 - Content section
-More content here.
-```
-
-### Content Levels
-
-The `--content-level` parameter determines the publication structure:
-
-- **Level 0 (default)**: Flat article - single content event, no indexes
-- **Level 1+**: Hierarchical publication - multiple content events with index events (30040)
-
-For content-level > 0, the `--content-kind` parameter determines the content event type:
-- **30041 (default)**: Publication content (book-style or blog-style)
-- **30023**: Long-form content (magazine-style) 
-- **30818**: Wiki articles (documentation-style)
-
-Examples:
-```bash
-# Flat article (default)
-php nostrbots.php publish article.adoc
-php nostrbots.php publish article.md
-
-# Hierarchical publication with book-style content
-php nostrbots.php publish book.adoc --content-level 2
-
-# Hierarchical publication with magazine-style content (30023 requires content-level > 0)
-php nostrbots.php publish magazine.adoc --content-level 2 --content-kind 30023
-
-# Hierarchical publication with documentation-style content
-php nostrbots.php publish docs.adoc --content-level 3 --content-kind 30818
-
-# Invalid examples (will throw errors):
-# php nostrbots.php publish article.md --content-level 2  # Markdown cannot have content-level
-# php nostrbots.php publish article.md --content-kind 30023  # Markdown always uses 30023 automatically
-# php nostrbots.php publish article.md --content-kind 30041  # 30041 requires AsciiDoc source
-# php nostrbots.php publish article.md --content-kind 30818  # 30818 requires AsciiDoc source
-# php nostrbots.php publish article.adoc --content-kind 30023  # 30023 requires content-level > 0
-```
-
-### Event Kind Requirements
-
-Different event kinds have specific content format requirements:
-
-#### 30023 - Long-form Content (Markdown)
-- **Content Format**: Markdown (converted from AsciiDoc source)
-- **Source Format**: AsciiDoc only (`.adoc` files)
-- **Use Case**: Articles, tutorials, CMS systems
-- **Structure**: Flat article (1 content event, 0 indexes)
-- **Conversion**: Automatically converts AsciiDoc syntax to GitHub Markdown
-- **Example**:
-```bash
-php nostrbots.php publish article.adoc --content-kind 30023
-```
-
-#### 30040 - Publication Index
-- **Content Format**: No content (metadata only)
-- **Use Case**: Table of contents for hierarchical publications
-- **Structure**: Part of publication system (typically used with 30041)
-- **Auto-generated**: Created automatically based on document structure
-
-#### 30041 - Publication Content
-- **Content Format**: AsciiDoc only
-- **Source Format**: AsciiDoc only (`.adoc` files)
-- **Use Case**: Individual sections/chapters of publications OR flat articles (called "notes")
-- **Structure**: 
-  - **Flat article**: 1 content event, 0 indexes (when used alone)
-  - **Publication**: Multiple content events with indexes (when used with 30040)
-- **Default**: Used when no specific content kind is specified for AsciiDoc files
-
-#### 30818 - Wiki Article
-- **Content Format**: AsciiDoc only
-- **Source Format**: AsciiDoc only (`.adoc` files)
-- **Use Case**: Collaborative wiki pages with wikilinks
-- **Structure**: Flat article (1 content event, 0 indexes)
-- **Example**:
-```bash
-php nostrbots.php publish wiki-article.adoc --content-kind 30818
-```
-
-### Content Format Detection
-
-Nostrbots automatically detects content format based on file extension:
-- `.md` files → Markdown content
-- `.adoc` files → AsciiDoc content
-
-The appropriate content format is automatically passed to the event kind handler.
-
-### Format and Content Level Constraints
-
-- **Markdown files (`.md`)**: Always flat articles (content-level 0) with 30023 (Long-form Content), no additional parameters allowed
-- **AsciiDoc files (`.adoc`)**: Can use any content-level (0-6) with any content-kind
-- **30023 (Long-form Content)**: Always Markdown format (from .md files or converted from .adoc files)
-- **30041 (Publication Content)**: Always AsciiDoc format
-- **30818 (Wiki Article)**: Always AsciiDoc format
-
-### AsciiDoc to Markdown Conversion
-
-When using 30023 with AsciiDoc source files, the content is automatically converted to GitHub Markdown format:
-
-- Headers: `= Title` → `# Title`
-- Bold: `**text**` → `**text**`
-- Italic: `__text__` → `*text*`
-- Monospace: `+text+` → `` `text` ``
-- Images: `image:file.png[alt]` → `![alt](file.png)`
-- Links: `[text](url)` → `[text](url)`
-- Lists: `- item` → `- item`
-- Code blocks: `[source,lang]` → ` ```lang`
-- Admonitions: `[NOTE]` → `> **Note:**`
-
-## Examples
-
-### Simple Article
-
-```asciidoc
-= Getting Started with Nostr
-author: Nostr Expert
-version: 1.0
-relays: favorite-relays
-summary: A beginner's guide to Nostr
-
-Welcome to Nostr! This guide will help you get started.
-
-== What is Nostr?
-
-Nostr is a simple protocol...
-
-== How to Use Nostr
-
-Here's how to get started...
-```
-
-### Hierarchical Guide
-
-```asciidoc
-= Complete Nostr Guide
-author: Nostr Protocol Team
-version: 2.0
-relays: favorite-relays
-summary: Comprehensive guide to Nostr protocols
-
-This is the most complete guide to Nostr.
-
-== Part I: Fundamentals
-=== Chapter 1: Basic Concepts
-==== What is Nostr?
-Detailed explanation here.
-
-==== Key Concepts
-More concepts here.
-
-=== Chapter 2: Getting Started
-==== Creating Your First Key
-Step-by-step guide.
-
-== Part II: Advanced Topics
-=== Chapter 3: Relay Management
-==== Choosing Relays
-Guide to selecting relays.
-```
-
-## Relay Configuration
-
-Edit `src/relays.yml` to configure relay categories:
-
-```yaml
-favorite-relays:
-  - wss://thecitadel.nostr1.com
-  - wss://theforest.nostr1.com
-
-more-relays:
-  - wss://nostr.wine
-  - wss://nostr.land
+== Chapter 1
+Chapter content...
 ```
 
 ## Testing
 
 ```bash
-# Run all tests
-php run-tests.php
-
-# Test specific functionality
-php src/Tests/DirectDocumentPublisherTest.php
-
-# Test document parsing
-php nostrbots.php publish examples/simple-guide.adoc --dry-run --verbose
-```
-
-## Utilities
-
-### Key Generator (`generate-key.php`)
-
-The key generator script helps you create new Nostr key pairs for the bot:
-
-```bash
-# Show help
-php generate-key.php --help
-
-# Generate key with full instructions
-php generate-key.php
-
-# Generate key for specific slot
-php generate-key.php --slot 1
-
-# Get just the export command
-php generate-key.php --export
-
-# Quiet mode for scripts
-php generate-key.php --quiet
-```
-
-**Features:**
-- Generates cryptographically secure Nostr key pairs
-- Supports multiple key slots (NOSTR_BOT_KEY1 through NOSTR_BOT_KEY10)
-- Provides both hex and bech32 formats
-- Includes setup instructions and shell profile integration
-- Safe for automation with `--quiet` mode
-
-## Development
-
-### Requirements
-
-- PHP 8.1+
-- Composer
-- YAML extension (`php-yaml`)
-
-### Running Tests
-
-```bash
 # Run test suite
 php run-tests.php
 
-# Test relay connectivity
-php -r "require 'src/bootstrap.php'; \$rm = new Nostrbots\Utils\RelayManager(); var_dump(\$rm->testRelay('wss://thecitadel.nostr1.com'));"
+# Test Hello World bot
+./test-hello-world.sh
 ```
-
-## Documentation
-
-- [Complete Direct Publishing Guide](docs/DIRECT_PUBLISHING.md) - Detailed documentation
-- [Relay Selection Guide](docs/RELAY_SELECTION.md) - Relay configuration and selection
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](./LICENSE) file for details.
 
-## Support
+## Contact
 
-- **GitHub**: [Issues and discussions](https://github.com/SilberWitch/Nostrbots)
-- **Nostr**: npub1l5sga6xg72phsz5422ykujprejwud075ggrr3z2hwyrfgr7eylqstegx9z
-- **Email**: support@gitcitadel.eu
+This is brought to you by [Silberengel](https://jumble.imwald.eu/users/npub1l5sga6xg72phsz5422ykujprejwud075ggrr3z2hwyrfgr7eylqstegx9z).
 
----
+Check me out on [GitHub](https://github.com/Silberengel) and [GitWorkshop](https://gitworkshop.dev/silberengel@gitcitadel.com).
 
-*Built with ❤️ for the Nostr community*
+You can zap me some Bitcoin on Lightning: silberengel@minibits.cash
