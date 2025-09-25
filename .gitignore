@@ -18,6 +18,9 @@ Thumbs.db
 *.temp
 /tmp/
 
+# Your environment file
+.env
+
 # Jenkins setup files (NEVER commit these!)
 docker-compose.jenkins.yml
 jenkins-data/

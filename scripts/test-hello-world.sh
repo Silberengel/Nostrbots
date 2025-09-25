@@ -98,10 +98,26 @@ run_dry_run_test() {
     print_status "🧪 Running Hello World Bot Dry Run Test..."
     echo "=============================================="
     
-    # Run dry run
-    print_status "Executing: php nostrbots.php publish bots/hello-world --dry-run"
+    # First generate content
+    print_status "Step 1: Generating content with hello-world bot..."
+    if php bots/hello-world/generate-content.php; then
+        print_success "✅ Content generation successful!"
+    else
+        print_error "❌ Content generation failed!"
+        return 1
+    fi
     
-    if php nostrbots.php publish bots/hello-world --dry-run; then
+    # Find the latest generated file
+    LATEST_OUTPUT=$(ls -t bots/hello-world/output/*.adoc 2>/dev/null | head -1)
+    if [ -z "$LATEST_OUTPUT" ]; then
+        print_error "❌ No output file found after content generation"
+        return 1
+    fi
+    
+    print_status "Step 2: Testing dry run with generated file: $(basename "$LATEST_OUTPUT")"
+    print_status "Executing: php nostrbots.php publish \"$LATEST_OUTPUT\" --dry-run"
+    
+    if php nostrbots.php publish "$LATEST_OUTPUT" --dry-run; then
         print_success "✅ Dry run test PASSED!"
         print_status "The bot can generate content and validate the setup"
         return 0
@@ -117,22 +133,36 @@ run_publish_test() {
     print_status "🚀 Running Hello World Bot Publish Test..."
     echo "=============================================="
     
-    # Run actual publish
-    print_status "Executing: php nostrbots.php publish bots/hello-world"
+    # First generate content if not already done
+    if [ -z "$LATEST_OUTPUT" ]; then
+        print_status "Step 1: Generating content with hello-world bot..."
+        if php bots/hello-world/generate-content.php; then
+            print_success "✅ Content generation successful!"
+        else
+            print_error "❌ Content generation failed!"
+            return 1
+        fi
+        
+        # Find the latest generated file
+        LATEST_OUTPUT=$(ls -t bots/hello-world/output/*.adoc 2>/dev/null | head -1)
+        if [ -z "$LATEST_OUTPUT" ]; then
+            print_error "❌ No output file found after content generation"
+            return 1
+        fi
+    fi
     
-    if php nostrbots.php publish bots/hello-world; then
+    print_status "Step 2: Publishing generated file: $(basename "$LATEST_OUTPUT")"
+    print_status "Executing: php nostrbots.php publish \"$LATEST_OUTPUT\""
+    
+    if php nostrbots.php publish "$LATEST_OUTPUT"; then
         print_success "✅ Publish test PASSED!"
         print_status "The bot successfully published content to Nostr!"
         
-        # Check if output file was created
-        LATEST_OUTPUT=$(ls -t bots/hello-world/output/*.adoc 2>/dev/null | head -1)
-        if [ -n "$LATEST_OUTPUT" ]; then
-            print_success "📄 Output file created: $(basename "$LATEST_OUTPUT")"
-            print_status "Content preview:"
-            echo "----------------------------------------"
-            head -10 "$LATEST_OUTPUT" | sed 's/^/  /'
-            echo "----------------------------------------"
-        fi
+        print_success "📄 Output file: $(basename "$LATEST_OUTPUT")"
+        print_status "Content preview:"
+        echo "----------------------------------------"
+        head -10 "$LATEST_OUTPUT" | sed 's/^/  /'
+        echo "----------------------------------------"
         
         return 0
     else

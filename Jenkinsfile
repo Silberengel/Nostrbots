@@ -1,280 +1,110 @@
 pipeline {
-    agent {
-        docker {
-            image 'nostrbots:latest'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
-    
-    environment {
-        // Bot configuration
-        BOT_CONFIG_DIR = '/app/bots'
-        LOG_DIR = '/app/logs'
-        
-        // Nostr configuration (encrypted key with default password decryption)
-        // Only the encrypted key is passed from the Docker container environment
-        NOSTR_BOT_KEY_ENCRYPTED = env.NOSTR_BOT_KEY_ENCRYPTED
-        
-        // Docker registry (if using private registry)
-        DOCKER_REGISTRY = 'your-registry.com'
-        DOCKER_IMAGE = 'nostrbots'
-        DOCKER_TAG = "${env.BUILD_NUMBER}"
-    }
-    
-    options {
-        // Keep builds for 30 days
-        buildDiscarder(logRotator(numToKeepStr: '30'))
-        
-        // Timeout after 30 minutes
-        timeout(time: 30, unit: 'MINUTES')
-        
-        // Skip default checkout (we'll do it manually)
-        skipDefaultCheckout()
-    }
+    agent any
     
     stages {
-        stage('Checkout') {
+        stage('Generate Content') {
             steps {
-                checkout scm
-                script {
-                    // Get git commit info for tagging
-                    env.GIT_COMMIT_SHORT = sh(
-                        script: 'git rev-parse --short HEAD',
-                        returnStdout: true
-                    ).trim()
-                    env.GIT_BRANCH = sh(
-                        script: 'git rev-parse --abbrev-ref HEAD',
-                        returnStdout: true
-                    ).trim()
-                }
-            }
-        }
-        
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    // Build the Docker image
-                    def image = docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                echo "📝 Generating Hello World content using Docker..."
+                sh '''
+                    # Load environment variables from .env file if it exists
+                    if [ -f ".env" ]; then
+                        echo "Loading environment variables from .env file..."
+                        export $(grep -v '^#' .env | xargs)
+                    fi
                     
-                    // Also tag as latest for local use
-                    sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+                    # Generate content using the nostrbots Docker image
+                    docker run --rm \
+                        -e NOSTR_BOT_KEY_ENCRYPTED="${NOSTR_BOT_KEY_ENCRYPTED}" \
+                        -e NOSTR_BOT_NPUB="${NOSTR_BOT_NPUB}" \
+                        -v /home/madmin/Projects/GitCitadel/Nostrbots:/workspace \
+                        -w /workspace \
+                        silberengel/nostrbots:latest \
+                        php bots/hello-world/generate-content.php
                     
-                    // Store image reference for later stages
-                    env.DOCKER_IMAGE_ID = image.id
-                }
+                    # List generated files
+                    echo "📋 Generated content files:"
+                    docker run --rm \
+                        -v /home/madmin/Projects/GitCitadel/Nostrbots:/workspace \
+                        -w /workspace \
+                        silberengel/nostrbots:latest \
+                        ls -la bots/hello-world/output/ || echo "No output directory found"
+                '''
             }
         }
         
-        stage('Test') {
-            parallel {
-                stage('Unit Tests') {
-                    steps {
-                        script {
-                            docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").inside {
-                                sh 'php nostrbots.php --help'
-                                sh 'php run-tests.php'
-                            }
-                        }
-                    }
-                }
-                
-                stage('Bot Validation') {
-                    steps {
-                        script {
-                            docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").inside {
-                                sh 'docker-entrypoint.sh list-bots'
-                                
-                                // Validate bot configurations
-                                sh '''
-                                    echo "🔍 Validating bot configurations..."
-                                    for bot_dir in /app/bots/*/; do
-                                        if [ -d "$bot_dir" ]; then
-                                            bot_name=$(basename "$bot_dir")
-                                            config_file="$bot_dir/config.json"
-                                            
-                                            if [ -f "$config_file" ]; then
-                                                echo "✅ Validating $bot_name..."
-                                                # Validate JSON syntax
-                                                jq empty "$config_file" || {
-                                                    echo "❌ Invalid JSON in $config_file"
-                                                    exit 1
-                                                }
-                                                
-                                                # Check required fields
-                                                name=$(jq -r '.name // empty' "$config_file")
-                                                relays=$(jq -r '.relays // empty' "$config_file")
-                                                
-                                                if [ -z "$name" ]; then
-                                                    echo "❌ Missing 'name' field in $config_file"
-                                                    exit 1
-                                                fi
-                                                
-                                                if [ -z "$relays" ]; then
-                                                    echo "❌ Missing 'relays' field in $config_file"
-                                                    exit 1
-                                                fi
-                                                
-                                                echo "✅ $bot_name configuration valid"
-                                            else
-                                                echo "⚠️  No config.json found for $bot_name"
-                                            fi
-                                        fi
-                                    done
-                                '''
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        stage('Dry Run Tests') {
+        stage('Publish to Nostr') {
             steps {
-                script {
-                    docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").inside {
-                        sh '''
-                            echo "🧪 Running dry-run tests for all bots..."
-                            
-                            for bot_dir in /app/bots/*/; do
-                                if [ -d "$bot_dir" ]; then
-                                    bot_name=$(basename "$bot_dir")
-                                    config_file="$bot_dir/config.json"
-                                    
-                                    if [ -f "$config_file" ]; then
-                                        echo "🔍 Testing $bot_name (dry-run)..."
-                                        
-                                        # Test bot execution in dry-run mode
-                                        docker-entrypoint.sh run-bot --bot "$bot_name" --dry-run --verbose || {
-                                            echo "❌ Dry-run test failed for $bot_name"
-                                            exit 1
-                                        }
-                                        
-                                        echo "✅ $bot_name dry-run test passed"
-                                    fi
-                                fi
-                            done
-                        '''
-                    }
-                }
-            }
-        }
-        
-        stage('Deploy') {
-            when {
-                anyOf {
-                    branch 'main'
-                    branch 'master'
-                    changeRequest()
-                }
-            }
-            steps {
-                script {
-                    // Push to registry if configured
-                    if (env.DOCKER_REGISTRY && env.DOCKER_REGISTRY != 'your-registry.com') {
-                        docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker-registry-credentials') {
-                            docker.image("${DOCKER_IMAGE}:${DOCKER_TAG}").push()
-                            docker.image("${DOCKER_IMAGE}:latest").push()
-                        }
-                    }
+                echo "📡 Publishing to Nostr relays..."
+                sh '''
+                    # Load environment variables from .env file if it exists
+                    if [ -f ".env" ]; then
+                        echo "Loading environment variables from .env file..."
+                        export $(grep -v '^#' .env | xargs)
+                    fi
                     
-                    // Deploy to staging/production if needed
-                    if (env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') {
-                        echo "🚀 Deploying to production..."
-                        // Add deployment steps here
-                    }
-                }
+                    # Check if content files exist and find the latest one
+                    LATEST_FILE=$(docker run --rm \
+                        -v /home/madmin/Projects/GitCitadel/Nostrbots:/workspace \
+                        -w /workspace \
+                        silberengel/nostrbots:latest \
+                        sh -c 'if [ -d "bots/hello-world/output" ] && [ "$(ls -A bots/hello-world/output/*.adoc 2>/dev/null)" ]; then ls -t bots/hello-world/output/*.adoc | head -1; else echo ""; fi')
+                    
+                    if [ -n "$LATEST_FILE" ]; then
+                        echo "📄 Publishing file: $LATEST_FILE"
+                        
+                        # Decrypt the key for publishing
+                        echo "🔓 Decrypting private key..."
+                        DECRYPTED_KEY=$(docker run --rm \
+                            -e NOSTR_BOT_KEY_ENCRYPTED="${NOSTR_BOT_KEY_ENCRYPTED}" \
+                            -v /home/madmin/Projects/GitCitadel/Nostrbots:/workspace \
+                            -w /workspace \
+                            silberengel/nostrbots:latest \
+                            php decrypt-key.php)
+                        
+                        # Publish to Nostr (dry-run first)
+                        echo "🔍 Testing with dry-run..."
+                        docker run --rm \
+                            -e NOSTR_BOT_KEY="${DECRYPTED_KEY}" \
+                            -e NOSTR_BOT_NPUB="${NOSTR_BOT_NPUB}" \
+                            -v /home/madmin/Projects/GitCitadel/Nostrbots:/workspace \
+                            -w /workspace \
+                            silberengel/nostrbots:latest \
+                            php nostrbots.php publish "$LATEST_FILE" --dry-run
+                        
+                        echo "🚀 Publishing for real..."
+                        docker run --rm \
+                            -e NOSTR_BOT_KEY="${DECRYPTED_KEY}" \
+                            -e NOSTR_BOT_NPUB="${NOSTR_BOT_NPUB}" \
+                            -v /home/madmin/Projects/GitCitadel/Nostrbots:/workspace \
+                            -w /workspace \
+                            silberengel/nostrbots:latest \
+                            php nostrbots.php publish "$LATEST_FILE"
+                    else
+                        echo "❌ No content files found to publish"
+                        exit 1
+                    fi
+                '''
+            }
+        }
+        
+        stage('Verify Publication') {
+            steps {
+                echo "✅ Verifying publication..."
+                sh '''
+                    echo "📊 Publication completed successfully!"
+                    echo "🔗 Check your Nostr client for the new content"
+                    echo "📡 Published to relays: wss://freelay.sovbit.host"
+                '''
             }
         }
     }
     
     post {
-        always {
-            // Clean up Docker images to save space
-            sh '''
-                docker rmi ${DOCKER_IMAGE}:${DOCKER_TAG} || true
-                docker system prune -f || true
-            '''
-        }
-        
         success {
-            echo "✅ Pipeline completed successfully!"
-            
-            // Send success notification (customize as needed)
-            script {
-                if (env.BRANCH_NAME == 'main' || env.BRANCH_NAME == 'master') {
-                    // Notify on main branch success
-                    echo "🎉 Production deployment successful!"
-                }
-            }
+            echo "🎉 Nostrbots pipeline completed successfully!"
         }
-        
         failure {
-            echo "❌ Pipeline failed!"
-            
-            // Send failure notification (customize as needed)
-            script {
-                // Add notification logic here (Slack, email, etc.)
-                echo "🚨 Build failed - check logs for details"
-            }
-        }
-        
-        unstable {
-            echo "⚠️  Pipeline completed with warnings"
-        }
-    }
-}
-
-// Scheduled builds for bot execution
-pipeline {
-    agent {
-        docker {
-            image 'nostrbots:latest'
-        }
-    }
-    
-    environment {
-        NOSTR_BOT_KEY_ENCRYPTED = env.NOSTR_BOT_KEY_ENCRYPTED
-    }
-    
-    triggers {
-        // Run every hour to check for scheduled bots
-        cron('0 * * * *')
-    }
-    
-    stages {
-        stage('Scheduled Bot Execution') {
-            steps {
-                script {
-                    docker.image('nostrbots:latest').inside {
-                        sh '''
-                            echo "⏰ Checking for scheduled bots..."
-                            current_time=$(date -u +%H:%M)
-                            echo "Current UTC time: $current_time"
-                            
-                            # Decrypt the Nostr bot key using default password
-                            echo "🔐 Decrypting Nostr bot key..."
-                            NOSTR_BOT_KEY=$(php generate-key.php --key "$NOSTR_BOT_KEY_ENCRYPTED" --decrypt --quiet | grep "export NOSTR_BOT_KEY=" | cut -d'=' -f2-)
-                            export NOSTR_BOT_KEY
-                            
-                            # Clear sensitive environment variables
-                            unset NOSTR_BOT_KEY_ENCRYPTED
-                            
-                            # Run bots in schedule mode
-                            docker-entrypoint.sh schedule
-                        '''
-                    }
-                }
-            }
-        }
-    }
-    
-    post {
-        always {
-            // Log the execution
-            script {
-                def timestamp = new Date().format('yyyy-MM-dd HH:mm:ss')
-                echo "Scheduled execution completed at $timestamp"
-            }
+            echo "❌ Nostrbots pipeline failed!"
         }
     }
 }

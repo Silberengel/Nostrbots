@@ -52,7 +52,7 @@ Now you can:
 This article was generated using:
 
 - **PHP**: {php_version}
-- **Nostrbots**: Version 2.0
+- **Nostrbots**: Version {nostrbots_version}
 - **Format**: AsciiDoc
 - **Event Kind**: 30041 (Publication Content)
 - **Relays**: Test relays for safe experimentation

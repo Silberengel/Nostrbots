@@ -15,7 +15,6 @@ The Docker setup has been updated to use the **same encrypted key system as Jenk
 ### 🔧 Updated Files
 
 - `Dockerfile` - Updated startup script to use encrypted keys
-- `docker-compose.next-orly.yml` - Updated environment variables
 - `scripts/build-next-orly-docker.sh` - Updated usage examples
 - `scripts/test-next-orly-docker.sh` - Updated to generate test keys
 - `docs/DOCKER_SETUP.md` - Updated documentation
@@ -32,7 +31,8 @@ docker run --rm -p 3334:3334 \
   silberengel/next-orly:latest
 
 # 3. Or use docker-compose
-docker-compose -f docker-compose.next-orly.yml up
+cp docker-compose.example.yml docker-compose.yml
+docker-compose up
 ```
 
 ### 🔑 Key Benefits

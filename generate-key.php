@@ -19,6 +19,41 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Nostrbots\Utils\KeyManager;
 
 /**
+ * Update the .env file with the generated keys
+ */
+function updateEnvFile(string $encryptedKey, string $npub): void
+{
+    $envFile = __DIR__ . '/.env';
+    
+    if (!file_exists($envFile)) {
+        // Create .env from template if it doesn't exist
+        $templateFile = __DIR__ . '/env.example';
+        if (file_exists($templateFile)) {
+            copy($templateFile, $envFile);
+        } else {
+            // Create basic .env file
+            file_put_contents($envFile, "# Nostrbots Environment Configuration\n");
+        }
+    }
+    
+    $content = file_get_contents($envFile);
+    
+    // Replace the key variables
+    $content = preg_replace('/^NOSTR_BOT_KEY_ENCRYPTED=.*$/m', "NOSTR_BOT_KEY_ENCRYPTED={$encryptedKey}", $content);
+    $content = preg_replace('/^NOSTR_BOT_NPUB=.*$/m', "NOSTR_BOT_NPUB={$npub}", $content);
+    
+    // If the variables weren't found, add them
+    if (!preg_match('/^NOSTR_BOT_KEY_ENCRYPTED=/m', $content)) {
+        $content .= "\nNOSTR_BOT_KEY_ENCRYPTED={$encryptedKey}";
+    }
+    if (!preg_match('/^NOSTR_BOT_NPUB=/m', $content)) {
+        $content .= "\nNOSTR_BOT_NPUB={$npub}";
+    }
+    
+    file_put_contents($envFile, $content);
+}
+
+/**
  * Encrypt a key using AES-256-CBC with password-based key derivation
  */
 function encryptKeyWithPassword(string $key, string $password): string
@@ -261,6 +296,7 @@ function main(): void
         }
         
         $hexPrivateKey = $result['key_set']['hexPrivateKey'];
+        $npub = $result['key_set']['bechPublicKey'];
         
         // Handle encryption
         if ($encrypt || $jenkins) {
@@ -282,6 +318,9 @@ function main(): void
             secureClear($password);
             
             if ($jenkins) {
+                // Update .env file first
+                updateEnvFile($encryptedKey, $npub);
+                
                 // Jenkins-specific output
                 if ($quiet) {
                     echo "NOSTR_BOT_KEY_ENCRYPTED={$encryptedKey}\n";
@@ -308,8 +347,12 @@ function main(): void
                 return;
             }
             
+            // Update .env file
+            updateEnvFile($encryptedKey, $npub);
+            
             if ($quiet) {
                 echo "export NOSTR_BOT_KEY_ENCRYPTED={$encryptedKey}\n";
+                echo "export NOSTR_BOT_NPUB={$npub}\n";
                 return;
             }
             
@@ -327,12 +370,17 @@ function main(): void
             echo "  Encryption: AES-256-CBC with PBKDF2\n\n";
             echo "🚀 Export commands:\n";
             echo "  export NOSTR_BOT_KEY_ENCRYPTED=<encrypted_key_value>\n";
+            
+            // Update .env file
+            updateEnvFile($encryptedKey, $npub);
+            echo "✅ Updated .env file with new keys\n";
             return;
         }
         
         // Standard output (unencrypted)
         if ($quiet) {
             echo "export {$result['env_variable']}={$hexPrivateKey}\n";
+            echo "export NOSTR_BOT_NPUB={$npub}\n";
             return;
         }
         

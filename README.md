@@ -40,64 +40,60 @@ A secure, enterprise-grade PHP tool for publishing content to Nostr from AsciiDo
 
 ## 🛠️ Quick Start
 
-### Option 1: Docker Full Setup (Recommended)
+### Option 1: Complete Automated Setup (Recommended)
 
-Complete setup with Jenkins, Orly relay, and testing:
+**One-command setup** with Jenkins, Orly relay, and pipeline:
 
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd Nostrbots
 
-# Run complete Docker setup
-bash scripts/docker-full-setup.sh
+# Run complete automated setup
+./setup.sh
 
-# Or with custom ports
-bash scripts/docker-full-setup.sh --jenkins-port 8080 --orly-port 3334
+# That's it! Everything is set up automatically:
+# ✅ Keys generated and encrypted
+# ✅ Orly relay started
+# ✅ Jenkins started with Docker support
+# ✅ Pipeline job created
+# ✅ Environment tested
 ```
 
-### Option 2: Individual Setup
+### Option 2: Individual Components
 
-Step-by-step setup for more control:
+For more control over the setup process:
 
 ```bash
-# 1. Generate encrypted Nostr key
-bash scripts/01-generate-key.sh
+# Generate keys only
+./setup.sh keys
 
-# 2. Setup Jenkins with encrypted environment
-bash scripts/02-setup-jenkins.sh
+# Setup Jenkins only (includes Orly relay)
+./setup.sh jenkins
 
-# 3. Create dedicated nostrbots user
-bash scripts/02a-create-nostrbots-user.sh
+# Test the setup
+./setup.sh test
 
-# 4. Setup distributed builds
-bash scripts/02b-setup-distributed-builds.sh
+# Create Jenkins pipeline job
+./setup.sh create-pipeline
 
-# 5. Verify environment
-bash scripts/03-verify-environment.sh
-
-# 6. Create Jenkins pipeline
-bash scripts/04-create-pipeline.sh
-
-# 7. Verify complete setup
-bash scripts/05-verify-setup.sh
-
-# 8. Test with hello world bot
-bash scripts/test-hello-world.sh
+# Check if pipeline exists
+./setup.sh check-pipeline
 ```
 
-### Option 3: Orly Relay Setup
+### Option 3: Manual Pipeline Testing
 
-For local development and testing:
+Test the pipeline locally without Jenkins:
 
 ```bash
-# Complete Orly setup
-bash scripts/setup-orly-complete.sh
+# Run the pipeline locally
+./run-pipeline.sh
 
-# Or individual steps
-bash scripts/01-install-orly.sh
-bash scripts/02-configure-orly.sh
-bash scripts/03-verify-orly.sh
+# Clean up everything
+./cleanup.sh
+
+# Clean up everything including generated content
+./cleanup.sh --all
 ```
 
 ## 🔐 Security Features
@@ -123,82 +119,90 @@ bash scripts/03-verify-orly.sh
 
 ## 🧪 Testing
 
-### Hello World Bot Test
+### Automated Testing
 
-Comprehensive test of the entire setup:
+The setup includes comprehensive automated testing:
 
 ```bash
-# Full test (dry run + publish + relay verification)
-bash scripts/test-hello-world.sh
+# Test environment loading
+./test-env-loading.sh
 
-# Dry run only
-bash scripts/test-hello-world.sh --dry-run-only
+# Test the complete setup
+./setup.sh test
 
-# Publish only
-bash scripts/test-hello-world.sh --publish-only
-
-# Skip Orly relay verification
-bash scripts/test-hello-world.sh --no-orly-verify
+# Test pipeline locally
+./run-pipeline.sh
 ```
 
-### Quick Test
+### Jenkins Pipeline Testing
 
-Fast validation for CI/CD:
+Test the complete CI/CD pipeline:
 
 ```bash
-# Quick validation
-bash scripts/quick-test.sh
+# 1. Go to Jenkins: http://localhost:8080
+# 2. Login: admin/admin
+# 3. Go to 'nostrbots-pipeline' job
+# 4. Click 'Build Now'
+
+# The pipeline will:
+# ✅ Generate Hello World content
+# ✅ Decrypt keys securely
+# ✅ Publish to Nostr (dry-run first, then real)
+# ✅ Verify publication success
 ```
 
 ### Test Features
-- **Dry Run Validation**: Tests bot configuration without publishing
+- **Environment Testing**: Verifies .env file loading and Docker access
+- **Key Decryption**: Tests encrypted key handling
+- **Content Generation**: Creates test content with timestamps
+- **Dry Run Validation**: Tests configuration without publishing
 - **Actual Publishing**: Publishes content to Nostr relays
-- **Relay Verification**: Queries Orly to confirm event publication
-- **Content Verification**: Checks output files and timestamps
-- **Public Key Extraction**: Derives pubkey from private key for verification
+- **Relay Verification**: Confirms events are published to Orly relay
 
 ## 🔧 Configuration
 
-### Using Existing Keys
-
-Use your favorite Nostr key instead of generating a new one:
-
-```bash
-# Use existing key with default password
-bash scripts/01-generate-key.sh --key <your_hex_private_key>
-
-# Use existing key with custom password
-bash scripts/01-generate-key.sh --key <your_hex_private_key> --password "your_password"
-```
-
-### Custom Ports
-
-Customize ports for Jenkins and Orly:
-
-```bash
-# Jenkins on custom ports
-bash scripts/02-setup-jenkins.sh 8081 50001
-
-# Orly on custom port
-bash scripts/01-install-orly.sh 3335
-```
-
 ### Environment Variables
 
-Key environment variables (set automatically by scripts):
+The system uses a `.env` file for configuration (created automatically):
 
 ```bash
-# Encrypted Nostr key and password
-NOSTR_BOT_KEY_ENCRYPTED=<encrypted_key>
+# Nostr Bot Configuration (auto-generated)
+NOSTR_BOT_KEY_ENCRYPTED=<encrypted_private_key>
+NOSTR_BOT_NPUB=<public_key>
 
-# Jenkins configuration
-JENKINS_PORT=8080
-AGENT_PORT=50000
-JENKINS_ADMIN_PASSWORD=<admin_password>
-NOSTRBOTS_PASSWORD=<bot_user_password>
+# Jenkins Configuration
+JENKINS_ADMIN_ID=admin
+JENKINS_ADMIN_PASSWORD=admin
+NOSTRBOTS_PASSWORD=nostrbots123
 
-# Orly configuration
-ORLY_PORT=3334
+# Optional: Custom relay configuration
+# NOSTR_RELAYS=wss://relay1.example.com,wss://relay2.example.com
+```
+
+### Using Existing Keys
+
+Use your own Nostr key instead of generating a new one:
+
+```bash
+# Generate keys with your existing private key
+php generate-key.php --key <your_hex_private_key>
+
+# Or use the setup script
+./setup.sh keys
+```
+
+### Relay Configuration
+
+Configure which relays to use in `src/relays.yml`:
+
+```yaml
+test-relays:
+  - ws://localhost:3334    # Local Orly relay
+  - wss://freelay.sovbit.host  # Public relay
+
+favorite-relays:
+  - wss://thecitadel.nostr1.com
+  - wss://theforest.nostr1.com
 ```
 
 ## 📁 Project Structure
@@ -206,27 +210,28 @@ ORLY_PORT=3334
 ```
 Nostrbots/
 ├── bots/                          # Bot configurations
-│   ├── hello-world/              # Test bot
+│   ├── hello-world/              # Test bot with templates
 │   └── daily-office/             # Example bot
-├── scripts/                      # Setup and utility scripts
-│   ├── 01-generate-key.sh        # Key generation and encryption
-│   ├── 02-setup-jenkins.sh       # Jenkins container setup
-│   ├── 02a-create-nostrbots-user.sh # Dedicated user creation
-│   ├── 02b-setup-distributed-builds.sh # Distributed builds
-│   ├── 03-verify-environment.sh  # Environment verification
-│   ├── 04-create-pipeline.sh     # Jenkins pipeline creation
-│   ├── 05-verify-setup.sh        # Complete setup verification
-│   ├── test-hello-world.sh       # Comprehensive test suite
-│   ├── quick-test.sh             # Fast validation
-│   └── docker-full-setup.sh      # Complete Docker setup
 ├── src/                          # PHP source code
+│   ├── Bot/                      # Bot framework
+│   ├── EventKinds/               # Event kind handlers
+│   ├── Utils/                    # Utilities (KeyManager, RelayManager, etc.)
+│   └── relays.yml                # Relay configuration
 ├── docs/                         # Documentation
 ├── examples/                     # Example documents
-├── Dockerfile                    # Container definition
-├── docker-compose.yml            # Basic Docker Compose
-├── docker-compose.full.yml       # Complete setup
+├── .env                          # Environment configuration (auto-generated)
+├── env.example                   # Environment template
+├── setup.sh                      # Main setup script
+├── run-pipeline.sh               # Local pipeline testing
+├── cleanup.sh                    # Cleanup script
+├── test-env-loading.sh           # Environment testing
+├── decrypt-key.php               # Key decryption utility
+├── generate-key.php              # Key generation utility
+├── nostrbots.php                 # Main publishing script
 ├── Jenkinsfile                   # Jenkins CI/CD pipeline
-└── generate-key.php              # Key management utility
+├── docker-compose.yml            # Main Docker Compose
+├── docker-compose.jenkins.yml    # Jenkins-specific setup
+└── Dockerfile                    # Container definition
 ```
 
 ## 🌐 Access Information
@@ -249,6 +254,17 @@ After setup, you can access:
 
 ### Common Issues
 
+**Setup fails:**
+```bash
+# Clean up and restart
+./cleanup.sh --all
+./setup.sh
+
+# Check Docker is running
+docker --version
+docker compose --version
+```
+
 **Jenkins not accessible:**
 ```bash
 # Check if Jenkins is running
@@ -261,13 +277,16 @@ docker logs jenkins-nostrbots
 docker compose -f docker-compose.jenkins.yml restart jenkins
 ```
 
-**Key decryption fails:**
+**Pipeline fails with key errors:**
 ```bash
-# Verify environment variables
-echo $NOSTR_BOT_KEY_ENCRYPTED
+# Test key decryption
+./test-env-loading.sh
 
-# Test decryption manually
-php generate-key.php --key $NOSTR_BOT_KEY_ENCRYPTED --decrypt
+# Check .env file
+cat .env
+
+# Regenerate keys
+./setup.sh keys
 ```
 
 **Orly relay not responding:**
@@ -278,25 +297,35 @@ docker ps | grep orly
 # Test Orly connection
 curl http://localhost:3334
 
-# Install websocat for proper testing
-apt install websocat  # Ubuntu/Debian
-brew install websocat # macOS
+# Restart Orly relay
+docker compose -f docker-compose.yml restart orly-relay
+```
+
+**Pipeline can't find files:**
+```bash
+# Check if files exist
+ls -la bots/hello-world/output/
+
+# Test content generation
+./run-pipeline.sh
 ```
 
 ### Logs and Debugging
 
 - **Jenkins Logs**: `docker logs jenkins-nostrbots`
-- **Bot Logs**: `logs/` directory
-- **Security Logs**: Check system logs for `[SECURITY]` entries
-- **Test Output**: `bots/hello-world/output/` for test results
+- **Orly Logs**: `docker logs orly-relay`
+- **Pipeline Logs**: Check Jenkins console output
+- **Test Output**: `bots/hello-world/output/` for generated content
+- **Environment Test**: `./test-env-loading.sh` for environment issues
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Run the test suite: `bash scripts/test-hello-world.sh`
-5. Submit a pull request to [Silberengel](https://github.com/Silberengel/nostrbots)
+4. Run the test suite: `./setup.sh test`
+5. Test the pipeline: `./run-pipeline.sh`
+6. Submit a pull request to [Silberengel](https://github.com/Silberengel/nostrbots)
 
 ## 📄 License
 
@@ -311,4 +340,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Ready to start botting?** Run `bash scripts/docker-full-setup.sh` and you'll be publishing to Nostr in minutes! 🚀
+**Ready to start botting?** Run `./setup.sh` and you'll be publishing to Nostr in minutes! 🚀
+
+## 🎯 What's New
+
+### Recent Improvements
+- ✅ **One-command setup**: `./setup.sh` does everything automatically
+- ✅ **Automatic key management**: Keys generated and encrypted automatically
+- ✅ **Orly relay integration**: Local relay starts with Jenkins
+- ✅ **Pipeline automation**: Jenkins pipeline job created automatically
+- ✅ **Environment testing**: Comprehensive environment validation
+- ✅ **Cleanup tools**: Easy cleanup with `./cleanup.sh --all`
+- ✅ **Local testing**: Test pipeline locally with `./run-pipeline.sh`
+- ✅ **Fixed key decryption**: Standalone decryption script for Jenkins
+- ✅ **Updated relay config**: Correct Orly relay port (3334)
+- ✅ **Docker Compose v2**: Updated to modern Docker Compose syntax

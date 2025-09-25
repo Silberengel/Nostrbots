@@ -306,6 +306,12 @@ class KeyManager
      */
     public function getNextAvailableKeySlot(): ?string
     {
+        // First check the default slot
+        if (!$this->isEnvironmentVariableSet('NOSTR_BOT_KEY')) {
+            return 'NOSTR_BOT_KEY';
+        }
+        
+        // Then check numbered slots
         for ($i = 1; $i <= self::MAX_KEYS; $i++) {
             $envVar = "NOSTR_BOT_KEY{$i}";
             if (!$this->isEnvironmentVariableSet($envVar)) {

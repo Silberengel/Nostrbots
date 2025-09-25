@@ -27,11 +27,14 @@ docker run --rm -p 3334:3334 silberengel/next-orly:latest
 ### Option 2: Use Docker Compose
 
 ```bash
+# Copy the example compose file
+cp docker-compose.example.yml docker-compose.yml
+
 # Start with docker-compose
-docker-compose -f docker-compose.next-orly.yml up
+docker-compose up
 
 # Or run in background
-docker-compose -f docker-compose.next-orly.yml up -d
+docker-compose up -d
 ```
 
 ### Option 3: Pull from Docker Hub

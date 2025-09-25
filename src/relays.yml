@@ -3,7 +3,7 @@ favorite-relays:
   - wss://theforest.nostr1.com
 
 test-relays:
-  - ws://localhost:$ORLY_PORT
+  - ws://localhost:3334
   - wss://freelay.sovbit.host
 
 daily-office-relays:
@@ -11,4 +11,4 @@ daily-office-relays:
   - wss://orly-relay.imwald.eu
 
 local-test-relays:
-  - ws://localhost:$ORLY_PORT
+  - ws://localhost:3334

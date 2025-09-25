@@ -186,7 +186,7 @@ if [ "$SUCCESS" = true ]; then
     echo ""
     print_status "Next steps:"
     print_status "  1. Run the container: docker run -p 3334:3334 $IMAGE_NAME:$TAG"
-    print_status "  2. Or use docker-compose: docker-compose -f docker-compose.next-orly.yml up"
+    print_status "  2. Or use docker-compose: cp docker-compose.example.yml docker-compose.yml && docker-compose up"
     print_status "  3. Access the relay at: http://localhost:3334"
 else
     print_error "❌ Full test failed"
