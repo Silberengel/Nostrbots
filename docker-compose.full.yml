@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # Nostrbots with full setup
+  nostrbots-setup:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nostrbots:latest
+    container_name: nostrbots-full-setup
+    volumes:
+      - .:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace
+    environment:
+      # These will be set by the setup script
+      - NOSTR_BOT_KEY_ENCRYPTED
+      - NOSTR_BOT_KEY_PASSWORD
+      - JENKINS_PORT=8080
+      - AGENT_PORT=50000
+      - ORLY_PORT=3334
+    command: ["bash", "scripts/docker-full-setup.sh"]
+    networks:
+      - nostrbots-network
+    depends_on:
+      - jenkins
+      - orly
+    restart: "no"
+
+  # Jenkins service
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins-nostrbots
+    user: jenkins
+    ports:
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:50000:50000"
+    volumes:
+      - ./jenkins-data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspace
+    environment:
+      - JENKINS_OPTS=--httpPort=8080 --httpListenAddress=127.0.0.1
+      - NOSTR_BOT_KEY_ENCRYPTED
+      - NOSTR_BOT_KEY_PASSWORD
+    networks:
+      - nostrbots-network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    tmpfs:
+      - /tmp
+      - /var/run
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # Nostrbots build agent
+  nostrbots-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nostrbots:jenkins
+    container_name: nostrbots-agent
+    user: jenkins
+    volumes:
+      - ./bots:/app/bots
+      - ./logs:/app/logs
+      - ./tmp:/app/tmp
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - NOSTR_BOT_KEY_ENCRYPTED
+      - NOSTR_BOT_KEY_PASSWORD
+    networks:
+      - nostrbots-network
+    command: ["tail", "-f", "/dev/null"]
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    tmpfs:
+      - /tmp
+      - /var/run
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # Orly Nostr relay
+  orly:
+    image: nostr-relay/orly:latest
+    container_name: orly-nostrbots
+    ports:
+      - "127.0.0.1:3334:3334"
+    volumes:
+      - ./orly-data:/app/data
+    environment:
+      - ORLY_PORT=3334
+    networks:
+      - nostrbots-network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    tmpfs:
+      - /tmp
+      - /var/run
+
+networks:
+  nostrbots-network:
+    driver: bridge

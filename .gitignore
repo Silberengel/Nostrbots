@@ -17,3 +17,11 @@ Thumbs.db
 *.tmp
 *.temp
 /tmp/
+
+# Jenkins setup files (NEVER commit these!)
+docker-compose.jenkins.yml
+jenkins-data/
+
+# Orly setup files (NEVER commit these!)
+docker-compose.orly.yml
+orly-data/

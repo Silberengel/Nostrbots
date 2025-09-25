@@ -1,16 +1,35 @@
 # Nostrbots
 
-A PHP tool for publishing content to Nostr from AsciiDoc and Markdown documents, with support for automated bots and scheduled publishing.
+A secure, enterprise-grade PHP tool for publishing content to Nostr from AsciiDoc and Markdown documents, with automated bots, Jenkins CI/CD, and comprehensive security features.
 
-## Features
+## 🚀 Features
 
+### Core Publishing
 - **Direct Publishing**: Publish from AsciiDoc/Markdown files with embedded metadata
 - **Multiple Event Kinds**: 30023 (Long-form), 30040/30041 (Publications), 30818 (Wiki)
 - **Bot System**: Automated content generation and scheduled publishing
-- **Docker Support**: Containerized deployment with Jenkins CI/CD
-- **Test Environment**: Safe testing with throwaway keys and test relays
+- **Template Engine**: Dynamic content generation with PHP templates
 
-## Supported Event Kinds
+### Security & Encryption
+- **🔒 Password-Based Encryption**: AES-256-CBC with PBKDF2 key derivation
+- **🔒 Secure Memory Management**: Automatic cleanup of sensitive data
+- **🔒 Non-Root Containers**: Jenkins and bots run as non-privileged users
+- **🔒 Network Isolation**: Localhost-only binding and resource limits
+- **🔒 Environment-Only Secrets**: No sensitive data written to disk
+
+### CI/CD & Automation
+- **Jenkins Integration**: Complete CI/CD pipeline with encrypted environment
+- **Distributed Builds**: Jenkins agents for scalable bot execution
+- **Automated Testing**: Comprehensive test suite with relay verification
+- **Docker Support**: Containerized deployment with security hardening
+
+### Development & Testing
+- **Orly Relay**: Local Nostr relay for testing and development
+- **Test Suite**: Hello world bot with dry-run and publish verification
+- **Relay Verification**: Query Orly to confirm event publication
+- **Modular Scripts**: Individual setup steps for flexible deployment
+
+## 📋 Supported Event Kinds
 
 | Kind  | Name | Description |
 |-------|------|-------------|
@@ -19,259 +38,279 @@ A PHP tool for publishing content to Nostr from AsciiDoc and Markdown documents,
 | 30041 | Publication Content | Sections/chapters (AsciiDoc) |
 | 30818 | Wiki Article | Collaborative wiki articles |
 
-## Installation
+## 🛠️ Quick Start
 
-### With Docker (Recommended)
+### Option 1: Docker Full Setup (Recommended)
+
+Complete setup with Jenkins, Orly relay, and testing:
 
 ```bash
-# Clone and build
+# Clone the repository
 git clone <repository-url>
 cd Nostrbots
-docker build -t nostrbots .
 
-# Test immediately
-./test-hello-world.sh
+# Run complete Docker setup
+bash scripts/docker-full-setup.sh
+
+# Or with custom ports
+bash scripts/docker-full-setup.sh --jenkins-port 8080 --orly-port 3334
 ```
 
-### Without Docker
+### Option 2: Individual Setup
+
+Step-by-step setup for more control:
 
 ```bash
-# Install dependencies
-composer install
+# 1. Generate encrypted Nostr key
+bash scripts/01-generate-key.sh
 
-# Generate Nostr key (or use your own)
-php generate-key.php --export
+# 2. Setup Jenkins with encrypted environment
+bash scripts/02-setup-jenkins.sh
 
-# Set environment variable
-export NOSTR_BOT_KEY=your_private_key_here
+# 3. Create dedicated nostrbots user
+bash scripts/02a-create-nostrbots-user.sh
 
-# Test publishing
-php nostrbots.php publish examples/simple-guide.adoc --dry-run --verbose
+# 4. Setup distributed builds
+bash scripts/02b-setup-distributed-builds.sh
+
+# 5. Verify environment
+bash scripts/03-verify-environment.sh
+
+# 6. Create Jenkins pipeline
+bash scripts/04-create-pipeline.sh
+
+# 7. Verify complete setup
+bash scripts/05-verify-setup.sh
+
+# 8. Test with hello world bot
+bash scripts/test-hello-world.sh
 ```
 
-## Quick Test
+### Option 3: Orly Relay Setup
 
-Try the Hello World bot immediately:
+For local development and testing:
 
 ```bash
-./test-hello-world.sh
+# Complete Orly setup
+bash scripts/setup-orly-complete.sh
+
+# Or individual steps
+bash scripts/01-install-orly.sh
+bash scripts/02-configure-orly.sh
+bash scripts/03-verify-orly.sh
 ```
 
-This will:
-- Generate a test Nostr key
-- Create a "Hello World" article
-- Publish to test relays
-- Verify everything works
+## 🔐 Security Features
 
-## Bot System
+### Password-Based Encryption
+- **Default Password**: Secure, deterministic default (no manual setup required)
+- **Custom Passwords**: Use your own password with `--password` option
+- **PBKDF2 Key Derivation**: Industry-standard key derivation with random salt/IV
+- **Memory Protection**: Sensitive data cleared from memory after use
 
-### Create a Bot
+### Container Security
+- **Non-Root Users**: Jenkins and bots run as `jenkins` user (UID 1000)
+- **No Privilege Escalation**: `no-new-privileges` security option
+- **Resource Limits**: Memory and CPU limits to prevent resource exhaustion
+- **Network Isolation**: Services bound to localhost only
+- **Secure Filesystems**: Temporary filesystems for sensitive operations
+
+### Environment Security
+- **No File Storage**: All secrets stored in environment variables only
+- **Automatic Cleanup**: Environment variables cleared on script exit
+- **Signal Handling**: Secure cleanup on interruption (SIGINT/SIGTERM)
+- **Audit Logging**: Security events logged without sensitive data
+
+## 🧪 Testing
+
+### Hello World Bot Test
+
+Comprehensive test of the entire setup:
 
 ```bash
-# Create a new bot
-./scripts/setup-bot.sh my-bot --schedule "06:00,18:00" --relays "wss://relay1.com,wss://relay2.com"
+# Full test (dry run + publish + relay verification)
+bash scripts/test-hello-world.sh
 
-# Test your bot
-docker run --rm -v $(pwd)/bots:/app/bots nostrbots run-bot --bot my-bot --dry-run --verbose
+# Dry run only
+bash scripts/test-hello-world.sh --dry-run-only
+
+# Publish only
+bash scripts/test-hello-world.sh --publish-only
+
+# Skip Orly relay verification
+bash scripts/test-hello-world.sh --no-orly-verify
 ```
 
-### Bot Structure
+### Quick Test
 
-```
-bots/
-├── hello-world/             # Test bot
-│   ├── config.json          # Bot configuration
-│   ├── generate-content.php # Content generator
-│   └── output/              # Generated articles
-└── daily-office/            # Catholic Daily Office bot
-    ├── config.json
-    ├── generate-content.php
-    └── templates/
-```
-
-## Jenkins CI/CD
-
-Set up automated bot execution with local ORLY relay:
+Fast validation for CI/CD:
 
 ```bash
-# Basic Jenkins setup
-./scripts/setup-local-jenkins.sh
-
-# Full setup with pipeline + ORLY relay
-./scripts/setup-local-jenkins.sh --build-nostrbots --setup-pipeline
+# Quick validation
+bash scripts/quick-test.sh
 ```
 
-This will:
-- Install and configure Jenkins
-- Build Nostrbots Docker image
-- Install ORLY relay from [next.orly.dev](https://github.com/mleku/next.orly.dev)
-- Configure ORLY with the same key as your bot
-- Set up complete CI/CD pipeline
-- Create comprehensive test scripts
+### Test Features
+- **Dry Run Validation**: Tests bot configuration without publishing
+- **Actual Publishing**: Publishes content to Nostr relays
+- **Relay Verification**: Queries Orly to confirm event publication
+- **Content Verification**: Checks output files and timestamps
+- **Public Key Extraction**: Derives pubkey from private key for verification
 
-Then visit: http://localhost:8080 (admin/admin)
+## 🔧 Configuration
 
-### Complete Pipeline Test
+### Using Existing Keys
 
-Test the entire system with one command:
+Use your favorite Nostr key instead of generating a new one:
 
 ```bash
-./test-complete-pipeline.sh
+# Use existing key with default password
+bash scripts/01-generate-key.sh --key <your_hex_private_key>
+
+# Use existing key with custom password
+bash scripts/01-generate-key.sh --key <your_hex_private_key> --password "your_password"
 ```
 
-This tests:
-- ORLY relay startup and configuration
-- Hello World bot publishing to local relay
-- End-to-end workflow verification
+### Custom Ports
 
-## Catholic Daily Office Bot
-
-The Daily Office bot demonstrates a real-world application, publishing Catholic liturgical content twice daily.
-
-### Configuration
-
-```json
-{
-  "name": "Daily Office Bot",
-  "schedule": ["06:00", "18:00"],
-  "relays": [
-    "wss://thecitadel.nostr1.com",
-    "wss://orly-relay.imwald.eu"
-  ],
-  "content_kind": "30023"
-}
-```
-
-### How It Works
-
-1. **Liturgical Calendar**: Tracks Catholic seasons (Advent, Christmas, Lent, Easter, Ordinary Time)
-2. **Time-Based Content**: Generates different content for morning (6am) vs evening (6pm) prayers
-3. **Dynamic Content**: Includes daily psalms, scripture readings, and intercessions
-4. **Seasonal Adaptation**: Content varies based on liturgical season and color
-
-### Content Structure
-
-**Morning Prayer (6am UTC)**:
-- Opening prayer and Gloria
-- Psalm of the day
-- Scripture reading
-- Intercessions
-- Closing prayer and blessing
-
-**Evening Prayer (6pm UTC)**:
-- Opening prayer and Gloria
-- Psalm of thanksgiving
-- Scripture reading
-- Magnificat (Mary's song)
-- Intercessions
-- Closing prayer and blessing
-
-### Example Output
-
-```asciidoc
-= Morning Prayer - Monday, January 15, 2024
-author: Daily Office Bot
-relays: daily-office-relays
-summary: Catholic Daily Office - Morning Prayer for Monday, January 15, 2024
-liturgical_season: Ordinary Time
-liturgical_color: Green
-prayer_time: 6:00 AM UTC
-
-**Monday of the Second Week in Ordinary Time**
-*Liturgical Season: Ordinary Time*
-*Liturgical Color: Green*
-
-== Opening Prayer
-
-O God, come to my assistance.
-O Lord, make haste to help me.
-
-Glory to the Father, and to the Son, and to the Holy Spirit,
-as it was in the beginning, is now, and will be for ever. Amen.
-
-== Psalm of the Day
-
-Psalm 95: Come, let us sing to the Lord; let us shout for joy to the Rock of our salvation.
-
-== Scripture Reading
-
-Matthew 5:14-16: 'You are the light of the world. A city built on a hill cannot be hid.'
-
-== Intercessions
-
-Let us pray to the Lord, who is our light and our salvation:
-
-- For the Church, that she may be a beacon of hope in the world
-- For all who are suffering, that they may find comfort and strength
-- For our families and communities, that we may grow in love and unity
-- For peace in our world, that all conflicts may be resolved through justice
-
-== Closing Prayer
-
-Almighty and eternal God,
-you have brought us safely to this new day.
-Preserve us now by your mighty power,
-that we may not fall into sin,
-nor be overcome by adversity;
-and in all we do,
-direct us to the fulfilling of your purpose;
-through Jesus Christ our Lord. Amen.
-
-== Blessing
-
-May the Lord bless us, protect us from all evil,
-and bring us to everlasting life. Amen.
-```
-
-## Command Line Usage
+Customize ports for Jenkins and Orly:
 
 ```bash
-# Basic publishing
-php nostrbots.php publish document.adoc
+# Jenkins on custom ports
+bash scripts/02-setup-jenkins.sh 8081 50001
 
-# With options
-php nostrbots.php publish document.adoc --content-level 3 --content-kind 30023 --dry-run --verbose
-
-# Bot management
-docker run --rm -v $(pwd)/bots:/app/bots nostrbots list-bots
-docker run --rm -v $(pwd)/bots:/app/bots nostrbots run-bot --bot daily-office --dry-run
+# Orly on custom port
+bash scripts/01-install-orly.sh 3335
 ```
 
-## Document Format
+### Environment Variables
 
-Include metadata in your document header:
-
-```asciidoc
-= Document Title
-author: Your Name
-relays: favorite-relays
-summary: Brief description
-type: article
-
-Your content here...
-
-== Chapter 1
-Chapter content...
-```
-
-## Testing
+Key environment variables (set automatically by scripts):
 
 ```bash
-# Run test suite
-php run-tests.php
+# Encrypted Nostr key and password
+NOSTR_BOT_KEY_ENCRYPTED=<encrypted_key>
+NOSTR_BOT_KEY_PASSWORD=<password>
 
-# Test Hello World bot
-./test-hello-world.sh
+# Jenkins configuration
+JENKINS_PORT=8080
+AGENT_PORT=50000
+JENKINS_ADMIN_PASSWORD=<admin_password>
+NOSTRBOTS_PASSWORD=<bot_user_password>
+
+# Orly configuration
+ORLY_PORT=3334
 ```
 
-## License
+## 📁 Project Structure
 
-MIT License - see [LICENSE](./LICENSE) file for details.
+```
+Nostrbots/
+├── bots/                          # Bot configurations
+│   ├── hello-world/              # Test bot
+│   └── daily-office/             # Example bot
+├── scripts/                      # Setup and utility scripts
+│   ├── 01-generate-key.sh        # Key generation and encryption
+│   ├── 02-setup-jenkins.sh       # Jenkins container setup
+│   ├── 02a-create-nostrbots-user.sh # Dedicated user creation
+│   ├── 02b-setup-distributed-builds.sh # Distributed builds
+│   ├── 03-verify-environment.sh  # Environment verification
+│   ├── 04-create-pipeline.sh     # Jenkins pipeline creation
+│   ├── 05-verify-setup.sh        # Complete setup verification
+│   ├── test-hello-world.sh       # Comprehensive test suite
+│   ├── quick-test.sh             # Fast validation
+│   └── docker-full-setup.sh      # Complete Docker setup
+├── src/                          # PHP source code
+├── docs/                         # Documentation
+├── examples/                     # Example documents
+├── Dockerfile                    # Container definition
+├── docker-compose.yml            # Basic Docker Compose
+├── docker-compose.full.yml       # Complete setup
+├── Jenkinsfile                   # Jenkins CI/CD pipeline
+└── generate-key.php              # Key management utility
+```
 
-## Contact
+## 🌐 Access Information
 
-This is brought to you by [Silberengel](https://jumble.imwald.eu/users/npub1l5sga6xg72phsz5422ykujprejwud075ggrr3z2hwyrfgr7eylqstegx9z).
+After setup, you can access:
 
-Check me out on [GitHub](https://github.com/Silberengel) and [GitWorkshop](https://gitworkshop.dev/silberengel@gitcitadel.com).
+- **Jenkins Web Interface**: http://localhost:8080
+- **Jenkins Agent**: localhost:50000
+- **Orly Relay**: ws://localhost:3334
+- **Bot Output**: `bots/*/output/` directory
 
-You can zap me some Bitcoin on Lightning: silberengel@minibits.cash
+## 📚 Documentation
+
+- **[Jenkins Setup Guide](docs/JENKINS_SETUP.md)**: Detailed Jenkins configuration
+- **[Using Existing Keys](docs/USING_EXISTING_KEYS.md)**: How to use your own Nostr key
+- **[Direct Publishing](docs/DIRECT_PUBLISHING.md)**: Publishing without bots
+- **[Relay Selection](docs/RELAY_SELECTION.md)**: Choosing and configuring relays
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+**Jenkins not accessible:**
+```bash
+# Check if Jenkins is running
+docker ps | grep jenkins
+
+# Check Jenkins logs
+docker logs jenkins-nostrbots
+
+# Restart Jenkins
+docker compose -f docker-compose.jenkins.yml restart jenkins
+```
+
+**Key decryption fails:**
+```bash
+# Verify environment variables
+echo $NOSTR_BOT_KEY_ENCRYPTED
+echo $NOSTR_BOT_KEY_PASSWORD
+
+# Test decryption manually
+php generate-key.php --key $NOSTR_BOT_KEY_ENCRYPTED --decrypt --password $NOSTR_BOT_KEY_PASSWORD
+```
+
+**Orly relay not responding:**
+```bash
+# Check if Orly is running
+docker ps | grep orly
+
+# Test Orly connection
+curl http://localhost:3334
+
+# Install websocat for proper testing
+apt install websocat  # Ubuntu/Debian
+brew install websocat # macOS
+```
+
+### Logs and Debugging
+
+- **Jenkins Logs**: `docker logs jenkins-nostrbots`
+- **Bot Logs**: `logs/` directory
+- **Security Logs**: Check system logs for `[SECURITY]` entries
+- **Test Output**: `bots/hello-world/output/` for test results
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run the test suite: `bash scripts/test-hello-world.sh`
+5. Submit a pull request to [Silberengel](https://github.com/Silberengel/nostrbots)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Nostr Protocol**: For the decentralized social protocol
+- **Jenkins**: For the CI/CD platform
+- **Orly**: For the Nostr relay implementation
+- **PHP Community**: For the excellent libraries and tools
+
+---
+
+**Ready to start botting?** Run `bash scripts/docker-full-setup.sh` and you'll be publishing to Nostr in minutes! 🚀

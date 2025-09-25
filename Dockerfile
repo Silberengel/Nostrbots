@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libgmp-dev \
     libxml2-dev \
+    su-exec \
     && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -39,6 +40,9 @@ RUN mkdir -p /app/bots /app/logs /app/tmp
 
 # Set permissions
 RUN chmod +x nostrbots.php generate-key.php run-tests.php
+
+# Security: Create jenkins user (will be activated by entrypoint)
+RUN useradd -m -u 1000 -s /bin/bash jenkins || true
 
 # Create entrypoint script
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
