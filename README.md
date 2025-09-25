@@ -190,7 +190,6 @@ Key environment variables (set automatically by scripts):
 ```bash
 # Encrypted Nostr key and password
 NOSTR_BOT_KEY_ENCRYPTED=<encrypted_key>
-NOSTR_BOT_KEY_PASSWORD=<password>
 
 # Jenkins configuration
 JENKINS_PORT=8080
@@ -266,10 +265,9 @@ docker compose -f docker-compose.jenkins.yml restart jenkins
 ```bash
 # Verify environment variables
 echo $NOSTR_BOT_KEY_ENCRYPTED
-echo $NOSTR_BOT_KEY_PASSWORD
 
 # Test decryption manually
-php generate-key.php --key $NOSTR_BOT_KEY_ENCRYPTED --decrypt --password $NOSTR_BOT_KEY_PASSWORD
+php generate-key.php --key $NOSTR_BOT_KEY_ENCRYPTED --decrypt
 ```
 
 **Orly relay not responding:**

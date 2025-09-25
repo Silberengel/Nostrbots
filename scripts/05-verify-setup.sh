@@ -64,12 +64,9 @@ fi
 # Test 2: Environment variables in Jenkins container
 print_status "Test 2: Encrypted environment variables in Jenkins container..."
 ENCRYPTED_CHECK=$(docker exec jenkins-nostrbots env | grep NOSTR_BOT_KEY_ENCRYPTED || echo "")
-DECRYPTION_CHECK=$(docker exec jenkins-nostrbots env | grep NOSTR_BOT_KEY_PASSWORD || echo "")
-
-if [ -n "$ENCRYPTED_CHECK" ] && [ -n "$DECRYPTION_CHECK" ]; then
+if [ -n "$ENCRYPTED_CHECK" ]; then
     print_success "✅ Encrypted environment variables are available in Jenkins container"
     echo "    Encrypted key: ${ENCRYPTED_CHECK:0:50}..."
-    echo "    Decryption key: ${DECRYPTION_CHECK:0:20}..."
 else
     print_error "❌ Encrypted environment variables are not available in Jenkins container"
     exit 1
@@ -77,9 +74,9 @@ fi
 
 # Test 3: Key decryption
 print_status "Test 3: Key decryption test..."
-if [ -n "$NOSTR_BOT_KEY_ENCRYPTED" ] && [ -n "$NOSTR_BOT_KEY_PASSWORD" ]; then
-    # Test decryption
-    DECRYPTED_KEY=$(docker exec jenkins-nostrbots bash -c "echo \"\$NOSTR_BOT_KEY_ENCRYPTED\" | openssl enc -aes-256-cbc -base64 -d -A -K \"\$NOSTR_BOT_KEY_PASSWORD\" -iv \"00000000000000000000000000000000\"" 2>/dev/null || echo "")
+if [ -n "$NOSTR_BOT_KEY_ENCRYPTED" ]; then
+    # Test decryption using the PHP script with default password
+    DECRYPTED_KEY=$(docker exec jenkins-nostrbots php generate-key.php --key "$NOSTR_BOT_KEY_ENCRYPTED" --decrypt --quiet 2>/dev/null | grep "export NOSTR_BOT_KEY=" | cut -d'=' -f2- || echo "")
     
     if [ -n "$DECRYPTED_KEY" ] && [ ${#DECRYPTED_KEY} -eq 64 ]; then
         print_success "✅ Key decryption test successful"

@@ -15,7 +15,6 @@ services:
     environment:
       # These will be set by the setup script
       - NOSTR_BOT_KEY_ENCRYPTED
-      - NOSTR_BOT_KEY_PASSWORD
       - JENKINS_PORT=8080
       - AGENT_PORT=50000
       - ORLY_PORT=3334
@@ -42,7 +41,6 @@ services:
     environment:
       - JENKINS_OPTS=--httpPort=8080 --httpListenAddress=127.0.0.1
       - NOSTR_BOT_KEY_ENCRYPTED
-      - NOSTR_BOT_KEY_PASSWORD
     networks:
       - nostrbots-network
     restart: unless-stopped
@@ -76,7 +74,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - NOSTR_BOT_KEY_ENCRYPTED
-      - NOSTR_BOT_KEY_PASSWORD
     networks:
       - nostrbots-network
     command: ["tail", "-f", "/dev/null"]
@@ -97,7 +94,7 @@ services:
 
   # Orly Nostr relay
   orly:
-    image: nostr-relay/orly:latest
+    image: mleku/orly:latest
     container_name: orly-nostrbots
     ports:
       - "127.0.0.1:3334:3334"

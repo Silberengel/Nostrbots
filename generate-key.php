@@ -91,9 +91,7 @@ function clearSensitiveEnvVars(): void
 {
     $sensitiveVars = [
         'NOSTR_BOT_KEY',
-        'NOSTR_BOT_KEY_ENCRYPTED', 
-        'NOSTR_BOT_KEY_PASSWORD',
-        'NOSTR_BOT_KEY_PASSWORD'
+        'NOSTR_BOT_KEY_ENCRYPTED'
     ];
     
     foreach ($sensitiveVars as $var) {
@@ -277,6 +275,9 @@ function main(): void
             $encryptedKey = encryptKeyWithPassword($hexPrivateKey, $password);
             logSecurityEvent('Key encryption successful', ['method' => 'password-based']);
             
+            // Store password for output before clearing
+            $passwordForOutput = $password;
+            
             // Clear password from memory
             secureClear($password);
             
@@ -284,7 +285,6 @@ function main(): void
                 // Jenkins-specific output
                 if ($quiet) {
                     echo "NOSTR_BOT_KEY_ENCRYPTED={$encryptedKey}\n";
-                    echo "NOSTR_BOT_KEY_PASSWORD={$password}\n";
                     return;
                 }
                 
@@ -293,7 +293,6 @@ function main(): void
                 echo "✅ Generated encrypted key for Jenkins:\n\n";
                 echo "📋 Jenkins Environment Variables:\n";
                 echo "  NOSTR_BOT_KEY_ENCRYPTED=<encrypted_key_value>\n";
-                echo "  NOSTR_BOT_KEY_PASSWORD=<password_value>\n\n";
                 echo "🔒 Security Information:\n";
                 echo "  Original Key: " . substr($hexPrivateKey, 0, 20) . "...\n";
                 if (isset($options['password'])) {
@@ -311,7 +310,6 @@ function main(): void
             
             if ($quiet) {
                 echo "export NOSTR_BOT_KEY_ENCRYPTED={$encryptedKey}\n";
-                echo "export NOSTR_BOT_KEY_PASSWORD={$password}\n";
                 return;
             }
             
@@ -329,7 +327,6 @@ function main(): void
             echo "  Encryption: AES-256-CBC with PBKDF2\n\n";
             echo "🚀 Export commands:\n";
             echo "  export NOSTR_BOT_KEY_ENCRYPTED=<encrypted_key_value>\n";
-            echo "  export NOSTR_BOT_KEY_PASSWORD=<password_value>\n\n";
             return;
         }
         

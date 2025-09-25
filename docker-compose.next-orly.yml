@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  next-orly-nostrbots:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: silberengel/next-orly:latest
+    container_name: next-orly-nostrbots
+    ports:
+      - "3334:3334"  # next-orly relay port
+      - "8080:8080"  # Optional: for future web interface
+    volumes:
+      # Mount bot configurations
+      - ./bots:/app/bots
+      # Mount logs directory
+      - ./logs:/app/logs
+      # Mount temporary files
+      - ./tmp:/app/tmp
+      # Mount orly data for persistence
+      - ./orly-data:/app/orly-data
+    environment:
+      # Nostr bot key (same encrypted key system as Jenkins)
+      - NOSTR_BOT_KEY_ENCRYPTED=${NOSTR_BOT_KEY_ENCRYPTED}
+      # next-orly configuration
+      - ORLY_PORT=3334
+      # Optional: Set timezone
+      - TZ=${TZ:-UTC}
+    networks:
+      - next-orly-network
+    restart: unless-stopped
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3334"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  next-orly-network:
+    driver: bridge
+
+# Optional: Add volumes for persistent data
+volumes:
+  next-orly-data:
+    driver: local
+  nostrbots-logs:
+    driver: local
+  nostrbots-tmp:
+    driver: local

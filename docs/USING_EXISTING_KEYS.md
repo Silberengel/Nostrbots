@@ -40,7 +40,6 @@ php generate-key.php --key YOUR_EXISTING_KEY --encrypt --jenkins
 
 # This will output something like:
 # NOSTR_BOT_KEY_ENCRYPTED=base64_encoded_encrypted_key
-# NOSTR_BOT_KEY_PASSWORD=hex_encryption_key
 ```
 
 ## Key Format Support
@@ -129,7 +128,6 @@ When using your existing key, these environment variables are set:
 
 ```bash
 NOSTR_BOT_KEY_ENCRYPTED=base64_encoded_encrypted_key
-NOSTR_BOT_KEY_PASSWORD=hex_encryption_key
 ```
 
 These are used by Jenkins to decrypt your key at runtime.

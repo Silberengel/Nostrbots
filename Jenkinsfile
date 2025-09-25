@@ -11,10 +11,9 @@ pipeline {
         BOT_CONFIG_DIR = '/app/bots'
         LOG_DIR = '/app/logs'
         
-        // Nostr configuration (encrypted key with password-based decryption)
-        // These are passed from the Docker container environment
+        // Nostr configuration (encrypted key with default password decryption)
+        // Only the encrypted key is passed from the Docker container environment
         NOSTR_BOT_KEY_ENCRYPTED = env.NOSTR_BOT_KEY_ENCRYPTED
-        NOSTR_BOT_KEY_PASSWORD = env.NOSTR_BOT_KEY_PASSWORD
         
         // Docker registry (if using private registry)
         DOCKER_REGISTRY = 'your-registry.com'
@@ -235,7 +234,6 @@ pipeline {
     
     environment {
         NOSTR_BOT_KEY_ENCRYPTED = env.NOSTR_BOT_KEY_ENCRYPTED
-        NOSTR_BOT_KEY_PASSWORD = env.NOSTR_BOT_KEY_PASSWORD
     }
     
     triggers {
@@ -253,14 +251,13 @@ pipeline {
                             current_time=$(date -u +%H:%M)
                             echo "Current UTC time: $current_time"
                             
-                            # Decrypt the Nostr bot key using password-based decryption
+                            # Decrypt the Nostr bot key using default password
                             echo "🔐 Decrypting Nostr bot key..."
-                            NOSTR_BOT_KEY=$(php generate-key.php --key "$NOSTR_BOT_KEY_ENCRYPTED" --decrypt --password "$NOSTR_BOT_KEY_PASSWORD" --quiet | grep "export NOSTR_BOT_KEY=" | cut -d'=' -f2-)
+                            NOSTR_BOT_KEY=$(php generate-key.php --key "$NOSTR_BOT_KEY_ENCRYPTED" --decrypt --quiet | grep "export NOSTR_BOT_KEY=" | cut -d'=' -f2-)
                             export NOSTR_BOT_KEY
                             
                             # Clear sensitive environment variables
                             unset NOSTR_BOT_KEY_ENCRYPTED
-                            unset NOSTR_BOT_KEY_PASSWORD
                             
                             # Run bots in schedule mode
                             docker-entrypoint.sh schedule

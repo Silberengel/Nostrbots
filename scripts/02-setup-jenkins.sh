@@ -48,7 +48,7 @@ if [ ! -f "Dockerfile" ] || [ ! -f "Jenkinsfile" ]; then
 fi
 
 # Check if encrypted key variables are in environment
-if [ -z "$NOSTR_BOT_KEY_ENCRYPTED" ] || [ -z "$NOSTR_BOT_KEY_PASSWORD" ]; then
+if [ -z "$NOSTR_BOT_KEY_ENCRYPTED" ]; then
     print_error "No encrypted key found in environment. Please run 01-generate-key.sh first"
     exit 1
 fi
@@ -87,9 +87,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - $(pwd):/workspace
     environment:
-      - JENKINS_OPTS=--httpPort=8080 --httpListenAddress=127.0.0.1
+      - JENKINS_OPTS=--httpPort=8080
       - NOSTR_BOT_KEY_ENCRYPTED=$NOSTR_BOT_KEY_ENCRYPTED
-      - NOSTR_BOT_KEY_PASSWORD=$NOSTR_BOT_KEY_PASSWORD
     networks:
       - jenkins-network
     restart: unless-stopped
@@ -123,7 +122,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - NOSTR_BOT_KEY_ENCRYPTED=$NOSTR_BOT_KEY_ENCRYPTED
-      - NOSTR_BOT_KEY_PASSWORD=$NOSTR_BOT_KEY_PASSWORD
     networks:
       - jenkins-network
     command: ["tail", "-f", "/dev/null"]

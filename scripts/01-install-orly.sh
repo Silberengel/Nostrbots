@@ -56,7 +56,7 @@ print_status "Creating Orly Docker Compose configuration..."
 cat > docker-compose.orly.yml << EOF
 services:
   orly:
-    image: ghcr.io/mleku/next.orly.dev:latest
+    image: mleku/orly:latest
     container_name: orly-relay
     ports:
       - "$ORLY_PORT:3334"

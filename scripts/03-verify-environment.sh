@@ -34,7 +34,7 @@ if ! curl -s http://localhost:$JENKINS_PORT > /dev/null 2>&1; then
 fi
 
 # Check if encrypted key variables are in environment
-if [ -z "$NOSTR_BOT_KEY_ENCRYPTED" ] || [ -z "$NOSTR_BOT_KEY_PASSWORD" ]; then
+if [ -z "$NOSTR_BOT_KEY_ENCRYPTED" ]; then
     print_error "No encrypted key found in environment. Please run 01-generate-key.sh first"
     exit 1
 fi
@@ -71,12 +71,9 @@ print_status "Using environment variable approach - no Jenkins credentials neede
 # Verify environment variables are available in Jenkins container
 print_status "Verifying encrypted environment variables in Jenkins container..."
 ENCRYPTED_CHECK=$(docker exec jenkins-nostrbots env | grep NOSTR_BOT_KEY_ENCRYPTED || echo "")
-DECRYPTION_CHECK=$(docker exec jenkins-nostrbots env | grep NOSTR_BOT_KEY_PASSWORD || echo "")
-
-if [ -n "$ENCRYPTED_CHECK" ] && [ -n "$DECRYPTION_CHECK" ]; then
+if [ -n "$ENCRYPTED_CHECK" ]; then
     print_success "Encrypted environment variables are available in Jenkins container!"
     echo "  Encrypted key: ${ENCRYPTED_CHECK:0:50}..."
-    echo "  Decryption key: ${DECRYPTION_CHECK:0:20}..."
 else
     print_error "Encrypted environment variables are not available in Jenkins container"
     exit 1

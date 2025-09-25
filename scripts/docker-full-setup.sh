@@ -8,7 +8,6 @@
 #   --jenkins-port <port>    Jenkins web interface port (default: 8080)
 #   --agent-port <port>      Jenkins agent port (default: 50000)
 #   --orly-port <port>       Orly relay port (default: 3334)
-#   --password <password>    Custom encryption password (optional)
 #   --key <hex_key>          Use existing Nostr key (optional)
 #   --test-only              Only run tests, don't setup Jenkins
 #   --no-orly                Skip Orly relay setup
@@ -33,7 +32,6 @@ print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 JENKINS_PORT=8080
 AGENT_PORT=50000
 ORLY_PORT=3334
-CUSTOM_PASSWORD=""
 EXISTING_KEY=""
 TEST_ONLY=false
 NO_ORLY=false
@@ -52,10 +50,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --orly-port)
             ORLY_PORT="$2"
-            shift 2
-            ;;
-        --password)
-            CUSTOM_PASSWORD="$2"
             shift 2
             ;;
         --key)
@@ -84,7 +78,6 @@ while [[ $# -gt 0 ]]; do
             echo "  --jenkins-port <port>    Jenkins web interface port (default: 8080)"
             echo "  --agent-port <port>      Jenkins agent port (default: 50000)"
             echo "  --orly-port <port>       Orly relay port (default: 3334)"
-            echo "  --password <password>    Custom encryption password (optional)"
             echo "  --key <hex_key>          Use existing Nostr key (optional)"
             echo "  --test-only              Only run tests, don't setup Jenkins"
             echo "  --no-orly                Skip Orly relay setup"
@@ -160,19 +153,16 @@ fi
 # Generate and encrypt the Nostr bot key
 print_status "🔑 Generating and encrypting Nostr bot key..."
 KEY_GEN_ARGS=""
-if [ -n "$CUSTOM_PASSWORD" ]; then
-    KEY_GEN_ARGS="$KEY_GEN_ARGS --password $CUSTOM_PASSWORD"
-fi
 if [ -n "$EXISTING_KEY" ]; then
     KEY_GEN_ARGS="$KEY_GEN_ARGS --key $EXISTING_KEY"
 fi
 
-if docker run --rm -v "$(pwd):/workspace" -w /workspace nostrbots:latest \
-    bash -c "php generate-key.php --jenkins $KEY_GEN_ARGS" > /tmp/nostr-key.env; then
+if docker run --rm --entrypoint="" -v "$(pwd):/workspace" -w /workspace nostrbots:latest \
+    bash -c "php generate-key.php --encrypt $KEY_GEN_ARGS --quiet 2>/dev/null" > /tmp/nostr-key.env; then
     print_success "✅ Nostr bot key generated and encrypted"
     
-    # Source the environment variables
-    source /tmp/nostr-key.env
+    # Source the environment variables (only the export lines)
+    eval "$(grep '^export NOSTR_BOT_KEY' /tmp/nostr-key.env)"
     print_status "Key variables exported to environment"
 else
     print_error "❌ Failed to generate Nostr bot key"
@@ -189,7 +179,7 @@ if [ "$TEST_ONLY" = false ]; then
     
     if docker run --rm -v "$(pwd):/workspace" -w /workspace \
         -e JENKINS_PORT -e AGENT_PORT \
-        -e NOSTR_BOT_KEY_ENCRYPTED -e NOSTR_BOT_KEY_PASSWORD \
+        -e NOSTR_BOT_KEY_ENCRYPTED \
         nostrbots:latest bash scripts/02-setup-jenkins.sh "$JENKINS_PORT" "$AGENT_PORT"; then
         print_success "✅ Jenkins setup completed"
     else
@@ -201,7 +191,7 @@ if [ "$TEST_ONLY" = false ]; then
     print_status "👤 Setting up Jenkins user and distributed builds..."
     if docker run --rm -v "$(pwd):/workspace" -w /workspace \
         -e JENKINS_PORT -e AGENT_PORT -e NOSTRBOTS_PASSWORD \
-        -e NOSTR_BOT_KEY_ENCRYPTED -e NOSTR_BOT_KEY_PASSWORD \
+        -e NOSTR_BOT_KEY_ENCRYPTED \
         nostrbots:latest bash -c "
             bash scripts/02a-create-nostrbots-user.sh && \
             bash scripts/02b-setup-distributed-builds.sh
@@ -216,7 +206,7 @@ if [ "$TEST_ONLY" = false ]; then
     print_status "🔍 Verifying Jenkins environment..."
     if docker run --rm -v "$(pwd):/workspace" -w /workspace \
         -e JENKINS_PORT -e JENKINS_ADMIN_PASSWORD \
-        -e NOSTR_BOT_KEY_ENCRYPTED -e NOSTR_BOT_KEY_PASSWORD \
+        -e NOSTR_BOT_KEY_ENCRYPTED \
         nostrbots:latest bash scripts/03-verify-environment.sh; then
         print_success "✅ Jenkins environment verified"
     else
@@ -239,7 +229,7 @@ if [ "$TEST_ONLY" = false ]; then
     print_status "✅ Final Jenkins verification..."
     if docker run --rm -v "$(pwd):/workspace" -w /workspace \
         -e JENKINS_PORT -e JENKINS_ADMIN_PASSWORD \
-        -e NOSTR_BOT_KEY_ENCRYPTED -e NOSTR_BOT_KEY_PASSWORD \
+        -e NOSTR_BOT_KEY_ENCRYPTED \
         nostrbots:latest bash scripts/05-verify-setup.sh; then
         print_success "✅ Jenkins setup fully verified"
     else
@@ -287,10 +277,10 @@ if [ "$NO_TEST" = false ]; then
     print_status "🧪 Running Hello World Bot Test..."
     
     # Decrypt the key for testing
-    if docker run --rm -v "$(pwd):/workspace" -w /workspace \
-        -e NOSTR_BOT_KEY_ENCRYPTED -e NOSTR_BOT_KEY_PASSWORD \
+    if docker run --rm --entrypoint="" -v "$(pwd):/workspace" -w /workspace \
+        -e NOSTR_BOT_KEY_ENCRYPTED \
         nostrbots:latest bash -c "
-            export NOSTR_BOT_KEY=\$(php generate-key.php --key \$NOSTR_BOT_KEY_ENCRYPTED --decrypt --password \$NOSTR_BOT_KEY_PASSWORD --quiet | grep 'export NOSTR_BOT_KEY=' | cut -d'=' -f2-)
+            export NOSTR_BOT_KEY=\$(php generate-key.php --key \$NOSTR_BOT_KEY_ENCRYPTED --decrypt --quiet 2>/dev/null | grep 'export NOSTR_BOT_KEY=' | cut -d'=' -f2-)
             bash scripts/test-hello-world.sh --no-orly-verify
         "; then
         print_success "✅ Hello world bot test passed"

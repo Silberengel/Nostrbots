@@ -86,12 +86,11 @@ bash scripts/05-verify-setup.sh
 
 Jenkins uses these environment variables:
 - `NOSTR_BOT_KEY_ENCRYPTED` - The encrypted Nostr bot key
-- `NOSTR_BOT_KEY_PASSWORD` - The key to decrypt the Nostr key
 
-The Jenkinsfile automatically decrypts the key at runtime using:
+The Jenkinsfile automatically decrypts the key at runtime using the default password:
 ```groovy
 NOSTR_BOT_KEY = sh(
-    script: 'echo "${NOSTR_BOT_KEY_ENCRYPTED}" | openssl enc -aes-256-cbc -base64 -d -A -K "${NOSTR_BOT_KEY_PASSWORD}" -iv "00000000000000000000000000000000"',
+    script: 'php generate-key.php --key "${NOSTR_BOT_KEY_ENCRYPTED}" --decrypt --quiet',
     returnStdout: true
 ).trim()
 ```
@@ -169,7 +168,7 @@ bash scripts/01-generate-key.sh --force
 
 ### Key Decryption Issues
 - Verify environment variables are set: `docker exec jenkins-nostrbots env | grep NOSTR_BOT_KEY`
-- Check environment variables: `echo $NOSTR_BOT_KEY_ENCRYPTED` and `echo $NOSTR_BOT_KEY_PASSWORD`
+- Check environment variables: `echo $NOSTR_BOT_KEY_ENCRYPTED` 
 - Test decryption manually using the `generate-key.php` script
 
 ### Authentication Issues

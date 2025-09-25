@@ -4,9 +4,8 @@
 # Generates and encrypts a Nostr bot key for Jenkins
 # Can be run independently or as part of the complete setup
 #
-# Usage: bash scripts/01-generate-key.sh [--key YOUR_KEY] [--password PASSWORD] [--force]
+# Usage: bash scripts/01-generate-key.sh [--key YOUR_KEY] [--force]
 #   --key YOUR_KEY: Use your existing Nostr key instead of generating a new one
-#   --password PASSWORD: Use custom password for encryption (default: secure default)
 #   --force: Force regeneration even if key exists in environment
 
 set -e
@@ -33,7 +32,6 @@ fi
 
 # Parse command line arguments
 EXISTING_KEY=""
-CUSTOM_PASSWORD=""
 FORCE_REGENERATE=false
 
 while [[ $# -gt 0 ]]; do
@@ -47,68 +45,51 @@ while [[ $# -gt 0 ]]; do
             fi
             shift 2
             ;;
-        --password)
-            CUSTOM_PASSWORD="$2"
-            # Validate password length
-            if [ ${#CUSTOM_PASSWORD} -lt 8 ]; then
-                print_error "Password must be at least 8 characters long."
-                exit 1
-            fi
-            shift 2
-            ;;
         --force)
             FORCE_REGENERATE=true
             shift
             ;;
         *)
             print_error "Unknown option: $1"
-            print_status "Usage: bash scripts/01-generate-key.sh [--key YOUR_KEY] [--password PASSWORD] [--force]"
+            print_status "Usage: bash scripts/01-generate-key.sh [--key YOUR_KEY] [--force]"
             exit 1
             ;;
     esac
 done
 
 # Check if key already exists in environment
-if [ -n "$NOSTR_BOT_KEY_ENCRYPTED" ] && [ -n "$NOSTR_BOT_KEY_PASSWORD" ] && [ "$FORCE_REGENERATE" = false ]; then
+if [ -n "$NOSTR_BOT_KEY_ENCRYPTED" ] && [ "$FORCE_REGENERATE" = false ]; then
     print_warning "Nostr bot key already exists in environment. Use --force to regenerate."
     print_status "Using existing environment variables..."
     print_success "Using existing encrypted key from environment"
     exit 0
 fi
 
-# Generate or encrypt key using the PHP script
+# Generate or encrypt key using the PHP script (always uses default password)
 if [ -n "$EXISTING_KEY" ]; then
-    print_status "Encrypting your existing Nostr key..."
-    if [ -n "$CUSTOM_PASSWORD" ]; then
-        JENKINS_KEY_OUTPUT=$(php generate-key.php --key "$EXISTING_KEY" --password "$CUSTOM_PASSWORD" --encrypt --jenkins --quiet)
-    else
-        JENKINS_KEY_OUTPUT=$(php generate-key.php --key "$EXISTING_KEY" --encrypt --jenkins --quiet)
-    fi
+    print_status "Encrypting your existing Nostr key with default password..."
+    JENKINS_KEY_OUTPUT=$(php generate-key.php --key "$EXISTING_KEY" --encrypt --quiet 2>/dev/null)
 else
-    print_status "Generating new encrypted Nostr key..."
-    if [ -n "$CUSTOM_PASSWORD" ]; then
-        JENKINS_KEY_OUTPUT=$(php generate-key.php --password "$CUSTOM_PASSWORD" --jenkins --quiet)
-    else
-        JENKINS_KEY_OUTPUT=$(php generate-key.php --jenkins --quiet)
-    fi
+    print_status "Generating new encrypted Nostr key with default password..."
+    JENKINS_KEY_OUTPUT=$(php generate-key.php --encrypt --quiet 2>/dev/null)
 fi
 
-# Parse the output to get the variables
+# Parse the output to get the encrypted key
 NOSTR_BOT_KEY_ENCRYPTED=$(echo "$JENKINS_KEY_OUTPUT" | grep "NOSTR_BOT_KEY_ENCRYPTED=" | cut -d'=' -f2)
-NOSTR_BOT_KEY_PASSWORD=$(echo "$JENKINS_KEY_OUTPUT" | grep "NOSTR_BOT_KEY_PASSWORD=" | cut -d'=' -f2)
 
-if [ -z "$NOSTR_BOT_KEY_ENCRYPTED" ] || [ -z "$NOSTR_BOT_KEY_PASSWORD" ]; then
+if [ -z "$NOSTR_BOT_KEY_ENCRYPTED" ]; then
     print_error "Failed to generate encrypted key"
     exit 1
 fi
 
 print_success "Generated encrypted Nostr bot key"
 print_status "Encrypted key: ${NOSTR_BOT_KEY_ENCRYPTED:0:50}..."
-print_status "Password: ${NOSTR_BOT_KEY_PASSWORD:0:20}..."
 
-# Export variables for current session
+# Export only the encrypted key for current session
 export NOSTR_BOT_KEY_ENCRYPTED
-export NOSTR_BOT_KEY_PASSWORD
+
+# Also output it for sourcing by parent scripts
+echo "export NOSTR_BOT_KEY_ENCRYPTED=\"$NOSTR_BOT_KEY_ENCRYPTED\""
 
 if [ -n "$EXISTING_KEY" ]; then
     print_success "Key encryption complete! Your existing key is now encrypted and exported to environment"

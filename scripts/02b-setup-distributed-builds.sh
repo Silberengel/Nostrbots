@@ -78,10 +78,6 @@ cat > /tmp/agent-config.xml << EOF
           <key>NOSTR_BOT_KEY_ENCRYPTED</key>
           <value>\$NOSTR_BOT_KEY_ENCRYPTED</value>
         </hudson.slaves.EnvironmentVariablesNodeProperty\$Entry>
-        <hudson.slaves.EnvironmentVariablesNodeProperty\$Entry>
-          <key>NOSTR_BOT_KEY_PASSWORD</key>
-          <value>\$NOSTR_BOT_KEY_PASSWORD</value>
-        </hudson.slaves.EnvironmentVariablesNodeProperty\$Entry>
       </env>
     </hudson.slaves.EnvironmentVariablesNodeProperty>
   </nodeProperties>
@@ -118,7 +114,7 @@ fi
 print_status "Updating Docker Compose configuration for distributed builds..."
 
 # Check if encrypted key variables are in environment
-if [ -z "$NOSTR_BOT_KEY_ENCRYPTED" ] || [ -z "$NOSTR_BOT_KEY_PASSWORD" ]; then
+if [ -z "$NOSTR_BOT_KEY_ENCRYPTED" ]; then
     print_error "No encrypted key found in environment. Please run 01-generate-key.sh first"
     exit 1
 fi
@@ -139,7 +135,6 @@ services:
     environment:
       - JENKINS_OPTS=--httpPort=8080
       - NOSTR_BOT_KEY_ENCRYPTED=$NOSTR_BOT_KEY_ENCRYPTED
-      - NOSTR_BOT_KEY_PASSWORD=$NOSTR_BOT_KEY_PASSWORD
     networks:
       - jenkins-network
     restart: unless-stopped
@@ -158,7 +153,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - NOSTR_BOT_KEY_ENCRYPTED=$NOSTR_BOT_KEY_ENCRYPTED
-      - NOSTR_BOT_KEY_PASSWORD=$NOSTR_BOT_KEY_PASSWORD
       - JENKINS_URL=http://jenkins:8080
       - JENKINS_AGENT_NAME=nostrbots-agent
       - JENKINS_AGENT_SECRET=$AGENT_SECRET

@@ -83,6 +83,19 @@ run_script() {
     if bash "$script_path"; then
         print_success "$script_name completed successfully"
         echo ""
+        
+        # If this is the key generation script, source the environment variables
+        if [ "$script_name" = "01-generate-key.sh" ]; then
+            print_status "Sourcing environment variables from key generation..."
+            # Source the environment variables from the script output
+            eval "$(bash "$script_path" 2>/dev/null | grep "^export NOSTR_BOT_KEY")"
+            if [ -n "$NOSTR_BOT_KEY_ENCRYPTED" ]; then
+                print_success "Environment variables sourced successfully"
+            else
+                print_error "Failed to source environment variables from key generation"
+                exit 1
+            fi
+        fi
     else
         print_error "$script_name failed"
         echo ""
