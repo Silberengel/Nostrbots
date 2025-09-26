@@ -90,7 +90,11 @@ setup_user_and_directories() {
     mkdir -p "$PROJECT_DIR/backup"
     mkdir -p "$PROJECT_DIR/backups"
     mkdir -p "$PROJECT_DIR/scripts"
-    mkdir -p "$PROJECT_DIR/config"
+    mkdir -p "$PROJECT_DIR/logs"
+    mkdir -p "$PROJECT_DIR/config/logstash"
+    
+    # Create log directories for services
+    mkdir -p "/var/log/nostrbots"
     
     # Set ownership
     chown -R "$SERVICE_USER:$SERVICE_USER" "$PROJECT_DIR"
@@ -588,6 +592,10 @@ copy_required_files() {
     mkdir -p "$PROJECT_DIR/data/orly"
     mkdir -p "$PROJECT_DIR/data/jenkins"
     mkdir -p "$PROJECT_DIR/data/elasticsearch"
+    mkdir -p "$PROJECT_DIR/logs"
+    
+    # Create log directories for services
+    mkdir -p "/var/log/nostrbots"
     
     # Copy essential scripts
     local scripts_to_copy=(
