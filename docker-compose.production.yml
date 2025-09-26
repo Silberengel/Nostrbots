@@ -1,0 +1,182 @@
+version: '3.8'
+
+services:
+  orly-relay:
+    image: silberengel/next-orly:latest
+    container_name: nostrbots-orly-relay
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3334:7777"  # Bind to localhost only
+    environment:
+      - ORLY_LISTEN=0.0.0.0
+      - ORLY_PORT=7777
+      - ORLY_LOG_LEVEL=info
+      - ORLY_MAX_CONNECTIONS=1000
+      - ORLY_ACL_MODE=none
+    volumes:
+      - /opt/nostrbots/data/orly:/data
+    secrets:
+      - nostr_bot_key_encrypted
+      - nostr_bot_npub
+    networks:
+      - nostrbots-network
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "7777"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: nostrbots-jenkins
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"  # Bind to localhost only
+      - "127.0.0.1:50000:50000"
+    environment:
+      - JENKINS_OPTS=--httpPort=8080
+      - NOSTR_BOT_KEY_ENCRYPTED_FILE=/run/secrets/nostr_bot_key_encrypted
+      - NOSTR_BOT_NPUB_FILE=/run/secrets/nostr_bot_npub
+      - NOSTRBOTS_PASSWORD=${NOSTRBOTS_PASSWORD:-nostrbots123}
+      - JENKINS_ADMIN_ID=${JENKINS_ADMIN_ID:-admin}
+      - JENKINS_ADMIN_PASSWORD=${JENKINS_ADMIN_PASSWORD:-admin}
+    volumes:
+      - /opt/nostrbots/data/jenkins:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/nostrbots:/workspace
+      - /opt/nostrbots/scripts/jenkins-setup.groovy:/usr/share/jenkins/ref/init.groovy.d/setup.groovy
+    secrets:
+      - nostr_bot_key_encrypted
+      - nostr_bot_npub
+    networks:
+      - nostrbots-network
+    user: root
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run
+      - /var/jenkins_home/workspace
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    command: >
+      bash -c "
+        apt-get update &&
+        apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release &&
+        curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg &&
+        echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bookworm stable' | tee /etc/apt/sources.list.d/docker.list > /dev/null &&
+        apt-get update &&
+        apt-get install -y docker-ce-cli &&
+        /usr/local/bin/jenkins.sh
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  nostrbots-agent:
+    image: jenkins/jenkins:lts
+    container_name: nostrbots-agent
+    restart: unless-stopped
+    environment:
+      - JENKINS_AGENT_SSH_PUBKEY=${JENKINS_AGENT_SSH_PUBKEY:-}
+      - NOSTR_BOT_KEY_ENCRYPTED_FILE=/run/secrets/nostr_bot_key_encrypted
+      - NOSTR_BOT_NPUB_FILE=/run/secrets/nostr_bot_npub
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/nostrbots:/workspace
+    secrets:
+      - nostr_bot_key_encrypted
+      - nostr_bot_npub
+    networks:
+      - nostrbots-network
+    depends_on:
+      - jenkins
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run
+
+  backup-agent:
+    image: silberengel/nostrbots:latest
+    container_name: nostrbots-backup-agent
+    restart: unless-stopped
+    environment:
+      - NOSTR_BOT_KEY_ENCRYPTED_FILE=/run/secrets/nostr_bot_key_encrypted
+      - NOSTR_BOT_NPUB_FILE=/run/secrets/nostr_bot_npub
+      - BACKUP_DIR=/backups
+      - DATA_DIR=/data
+    volumes:
+      - /opt/nostrbots/backups:/backups
+      - /opt/nostrbots/data:/data
+      - /opt/nostrbots:/workspace
+    secrets:
+      - nostr_bot_key_encrypted
+      - nostr_bot_npub
+    networks:
+      - nostrbots-network
+    depends_on:
+      - orly-relay
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run
+    command: >
+      bash -c "
+        echo '🔄 Backup agent started' &&
+        while true; do
+          echo '⏰ Starting daily backup at $$(date)' &&
+          /workspace/scripts/backup-relay-data.sh &&
+          echo '✅ Backup completed at $$(date)' &&
+          sleep 86400
+        done
+      "
+
+secrets:
+  nostr_bot_key_encrypted:
+    external: true
+  nostr_bot_npub:
+    external: true
+
+networks:
+  nostrbots-network:
+    driver: bridge
+    internal: true  # No external access

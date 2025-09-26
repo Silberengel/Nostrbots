@@ -708,7 +708,7 @@ class DocumentParser
         ];
         
         // Store relay information separately for later use
-        $this->relays = 'favorite-relays';
+        $this->relays = 'document-relays';
         
         // Parse the collected metadata lines
         $inHeader = true;

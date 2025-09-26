@@ -1,14 +1,11 @@
-favorite-relays:
+document-relays:
   - wss://thecitadel.nostr1.com
-  - wss://theforest.nostr1.com
+  - wss://freelay.sovbit.host
+  - ws://localhost:3334
 
 test-relays:
   - ws://localhost:3334
   - wss://freelay.sovbit.host
-
-daily-office-relays:
-  - wss://thecitadel.nostr1.com
-  - wss://orly-relay.imwald.eu
 
 local-test-relays:
   - ws://localhost:3334

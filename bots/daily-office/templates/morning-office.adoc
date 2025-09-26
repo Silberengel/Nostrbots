@@ -1,7 +1,7 @@
 = Morning Prayer - {date}
 author: Daily Office Bot
 version: 1.0
-relays: daily-office-relays
+relays: wss://freelay.sovbit.host
 auto_update: true
 summary: Catholic Daily Office - Morning Prayer for {date}
 type: prayer

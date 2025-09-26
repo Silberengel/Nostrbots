@@ -61,7 +61,7 @@ function showHelp(): void
     echo "  = Document Title" . PHP_EOL;
     echo "  author: Your Name" . PHP_EOL;
     echo "  version: 1.0" . PHP_EOL;
-    echo "  relays: favorite-relays" . PHP_EOL;
+    echo "  relays: document-relays" . PHP_EOL;
     echo "  auto_update: true" . PHP_EOL;
     echo "  summary: Brief description" . PHP_EOL;
     echo "  type: article" . PHP_EOL . PHP_EOL;

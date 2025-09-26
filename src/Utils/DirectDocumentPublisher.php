@@ -111,8 +111,8 @@ class DirectDocumentPublisher
         
         // Fallback to default relays
         echo "📡 Using default relay configuration" . PHP_EOL;
-        $this->currentRelayConfig = 'favorite-relays';
-        return 'favorite-relays';
+        $this->currentRelayConfig = 'document-relays';
+        return 'document-relays';
     }
 
     /**
@@ -224,7 +224,7 @@ class DirectDocumentPublisher
     private function buildEventConfig(array $section, array $metadata, array $publishedEventIds, string $relayConfig = ''): array
     {
         // Handle relay configuration properly - convert comma-separated string back to array if needed
-        $relayConfig = $this->currentRelayConfig ?: 'favorite-relays';
+        $relayConfig = $this->currentRelayConfig ?: 'document-relays';
         if ($this->isRelayUrl($relayConfig)) {
             // If it's a comma-separated string of URLs, convert to array
             $relayConfig = array_map('trim', explode(',', $relayConfig));

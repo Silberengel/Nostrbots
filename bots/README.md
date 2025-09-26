@@ -169,7 +169,7 @@ Bots are scheduled using the `schedule` field in their configuration:
 Relays can be specified as:
 
 1. **Direct URLs**: `"wss://relay.example.com"`
-2. **Relay Categories**: `"favorite-relays"` (from `src/relays.yml`)
+2. **Relay Categories**: `"document-relays"` (from `src/relays.yml`)
 3. **Mixed Arrays**: Combination of URLs and categories
 
 ## Testing Your Bot
