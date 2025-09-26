@@ -67,7 +67,6 @@ install_dependencies() {
         php-cli \
         php-json \
         php-mbstring \
-        php-openssl \
         php-curl
     
     # Enable and start Docker
