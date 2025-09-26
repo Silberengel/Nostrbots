@@ -18,7 +18,7 @@ services:
       - nostrbots-network
     ports:
       - "3334:7777"
-    user: "1000:1000"
+    user: "995:982"
     logging:
       driver: "json-file"
       options:

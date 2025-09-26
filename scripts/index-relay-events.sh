@@ -129,9 +129,10 @@ index_events() {
             
             # Create bulk index entry
             local event_id=$(echo "$indexed_event" | jq -r '.id')
-            local index_entry="{\"index\": {\"_index\": \"$INDEX_NAME\", \"_id\": \"$event_id\"}}
-$indexed_event"
-            bulk_data="$bulk_data$index_entry"
+            local index_entry="{\"index\": {\"_index\": \"$INDEX_NAME\", \"_id\": \"$event_id\"}}"
+            bulk_data="$bulk_data$index_entry
+$indexed_event
+"
         fi
     done < "$temp_file"
     rm -f "$temp_file"

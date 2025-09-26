@@ -18,7 +18,6 @@ services:
       - "9200:9200"
     networks:
       - nostrbots-network
-    user: "1000:1000"
     deploy:
       resources:
         limits:
@@ -86,7 +85,7 @@ services:
       - nostrbots-network
     ports:
       - "3334:7777"
-    user: "1000:1000"
+    user: "995:982"
     logging:
       driver: "json-file"
       options:
@@ -241,6 +240,8 @@ services:
       sh -c "
         echo 'Event indexer started' &&
         echo '👤 Current user: $$(whoami) $$(id)' &&
+        echo '📦 Installing jq dependency...' &&
+        apk add --no-cache jq curl &&
         echo '📁 Checking workspace contents:' &&
         ls -la /workspace/ &&
         echo '📁 Checking scripts directory:' &&

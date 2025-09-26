@@ -142,7 +142,7 @@ cleanup_stack() {
     
     log_success "🎉 Cleanup completed! You now have a blank slate for testing."
     echo ""
-    echo "To start fresh, run: sudo -E ./setup-production-with-elasticsearch.sh"
+    echo "To start fresh, run: sudo -E ./setup-production.sh"
     echo ""
 }
 
@@ -194,8 +194,10 @@ verify_docker_compose() {
         log_info "Verifying Docker Compose file for basic production setup"
     fi
     
-    if [[ ! -f "$compose_file" ]]; then
-        log_error "Docker Compose file $compose_file not found!"
+    local project_compose_file="$PROJECT_DIR/$compose_file"
+    
+    if [[ ! -f "$project_compose_file" ]]; then
+        log_error "Docker Compose file $project_compose_file not found!"
         log_error "Please ensure the file exists before running this script."
         exit 1
     fi
@@ -209,14 +211,14 @@ verify_docker_compose() {
     local missing_services=()
     
     for service in "${required_services[@]}"; do
-        if ! grep -q "^  $service:" "$compose_file"; then
+        if ! grep -q "^  $service:" "$project_compose_file"; then
             missing_services+=("$service")
         fi
     done
     
     if [[ ${#missing_services[@]} -gt 0 ]]; then
         log_error "Docker Compose file is missing required services: ${missing_services[*]}"
-        log_error "Please check the $compose_file file."
+        log_error "Please check the $project_compose_file file."
         exit 1
     fi
     
@@ -227,10 +229,18 @@ verify_docker_compose() {
 create_systemd_services() {
     log_info "Creating systemd services"
     
+    # Determine which compose file to use
+    local compose_file
+    if [[ "$ELK_STACK" == "true" ]]; then
+        compose_file="$COMPOSE_FILE_ELK"
+    else
+        compose_file="$COMPOSE_FILE_BASIC"
+    fi
+    
     # Main service
     cat > "$SYSTEMD_DIR/nostrbots.service" << EOF
 [Unit]
-Description=Nostrbots Production with Elasticsearch
+Description=Nostrbots Production${ELK_STACK:+ with Elasticsearch}
 Requires=docker.service
 After=docker.service
 
@@ -238,9 +248,9 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=$PROJECT_DIR
-ExecStart=/usr/bin/docker stack deploy -c $COMPOSE_FILE nostrbots
+ExecStart=/usr/bin/docker stack deploy -c $compose_file nostrbots
 ExecStop=/usr/bin/docker stack rm nostrbots
-ExecReload=/usr/bin/docker stack deploy -c $COMPOSE_FILE nostrbots
+ExecReload=/usr/bin/docker stack deploy -c $compose_file nostrbots
 TimeoutStartSec=0
 
 [Install]
@@ -294,9 +304,10 @@ deploy_stack() {
         log_info "Deploying Nostrbots basic stack"
     fi
     
-    # Copy the compose file to project directory (if not already there)
-    if [[ "$compose_file" != "$PROJECT_DIR/$compose_file" ]]; then
-        cp "$compose_file" "$PROJECT_DIR/"
+    # Compose file should already be copied to project directory
+    if [[ ! -f "$PROJECT_DIR/$compose_file" ]]; then
+        log_error "Compose file not found in project directory: $PROJECT_DIR/$compose_file"
+        return 1
     fi
     
     cd "$PROJECT_DIR"
@@ -391,6 +402,37 @@ main() {
     setup_user_and_directories
     init_docker_swarm
     generate_keys_to_secrets "$@"
+    
+    # Copy compose files to project directory before verification
+    # Get the original script location (before any directory changes)
+    local original_script_dir="/home/madmin/Projects/GitCitadel/Nostrbots"
+    local compose_file
+    if [[ "$ELK_STACK" == "true" ]]; then
+        compose_file="$COMPOSE_FILE_ELK"
+    else
+        compose_file="$COMPOSE_FILE_BASIC"
+    fi
+    
+    local source_compose_file="$original_script_dir/$compose_file"
+    log_info "Looking for compose file: $source_compose_file"
+    log_info "Original script directory: $original_script_dir"
+    log_info "Current working directory: $(pwd)"
+    
+    if [[ -f "$source_compose_file" ]]; then
+        log_info "Found compose file, copying to $PROJECT_DIR/"
+        if cp "$source_compose_file" "$PROJECT_DIR/"; then
+            log_success "Copied $compose_file to project directory"
+        else
+            log_error "Failed to copy $compose_file to project directory"
+            exit 1
+        fi
+    else
+        log_error "Compose file not found: $source_compose_file"
+        log_error "Available files in original script directory:"
+        ls -la "$original_script_dir" | grep docker-compose || log_error "No docker-compose files found"
+        exit 1
+    fi
+    
     verify_docker_compose
     create_systemd_services
     
