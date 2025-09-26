@@ -117,6 +117,12 @@ nostrbots-dev status|start|stop|hello-world|test|nsec|cleanup
 
 # Clean up old backups
 ./scripts/manage-backups.sh cleanup
+
+# Clean up old systemd services
+./cleanup-systemd.sh [--dry-run]
+
+# Complete cleanup (removes everything - use with caution!)
+./scripts/manage-backups.sh cleanup-all
 ```
 
 ### What's Backed Up

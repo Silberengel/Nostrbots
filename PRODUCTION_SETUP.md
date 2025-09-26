@@ -132,9 +132,11 @@ After setup, the following directories are created:
 │   └── nostrbots-keys-*.env   # Key backups
 ├── scripts/                   # Management scripts
 │   ├── manage-stack.sh        # Docker Stack management
-│   ├── backup-relay-data.sh   # Backup script
+│   ├── backup-essential-data.sh # Efficient backup script
+│   ├── restore-essential-data.sh # Restore script
+│   ├── manage-backups.sh      # Backup management interface
+│   ├── cleanup-systemd.sh     # Systemd cleanup script
 │   ├── index-relay-events.sh  # Event indexing script
-│   ├── recover-from-backup.sh # Recovery script
 │   └── monitor.sh             # Health monitoring
 ├── config/                    # Configuration files
 │   ├── logstash/              # Logstash configuration (ELK setup)
@@ -291,7 +293,10 @@ The enhanced backup script provides comprehensive data backup including relay da
 
 ```bash
 # Run the backup script (requires sudo)
-sudo /opt/nostrbots/scripts/backup-relay-data.sh
+sudo /opt/nostrbots/scripts/backup-essential-data.sh
+
+# Or use the management interface
+./scripts/manage-backups.sh backup
 ```
 
 **What it does:**

@@ -78,13 +78,32 @@ Restore from a specific backup:
 ./scripts/restore-essential-data.sh /backups/nostrbots-essential-20241225_120000.tar.gz --dry-run
 ```
 
-### Cleanup
+### Cleanup Options
+
+#### Basic Cleanup (Backups Only)
 Remove old backups to free space:
 
 ```bash
 # Clean up backups older than 30 days
 ./scripts/manage-backups.sh cleanup
 ```
+
+#### Complete Cleanup (Everything)
+Remove all Nostrbots components including containers, data, and services:
+
+```bash
+# Complete cleanup - removes everything (requires confirmation)
+./scripts/manage-backups.sh cleanup-all
+```
+
+**⚠️ WARNING**: `cleanup-all` removes:
+- All Docker containers (Orly, Jenkins, Elasticsearch, etc.)
+- All Docker volumes and data
+- All backup files
+- All systemd services
+- All project data and logs
+
+This is equivalent to a complete uninstall and cannot be undone!
 
 ## Backup Format
 
@@ -270,4 +289,7 @@ Main backup script that creates efficient backups.
 Restore script with options for partial restoration.
 
 ### manage-backups.sh
-Management interface for backup operations.
+Management interface for backup operations with comprehensive cleanup capabilities.
+
+### cleanup-systemd.sh
+Standalone script for cleaning up only systemd services (does not remove data).
