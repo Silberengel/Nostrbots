@@ -16,36 +16,36 @@ NC='\033[0m' # No Color
 
 # Logging functions
 log() {
-    echo -e "${BLUE}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} $1"
+    echo -e "${BLUE}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} $1" >&2
 }
 
 log_info() {
-    echo -e "${BLUE}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ⓘ$1"
+    echo -e "${BLUE}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ⓘ$1" >&2
 }
 
 log_success() {
-    echo -e "${GREEN}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ✓ $1"
+    echo -e "${GREEN}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ✓ $1" >&2
 }
 
 log_error() {
-    echo -e "${RED}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ✗ $1"
+    echo -e "${RED}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ✗ $1" >&2
 }
 
 log_warn() {
-    echo -e "${YELLOW}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ⚠  $1"
+    echo -e "${YELLOW}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ⚠  $1" >&2
 }
 
 warn() {
-    echo -e "${YELLOW}⚠  $1${NC}"
+    echo -e "${YELLOW}⚠  $1${NC}" >&2
 }
 
 error() {
-    echo -e "${RED}✗ $1${NC}"
+    echo -e "${RED}✗ $1${NC}" >&2
     exit 1
 }
 
 info() {
-    echo -e "${BLUE}ⓘ$1${NC}"
+    echo -e "${BLUE}ⓘ$1${NC}" >&2
 }
 
 # Check if running as root
@@ -183,7 +183,7 @@ init_docker_swarm() {
 
 # Setup Nostr keys
 setup_nostr_keys() {
-    log "Setting up Nostr keys"
+    log "Setting up Nostr keys" >&2
     
     local encrypted_key
     local npub
@@ -192,15 +192,13 @@ setup_nostr_keys() {
     if [ -n "${CUSTOM_PRIVATE_KEY:-}" ]; then
         # Check security and warn if needed
         check_command_line_security "$@"
-        log "Using provided custom private key"
+        log "Using provided custom private key" >&2
         
         # Validate the private key format (should be hex or nsec)
         if [[ "$CUSTOM_PRIVATE_KEY" =~ ^[0-9a-fA-F]{64}$ ]] || [[ "$CUSTOM_PRIVATE_KEY" =~ ^nsec1 ]]; then
             # Use the generate-key.php script with the custom key
             local key_output
-            key_output=$(php generate-key.php --key "$CUSTOM_PRIVATE_KEY" --jenkins --quiet 2>/dev/null)
-            
-            if [ $? -ne 0 ]; then
+            if ! key_output=$(php "$SCRIPT_DIR/generate-key.php" --key "$CUSTOM_PRIVATE_KEY" --jenkins --quiet); then
                 error "Failed to process custom private key"
             fi
             
@@ -217,11 +215,9 @@ setup_nostr_keys() {
         
     else
         # Generate new keys using PHP script
-        log "Generating new Nostr keys"
+        log "Generating new Nostr keys" >&2
         local key_output
-        key_output=$(php generate-key.php --jenkins --quiet 2>/dev/null)
-        
-        if [ $? -ne 0 ]; then
+        if ! key_output=$(php "$SCRIPT_DIR/generate-key.php" --jenkins --quiet); then
             error "Failed to generate keys"
         fi
         
@@ -271,7 +267,7 @@ display_keys_for_user() {
     
     # Get the nsec for display
     local nsec_output
-    nsec_output=$(php generate-key.php --jenkins --quiet 2>/dev/null | grep "NOSTR_BOT_NSEC=" | cut -d'=' -f2)
+    nsec_output=$(php "$SCRIPT_DIR/generate-key.php" --jenkins --quiet | grep "NOSTR_BOT_NSEC=" | cut -d'=' -f2)
     echo "Your nsec: $nsec_output"
     echo ""
 }
