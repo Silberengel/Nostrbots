@@ -1,6 +1,6 @@
 # Nostrbots Production Setup Guide
 
-This guide covers setting up Nostrbots in a production environment with automatic startup, persistent data backups, and recovery capabilities.
+This guide covers setting up Nostrbots in a production environment with automatic startup, persistent data backups, and recovery capabilities. The setup now supports both basic and ELK stack configurations.
 
 ## 🚀 Quick Start
 
@@ -9,9 +9,29 @@ This guide covers setting up Nostrbots in a production environment with automati
 git clone <your-repo-url>
 cd Nostrbots
 
-# Run the production setup (requires root)
+# Minimal development setup
+./setup-local-dev.sh
+
+# Basic setup (no ELK stack)
 sudo ./setup-production.sh
+
+# Complete setup with ELK monitoring stack
+sudo ./setup-production.sh --elk
 ```
+
+## 🎯 Choosing Your Setup
+
+### Basic Setup (Default)
+- **Best for**: Simple deployments, development, testing
+- **Services**: Orly Relay, Jenkins, Backup Agent
+- **Resources**: Lower memory and storage requirements
+- **Features**: Core Nostrbots functionality without monitoring
+
+### ELK Stack Setup (--elk option)
+- **Best for**: Production deployments, monitoring, analytics
+- **Services**: All basic services + Elasticsearch, Kibana, Logstash, Event Indexer
+- **Resources**: Higher memory and storage requirements (4GB+ RAM recommended)
+- **Features**: Full monitoring, event indexing, log analysis, search capabilities
 
 ## 🧹 Cleanup and Testing
 
@@ -65,11 +85,17 @@ sudo ./setup-production.sh --cleanup
 
 ## 📋 What the Production Setup Includes
 
-### 🔧 Core Services
+### 🔧 Core Services (Basic Setup)
 - **Orly Relay**: Local Nostr relay for development and testing
 - **Jenkins**: CI/CD pipeline for automated bot content generation
 - **Backup Agent**: Automated daily data export and backup
 - **Systemd Services**: Auto-start on boot and service management
+
+### 📊 ELK Stack Services (--elk option)
+- **Elasticsearch**: Search and analytics engine
+- **Kibana**: Data visualization and dashboard
+- **Logstash**: Log processing and pipeline
+- **Event Indexer**: Automatic indexing of Nostr events
 
 ### 💾 Data Persistence
 - **Persistent Storage**: All data stored in `/opt/nostrbots/data/`
@@ -99,15 +125,22 @@ After setup, the following directories are created:
 /opt/nostrbots/                 # Main application directory
 ├── data/                       # Persistent data storage
 │   ├── jenkins/               # Jenkins home directory
-│   └── orly/                  # Orly relay data
+│   ├── orly/                  # Orly relay data
+│   └── elasticsearch/         # Elasticsearch data (ELK setup)
 ├── backups/                   # Backup storage
 │   ├── relay-backup-*.json.gz # Daily relay backups
 │   └── nostrbots-keys-*.env   # Key backups
 ├── scripts/                   # Management scripts
+│   ├── manage-stack.sh        # Docker Stack management
 │   ├── backup-relay-data.sh   # Backup script
+│   ├── index-relay-events.sh  # Event indexing script
 │   ├── recover-from-backup.sh # Recovery script
 │   └── monitor.sh             # Health monitoring
 ├── config/                    # Configuration files
+│   ├── logstash/              # Logstash configuration (ELK setup)
+│   └── kibana/                # Kibana configuration (ELK setup)
+├── docker-compose.basic.yml   # Basic setup configuration
+├── docker-compose.stack.yml   # ELK stack configuration
 └── .env                       # Environment variables (keys)
 
 /var/log/nostrbots/            # Application logs
@@ -117,7 +150,37 @@ After setup, the following directories are created:
 
 ## 🎮 Management Commands
 
-The production setup includes a management command for easy service control:
+The production setup includes multiple management tools for easy service control:
+
+### Docker Stack Management
+
+The new `manage-stack.sh` script provides comprehensive Docker Stack management:
+
+```bash
+# Stack deployment
+./scripts/manage-stack.sh deploy basic    # Deploy basic setup
+./scripts/manage-stack.sh deploy elk      # Deploy with ELK stack
+
+# Stack management
+./scripts/manage-stack.sh status          # Show stack status
+./scripts/manage-stack.sh health          # Check service health
+./scripts/manage-stack.sh restart basic   # Restart basic stack
+./scripts/manage-stack.sh restart elk     # Restart ELK stack
+./scripts/manage-stack.sh stop            # Stop the stack
+
+# Logs and monitoring
+./scripts/manage-stack.sh logs event-indexer  # View specific service logs
+./scripts/manage-stack.sh logs jenkins        # View Jenkins logs
+./scripts/manage-stack.sh ps                  # Show running services
+
+# Maintenance
+./scripts/manage-stack.sh cleanup         # Remove stack and clean up
+./scripts/manage-stack.sh update elk      # Update and redeploy
+```
+
+### Service Management
+
+The traditional management command for service control:
 
 ```bash
 # Service management
@@ -141,13 +204,20 @@ nostrbots help                   # Show all commands
 
 ### Setup Script Options
 
-The setup script also supports additional options:
+The setup script supports multiple configuration options:
 
 ```bash
-# Basic setup
+# Basic setup (no ELK stack)
 sudo ./setup-production.sh                    # Generate new keys and setup
 sudo ./setup-production.sh --private-key KEY  # Use existing private key
+
+# ELK stack setup (with monitoring)
+sudo ./setup-production.sh --elk              # Setup with ELK stack
+sudo ./setup-production.sh --elk --private-key KEY  # ELK with existing key
+
+# Management options
 sudo ./setup-production.sh --cleanup          # Clean up for blank slate testing
+sudo ./setup-production.sh --change-keys --private-key NEW_KEY  # Change keys
 
 # Help
 sudo ./setup-production.sh --help             # Show setup script help
@@ -306,6 +376,12 @@ nostrbots logs
 - **HTTP**: http://localhost:3334
 - **Health Check**: http://localhost:3334/health
 
+### ELK Stack (--elk option)
+- **Elasticsearch**: http://localhost:9200
+- **Kibana**: http://localhost:5601
+- **Event Indexer**: Automatically indexes Nostr events every 5 minutes
+- **Logstash**: Processes logs from all services
+
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -324,7 +400,9 @@ NOSTRBOTS_PASSWORD=nostrbots123
 ```
 
 ### Docker Compose
-Production configuration is in `/opt/nostrbots/docker-compose.production.yml`
+Production configurations are in:
+- `/opt/nostrbots/docker-compose.basic.yml` - Basic setup (no ELK)
+- `/opt/nostrbots/docker-compose.stack.yml` - Full setup with ELK stack
 
 ### Systemd Services
 - `nostrbots.service`: Main service management

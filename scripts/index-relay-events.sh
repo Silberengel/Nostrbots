@@ -19,18 +19,26 @@ log() {
     echo "[$(date -Iseconds)] $1" | tee -a /var/log/nostrbots/event-indexer.log
 }
 
-# Check if Elasticsearch is available
-check_elasticsearch() {
-    if ! curl -s "$ELASTICSEARCH_URL/_cluster/health" > /dev/null; then
-        log "ERROR: Elasticsearch is not available at $ELASTICSEARCH_URL"
-        return 1
-    fi
-    log "✓ Elasticsearch is available"
+# Error handling
+error_exit() {
+    log "ERROR: $1"
+    exit 1
 }
 
-# Create index mapping if it doesn't exist
-create_index_mapping() {
-    local mapping='{
+# Check if Elasticsearch is available
+check_elasticsearch() {
+    log "Checking Elasticsearch connectivity..."
+    if ! curl -s "$ELASTICSEARCH_URL/_cluster/health" > /dev/null; then
+        error_exit "Cannot connect to Elasticsearch at $ELASTICSEARCH_URL"
+    fi
+    log "Elasticsearch is available"
+}
+
+# Create index if it doesn't exist
+create_index() {
+    log "Ensuring index $INDEX_NAME exists..."
+    
+    local index_mapping='{
         "mappings": {
             "properties": {
                 "id": {"type": "keyword"},
@@ -43,124 +51,119 @@ create_index_mapping() {
                     "analyzer": "standard"
                 },
                 "sig": {"type": "keyword"},
-                "relay": {"type": "keyword"},
-                "indexed_at": {"type": "date"}
+                "indexed_at": {"type": "date"},
+                "relay": {"type": "keyword"}
             }
         }
     }'
     
-    if ! curl -s "$ELASTICSEARCH_URL/$INDEX_NAME" > /dev/null; then
-        log "Creating index mapping for $INDEX_NAME"
-        curl -s -X PUT "$ELASTICSEARCH_URL/$INDEX_NAME" \
-            -H "Content-Type: application/json" \
-            -d "$mapping" > /dev/null
-        log "✓ Index mapping created"
-    else
+    local response=$(curl -s -X PUT "$ELASTICSEARCH_URL/$INDEX_NAME" \
+        -H "Content-Type: application/json" \
+        -d "$index_mapping")
+    
+    if echo "$response" | jq -e '.acknowledged' > /dev/null; then
+        log "Index $INDEX_NAME created successfully"
+    elif echo "$response" | jq -e '.error.type' | grep -q "resource_already_exists_exception"; then
         log "Index $INDEX_NAME already exists"
+    else
+        log "Warning: Could not create index: $response"
     fi
 }
 
 # Get events from relay
-get_events_from_relay() {
-    local since="${1:-0}"
-    local limit="${2:-$BATCH_SIZE}"
+get_events() {
+    log "Fetching events from relay..."
     
-    # Query the relay for events
-    local query='{
-        "ids": [],
-        "authors": [],
-        "kinds": [],
-        "#e": [],
-        "#p": [],
-        "since": '$since',
-        "until": null,
-        "limit": '$limit'
-    }'
-    
-    # Send query to relay
     local response=$(curl -s -X POST "$ORLY_RELAY_URL" \
         -H "Content-Type: application/json" \
-        -d "$query" 2>/dev/null || echo '[]')
+        -d '{
+            "jsonrpc": "2.0",
+            "method": "query",
+            "params": {
+                "limit": '$MAX_EVENTS'
+            },
+            "id": 1
+        }')
     
-    echo "$response"
+    if [ -z "$response" ]; then
+        error_exit "No response from relay"
+    fi
+    
+    local events=$(echo "$response" | jq -r '.result // empty')
+    if [ -z "$events" ] || [ "$events" = "null" ]; then
+        log "No events found in relay response"
+        return 1
+    fi
+    
+    local count=$(echo "$events" | jq 'length')
+    log "Found $count events to index"
+    
+    if [ "$count" -eq 0 ]; then
+        return 1
+    fi
+    
+    echo "$events"
 }
 
 # Index events to Elasticsearch
 index_events() {
     local events="$1"
-    local count=$(echo "$events" | jq length)
+    local count=$(echo "$events" | jq 'length')
     
     if [ "$count" -eq 0 ]; then
-        log "No new events to index"
+        log "No events to index"
         return 0
     fi
     
     log "Indexing $count events to Elasticsearch"
     
-    # Prepare bulk index request
+    # Prepare bulk index request - using sh-compatible syntax
     local bulk_data=""
+    local temp_file=$(mktemp)
+    echo "$events" | jq -c '.[]' > "$temp_file"
+    
     while IFS= read -r event; do
         if [ -n "$event" ] && [ "$event" != "null" ]; then
             # Add metadata
             local indexed_event=$(echo "$event" | jq '. + {"indexed_at": now, "relay": "orly-relay"}')
             
             # Create bulk index entry
-            local index_entry=$(cat <<EOF
-{"index": {"_index": "$INDEX_NAME", "_id": "$(echo "$indexed_event" | jq -r '.id')"}}
-$indexed_event
-EOF
-)
+            local event_id=$(echo "$indexed_event" | jq -r '.id')
+            local index_entry="{\"index\": {\"_index\": \"$INDEX_NAME\", \"_id\": \"$event_id\"}}
+$indexed_event"
             bulk_data="$bulk_data$index_entry"
         fi
-    done <<< "$(echo "$events" | jq -c '.[]')"
+    done < "$temp_file"
+    rm -f "$temp_file"
     
     # Send bulk request
     local response=$(curl -s -X POST "$ELASTICSEARCH_URL/_bulk" \
         -H "Content-Type: application/json" \
         -d "$bulk_data")
     
-    # Check for errors
-    local errors=$(echo "$response" | jq '.errors')
-    if [ "$errors" = "true" ]; then
-        log "ERROR: Some events failed to index"
+    if echo "$response" | jq -e '.errors' | grep -q "true"; then
+        log "Warning: Some events failed to index"
         echo "$response" | jq '.items[] | select(.index.error) | .index.error' | tee -a /var/log/nostrbots/event-indexer.log
-        return 1
+    else
+        log "Successfully indexed $count events"
     fi
-    
-    log "✓ Successfully indexed $count events"
 }
 
-# Get last indexed timestamp
-get_last_indexed_timestamp() {
-    local response=$(curl -s "$ELASTICSEARCH_URL/$INDEX_NAME/_search" \
-        -H "Content-Type: application/json" \
-        -d '{
-            "size": 1,
-            "sort": [{"created_at": {"order": "desc"}}],
-            "_source": ["created_at"]
-        }')
-    
-    local last_timestamp=$(echo "$response" | jq -r '.hits.hits[0]._source.created_at // 0')
-    echo "$last_timestamp"
-}
-
-# Main indexing function
+# Main execution
 main() {
     log "Starting event indexing process"
     
-    # Check prerequisites
-    check_elasticsearch || exit 1
-    create_index_mapping
+    check_elasticsearch
+    create_index
     
-    # Get last indexed timestamp
-    local since=$(get_last_indexed_timestamp)
-    log "Indexing events since timestamp: $since"
+    local events
+    if events=$(get_events); then
+        index_events "$events"
+    else
+        log "No events to process"
+    fi
     
-    # Get and index events
-    local events=$(get_events_from_relay "$since" "$MAX_EVENTS")
-    index_events "$events"
-    
-    log "✓ Event indexing completed"
+    log "Event indexing process completed"
 }
 
 # Run main function

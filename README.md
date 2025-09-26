@@ -29,16 +29,16 @@ export CUSTOM_PRIVATE_KEY="your_key_here"
 sudo CUSTOM_PRIVATE_KEY="your_key_here" ./setup-production.sh
 
 # or just take your environment variables with you
-$ sudo -E ./setup-production-with-elasticsearch.sh
+$ sudo -E ./setup-production.sh --elk
 ```
 
 ### Production Setup (Recommended)
 ```bash
-# Complete setup with monitoring
-sudo ./setup-production-with-elasticsearch.sh
-
-# Or basic setup without Elasticsearch
+# Basic setup (no ELK stack)
 sudo ./setup-production.sh
+
+# Complete setup with ELK monitoring stack
+sudo ./setup-production.sh --elk
 ```
 
 ### Local Development
@@ -80,7 +80,11 @@ php generate-key.php --key YOUR_NSEC_OR_HEX_KEY --encrypt
 
 ### Management Commands
 ```bash
-# Production
+# Production Stack Management
+./scripts/manage-stack.sh status|health|logs|restart
+./scripts/manage-stack.sh deploy basic|elk
+
+# Production Service Management
 nostrbots status|logs|backup|elasticsearch
 ./retrieve-nsec-secure.sh
 
@@ -118,4 +122,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Ready to start botting?** Run `./setup-local-dev.sh` for local development or `sudo ./setup-production-with-elasticsearch.sh` for production! 🚀
+**Ready to start botting?** Run `./setup-local-dev.sh` for local development or `sudo ./setup-production.sh --elk` for production! 🚀

@@ -3,10 +3,6 @@ version: '3.8'
 services:
   orly-relay:
     image: silberengel/next-orly:latest
-    container_name: nostrbots-orly-relay
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:3334:7777"  # Bind to localhost only
     environment:
       - ORLY_LISTEN=0.0.0.0
       - ORLY_PORT=7777
@@ -20,16 +16,15 @@ services:
       - nostr_bot_npub
     networks:
       - nostrbots-network
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    cap_add:
-      - NET_BIND_SERVICE
-    read_only: true
-    tmpfs:
-      - /tmp
-      - /var/run
+    ports:
+      - "3334:7777"
+    user: "1000:1000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=orly-relay"
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "7777"]
       interval: 30s
@@ -39,11 +34,9 @@ services:
 
   jenkins:
     image: jenkins/jenkins:lts
-    container_name: nostrbots-jenkins
-    restart: unless-stopped
     ports:
-      - "127.0.0.1:8080:8080"  # Bind to localhost only
-      - "127.0.0.1:50000:50000"
+      - "8080:8080"
+      - "50000:50000"
     environment:
       - JENKINS_OPTS=--httpPort=8080
       - NOSTR_BOT_KEY_ENCRYPTED_FILE=/run/secrets/nostr_bot_key_encrypted
@@ -61,29 +54,18 @@ services:
       - nostr_bot_npub
     networks:
       - nostrbots-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=jenkins"
     user: root
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-    read_only: true
-    tmpfs:
-      - /tmp
-      - /var/run
-      - /var/jenkins_home/workspace
     deploy:
       resources:
         limits:
           cpus: '2.0'
           memory: 4G
-        reservations:
-          cpus: '1.0'
-          memory: 2G
     command: >
       bash -c "
         apt-get update &&
@@ -102,8 +84,6 @@ services:
 
   nostrbots-agent:
     image: jenkins/jenkins:lts
-    container_name: nostrbots-agent
-    restart: unless-stopped
     environment:
       - JENKINS_AGENT_SSH_PUBKEY=${JENKINS_AGENT_SSH_PUBKEY:-}
       - NOSTR_BOT_KEY_ENCRYPTED_FILE=/run/secrets/nostr_bot_key_encrypted
@@ -116,25 +96,15 @@ services:
       - nostr_bot_npub
     networks:
       - nostrbots-network
-    depends_on:
-      - jenkins
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-    read_only: true
-    tmpfs:
-      - /tmp
-      - /var/run
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=nostrbots-agent"
 
   backup-agent:
     image: silberengel/nostrbots:latest
-    container_name: nostrbots-backup-agent
-    restart: unless-stopped
     environment:
       - NOSTR_BOT_KEY_ENCRYPTED_FILE=/run/secrets/nostr_bot_key_encrypted
       - NOSTR_BOT_NPUB_FILE=/run/secrets/nostr_bot_npub
@@ -149,25 +119,33 @@ services:
       - nostr_bot_npub
     networks:
       - nostrbots-network
-    depends_on:
-      - orly-relay
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    read_only: true
-    tmpfs:
-      - /tmp
-      - /var/run
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "service=backup-agent"
     command: >
-      bash -c "
+      sh -c "
         echo '🔄 Backup agent started' &&
-        while true; do
-          echo '⏰ Starting daily backup at $$(date)' &&
-          /workspace/scripts/backup-relay-data.sh &&
-          echo '✓ Backup completed at $$(date)' &&
-          sleep 86400
-        done
+        echo '👤 Current user: $$(whoami) $$(id)' &&
+        echo '📁 Checking workspace contents:' &&
+        ls -la /workspace/ &&
+        echo '📁 Checking scripts directory:' &&
+        ls -la /workspace/scripts/ &&
+        echo '🔧 Copying and fixing script permissions...' &&
+        cp /workspace/scripts/backup-relay-data.sh /tmp/backup-relay-data.sh &&
+        chmod +x /tmp/backup-relay-data.sh &&
+        echo '⏰ Starting daily backup at $$(date)' &&
+        if [ -f /tmp/backup-relay-data.sh ]; then
+          sh /tmp/backup-relay-data.sh
+        else
+          echo '❌ Backup script not found, creating basic backup...'
+          mkdir -p /backups
+          echo 'Basic backup created at $$(date)' > /backups/backup-$$(date +%Y%m%d-%H%M%S).txt
+        fi &&
+        echo '✓ Backup completed at $$(date)' &&
+        sleep 86400
       "
 
 secrets:
@@ -178,5 +156,4 @@ secrets:
 
 networks:
   nostrbots-network:
-    driver: bridge
-    internal: true  # No external access
+    driver: overlay
