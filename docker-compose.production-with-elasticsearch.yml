@@ -207,7 +207,7 @@ services:
         max-file: "3"
         labels: "service=backup-agent"
     command: >
-      bash -c "
+      sh -c "
         echo '🔄 Backup agent started' &&
         while true; do
           echo '⏰ Starting daily backup at $$(date)' &&
@@ -238,7 +238,7 @@ services:
         max-file: "3"
         labels: "service=event-indexer"
     command: >
-      bash -c "
+      sh -c "
         echo 'Event indexer started' &&
         while true; do
           echo '⏰ Starting event indexing at $$(date)' &&
