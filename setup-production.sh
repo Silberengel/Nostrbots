@@ -140,6 +140,44 @@ cleanup_stack() {
     log_info "Removing any remaining containers..."
     docker container prune -f >/dev/null 2>&1 || true
     
+    # Clean up stuck lock files and corrupted data
+    log_info "Cleaning up stuck lock files and corrupted data..."
+    
+    # Remove Elasticsearch lock files
+    if [[ -f "/opt/nostrbots/data/elasticsearch/node.lock" ]]; then
+        log_info "Removing stuck Elasticsearch node.lock file..."
+        rm -f /opt/nostrbots/data/elasticsearch/node.lock
+        log_success "Elasticsearch lock file removed"
+    fi
+    
+    # Remove any other common lock files
+    find /opt/nostrbots/data -name "*.lock" -type f -delete 2>/dev/null || true
+    find /opt/nostrbots/data -name "*.pid" -type f -delete 2>/dev/null || true
+    
+    # Clean up temporary files
+    log_info "Cleaning up temporary files..."
+    find /opt/nostrbots -name "*.tmp" -type f -delete 2>/dev/null || true
+    find /opt/nostrbots -name "*.log" -type f -delete 2>/dev/null || true
+    find /opt/nostrbots -name ".DS_Store" -type f -delete 2>/dev/null || true
+    find /opt/nostrbots -name "Thumbs.db" -type f -delete 2>/dev/null || true
+    
+    # Clean up Docker system (images, networks, build cache)
+    log_info "Cleaning up Docker system..."
+    docker system prune -f >/dev/null 2>&1 || true
+    
+    # Clean up any orphaned networks
+    log_info "Cleaning up orphaned Docker networks..."
+    docker network prune -f >/dev/null 2>&1 || true
+    
+    # Clean up any orphaned volumes
+    log_info "Cleaning up orphaned Docker volumes..."
+    docker volume prune -f >/dev/null 2>&1 || true
+    
+    # Reset file permissions
+    log_info "Resetting file permissions..."
+    chown -R nostrbots:nostrbots /opt/nostrbots 2>/dev/null || true
+    chmod -R 755 /opt/nostrbots 2>/dev/null || true
+    
     log_success "🎉 Cleanup completed! You now have a blank slate for testing."
     echo ""
     echo "To start fresh, run: sudo -E ./setup-production.sh"
@@ -260,14 +298,14 @@ EOF
     # Backup service
     cat > "$SYSTEMD_DIR/nostrbots-backup.service" << EOF
 [Unit]
-Description=Nostrbots Backup Service
+Description=Nostrbots Efficient Backup Service
 Requires=docker.service
 After=docker.service
 
 [Service]
 Type=oneshot
 WorkingDirectory=$PROJECT_DIR
-ExecStart=/usr/bin/docker run --rm --network nostrbots_nostrbots-network -v nostrbots_jenkins_data:/var/jenkins_home:ro -v nostrbots_orly_data:/app/data:ro -v nostrbots_elasticsearch_data:/usr/share/elasticsearch/data:ro -v nostrbots_backup_data:/backups silberengel/nostrbots:latest /opt/nostrbots/scripts/backup-relay-data.sh
+ExecStart=/usr/bin/docker run --rm --network nostrbots_nostrbots-network -v /opt/nostrbots/data:/data:ro -v /opt/nostrbots/backups:/backups -v /opt/nostrbots:/workspace:ro silberengel/nostrbots:latest /opt/nostrbots/scripts/backup-essential-data.sh
 EOF
 
     # Backup timer

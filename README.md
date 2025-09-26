@@ -93,6 +93,38 @@ nostrbots-dev status|start|stop|hello-world|test|nsec|cleanup
 ./note "Your message" [--dry-run]
 ```
 
+## 💾 Efficient Backup System
+
+### Automatic Backups
+- **Location**: `/opt/nostrbots/backups/`
+- **Format**: Compressed archives (`nostrbots-essential-YYYYMMDD_HHMMSS.tar.gz`)
+- **Size**: Typically <100MB (vs 800GB+ with old system)
+- **Schedule**: Daily automated backups with 30-day retention
+
+### Manual Backup Management
+```bash
+# Create new backup
+./scripts/manage-backups.sh backup
+
+# List available backups
+./scripts/manage-backups.sh list
+
+# Check backup system status
+./scripts/manage-backups.sh status
+
+# Restore from backup
+./scripts/manage-backups.sh restore <backup-file>
+
+# Clean up old backups
+./scripts/manage-backups.sh cleanup
+```
+
+### What's Backed Up
+- **Config files**: Jenkins settings, project configuration
+- **Relay events**: Essential event data from database
+- **Elasticsearch data**: Exported indices and mappings
+- **NOT backed up**: Logs, cache, temporary files, entire containers
+
 ## 📚 Documentation
 
 - **[Local Development Guide](LOCAL_DEVELOPMENT.md)**: Local development and testing
@@ -100,6 +132,7 @@ nostrbots-dev status|start|stop|hello-world|test|nsec|cleanup
 - **[Production Setup Guide](PRODUCTION_SETUP.md)**: Complete production deployment guide
 - **[Elasticsearch Setup](ELASTICSEARCH_SETUP.md)**: Monitoring and search capabilities
 - **[Security Guide](SECURITY_GUIDE.md)**: Security features and hardening
+- **[Efficient Backup System](EFFICIENT_BACKUP_SYSTEM.md)**: Backup and restore procedures
 
 ## 🤝 Contributing
 

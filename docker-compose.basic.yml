@@ -127,24 +127,24 @@ services:
         labels: "service=backup-agent"
     command: >
       sh -c "
-        echo '🔄 Backup agent started' &&
+        echo '🔄 Efficient backup agent started' &&
         echo '👤 Current user: $$(whoami) $$(id)' &&
         echo '📁 Checking workspace contents:' &&
         ls -la /workspace/ &&
         echo '📁 Checking scripts directory:' &&
         ls -la /workspace/scripts/ &&
         echo '🔧 Copying and fixing script permissions...' &&
-        cp /workspace/scripts/backup-relay-data.sh /tmp/backup-relay-data.sh &&
-        chmod +x /tmp/backup-relay-data.sh &&
-        echo '⏰ Starting daily backup at $$(date)' &&
-        if [ -f /tmp/backup-relay-data.sh ]; then
-          sh /tmp/backup-relay-data.sh
+        cp /workspace/scripts/backup-essential-data.sh /tmp/backup-essential-data.sh &&
+        chmod +x /tmp/backup-essential-data.sh &&
+        echo '⏰ Starting efficient daily backup at $$(date)' &&
+        if [ -f /tmp/backup-essential-data.sh ]; then
+          sh /tmp/backup-essential-data.sh
         else
-          echo '❌ Backup script not found, creating basic backup...'
+          echo '❌ Efficient backup script not found, falling back to basic backup...'
           mkdir -p /backups
           echo 'Basic backup created at $$(date)' > /backups/backup-$$(date +%Y%m%d-%H%M%S).txt
         fi &&
-        echo '✓ Backup completed at $$(date)' &&
+        echo '✓ Efficient backup completed at $$(date)' &&
         sleep 86400
       "
 
