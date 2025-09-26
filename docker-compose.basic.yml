@@ -133,12 +133,14 @@ services:
         ls -la /workspace/ &&
         echo '📁 Checking scripts directory:' &&
         ls -la /workspace/scripts/ &&
+        echo '🔧 Installing bash for script compatibility...' &&
+        apk add --no-cache bash &&
         echo '🔧 Copying and fixing script permissions...' &&
         cp /workspace/scripts/backup-essential-data.sh /tmp/backup-essential-data.sh &&
         chmod +x /tmp/backup-essential-data.sh &&
         echo '⏰ Starting efficient daily backup at $$(date)' &&
         if [ -f /tmp/backup-essential-data.sh ]; then
-          sh /tmp/backup-essential-data.sh
+          bash /tmp/backup-essential-data.sh
         else
           echo '❌ Efficient backup script not found, falling back to basic backup...'
           mkdir -p /backups

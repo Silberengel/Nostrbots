@@ -88,6 +88,7 @@ setup_user_and_directories() {
     # Create project directories
     mkdir -p "$PROJECT_DIR/data"/{orly,jenkins,elasticsearch}
     mkdir -p "$PROJECT_DIR/backup"
+    mkdir -p "$PROJECT_DIR/backups"
     mkdir -p "$PROJECT_DIR/scripts"
     mkdir -p "$PROJECT_DIR/config"
     
@@ -471,6 +472,9 @@ main() {
         exit 1
     fi
     
+    # Copy all required scripts and files for services to work
+    copy_required_files "$original_script_dir"
+    
     verify_docker_compose
     create_systemd_services
     
@@ -570,6 +574,144 @@ main() {
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
         test_hello_world_note
     fi
+}
+
+# Copy all required files for services to work
+copy_required_files() {
+    local source_dir="$1"
+    log_info "Copying required files for services..."
+    
+    # Create directories if they don't exist
+    mkdir -p "$PROJECT_DIR/scripts"
+    mkdir -p "$PROJECT_DIR/config/logstash"
+    mkdir -p "$PROJECT_DIR/backups"
+    mkdir -p "$PROJECT_DIR/data/orly"
+    mkdir -p "$PROJECT_DIR/data/jenkins"
+    mkdir -p "$PROJECT_DIR/data/elasticsearch"
+    
+    # Copy essential scripts
+    local scripts_to_copy=(
+        "scripts/jenkins-setup.groovy"
+        "scripts/backup-essential-data.sh"
+        "scripts/index-relay-events.php"
+        "scripts/manage-stack.sh"
+        "scripts/manage-backups.sh"
+        "scripts/test-relay-connectivity.php"
+        "scripts/test-event-fetching.php"
+        "scripts/test-authentication.php"
+        "scripts/test-elasticsearch.php"
+        "scripts/monitor-performance.php"
+        "scripts/debug-auth.php"
+    )
+    
+    for script in "${scripts_to_copy[@]}"; do
+        local source_file="$source_dir/$script"
+        local dest_file="$PROJECT_DIR/$script"
+        
+        if [[ -f "$source_file" ]]; then
+            if cp "$source_file" "$dest_file"; then
+                chmod +x "$dest_file"
+                log_success "Copied $(basename "$script")"
+            else
+                log_warn "Failed to copy $script"
+            fi
+        else
+            log_warn "Source file not found: $source_file"
+        fi
+    done
+    
+    # Copy config files
+    local config_files=(
+        "config/logstash/logstash.conf"
+    )
+    
+    for config in "${config_files[@]}"; do
+        local source_file="$source_dir/$config"
+        local dest_file="$PROJECT_DIR/$config"
+        
+        if [[ -f "$source_file" ]]; then
+            if cp "$source_file" "$dest_file"; then
+                log_success "Copied $(basename "$config")"
+            else
+                log_warn "Failed to copy $config"
+            fi
+        else
+            log_warn "Config file not found: $source_file"
+        fi
+    done
+    
+    # Copy main PHP files
+    local php_files=(
+        "nostrbots.php"
+        "write-note.php"
+        "generate-key.php"
+        "decrypt-key.php"
+        "run-tests.php"
+    )
+    
+    for php_file in "${php_files[@]}"; do
+        local source_file="$source_dir/$php_file"
+        local dest_file="$PROJECT_DIR/$php_file"
+        
+        if [[ -f "$source_file" ]]; then
+            if cp "$source_file" "$dest_file"; then
+                chmod +x "$dest_file"
+                log_success "Copied $php_file"
+            else
+                log_warn "Failed to copy $php_file"
+            fi
+        else
+            log_warn "PHP file not found: $source_file"
+        fi
+    done
+    
+    # Copy composer files
+    local composer_files=(
+        "composer.json"
+        "composer.lock"
+    )
+    
+    for composer_file in "${composer_files[@]}"; do
+        local source_file="$source_dir/$composer_file"
+        local dest_file="$PROJECT_DIR/$composer_file"
+        
+        if [[ -f "$source_file" ]]; then
+            if cp "$source_file" "$dest_file"; then
+                log_success "Copied $composer_file"
+            else
+                log_warn "Failed to copy $composer_file"
+            fi
+        else
+            log_warn "Composer file not found: $source_file"
+        fi
+    done
+    
+    # Copy src directory
+    if [[ -d "$source_dir/src" ]]; then
+        if cp -r "$source_dir/src" "$PROJECT_DIR/"; then
+            log_success "Copied src directory"
+        else
+            log_warn "Failed to copy src directory"
+        fi
+    else
+        log_warn "src directory not found: $source_dir/src"
+    fi
+    
+    # Copy vendor directory if it exists
+    if [[ -d "$source_dir/vendor" ]]; then
+        if cp -r "$source_dir/vendor" "$PROJECT_DIR/"; then
+            log_success "Copied vendor directory"
+        else
+            log_warn "Failed to copy vendor directory"
+        fi
+    else
+        log_warn "vendor directory not found: $source_dir/vendor"
+    fi
+    
+    # Set proper ownership
+    chown -R nostrbots:nostrbots "$PROJECT_DIR"
+    
+    log_success "Required files copied successfully"
 }
 
 # Test hello world note publishing

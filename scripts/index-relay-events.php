@@ -12,8 +12,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use swentel\nostr\Relay\Relay;
 use swentel\nostr\Relay\RelaySet;
 use swentel\nostr\Message\RequestMessage;
-use swentel\nostr\Message\Subscription;
-use swentel\nostr\Filter;
+use swentel\nostr\Subscription\Subscription;
+use swentel\nostr\Filter\Filter;
 use swentel\nostr\Message\AuthMessage;
 use swentel\nostr\Nip42\AuthEvent;
 use swentel\nostr\Sign\Sign;
@@ -568,7 +568,7 @@ class EventIndexer
         return null;
     }
 
-    private function log(string $message): void
+    public function log(string $message): void
     {
         $timestamp = date('c');
         $logMessage = "[{$timestamp}] {$message}" . PHP_EOL;
