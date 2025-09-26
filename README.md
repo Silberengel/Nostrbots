@@ -24,7 +24,7 @@ I'm happy to receive tips: silberengel@minibits.cash
 sudo ./setup-production-with-elasticsearch.sh
 
 # Or basic setup without Elasticsearch
-sudo ./setup-production-secrets-only.sh
+sudo ./setup-production.sh
 ```
 
 ### Local Development

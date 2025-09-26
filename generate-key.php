@@ -17,6 +17,7 @@
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Nostrbots\Utils\KeyManager;
+use swentel\nostr\Key\Key;
 
 /**
  * Update the .env file with the generated keys
@@ -280,15 +281,24 @@ function main(): void
         
         // Use provided key or generate new one
         if ($providedKey && !$decrypt) {
-            // Use provided key (assume it's unencrypted)
+            // Handle custom key (hex or nsec format)
             $hexPrivateKey = $providedKey;
+            
+            // If it's nsec format, convert to hex first
+            if (str_starts_with($providedKey, 'nsec1')) {
+                $key = new Key();
+                $hexPrivateKey = $key->convertToHex($providedKey);
+            }
+            
+            // Generate key set from the hex private key
+            $keySet = $keyManager->getKeySet($hexPrivateKey);
+            $profile = $keyManager->fetchProfile($keySet['bechPublicKey']);
+            
             $result = [
                 'env_variable' => $envVariable ?? 'NOSTR_BOT_KEY',
-                'key_set' => [
-                    'hexPrivateKey' => $hexPrivateKey,
-                    'bechPrivateKey' => 'nsec...', // Would need to convert
-                    'bechPublicKey' => 'npub...'  // Would need to convert
-                ]
+                'key_set' => $keySet,
+                'profile' => $profile,
+                'setup_instructions' => $keyManager->getSetupInstructions($envVariable ?? 'NOSTR_BOT_KEY', $hexPrivateKey),
             ];
         } else {
             // Generate new key

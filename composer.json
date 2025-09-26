@@ -8,7 +8,6 @@
         "simplito/elliptic-php": "^1.0",
         "paragonie/ecc": "^2.0",
         "swentel/nostr-php": "^1.4.1",
-        "textalk/websocket": "^1.5",
         "symfony/yaml": "^7.3"
   
     },

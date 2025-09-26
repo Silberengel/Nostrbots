@@ -8,6 +8,9 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Source shared security utilities
+source "$SCRIPT_DIR/security-utils.sh"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -26,6 +29,8 @@ log_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
+# Security cleanup function is now in security-utils.sh
+
 echo "🧹 Nostrbots Cleanup"
 echo "==================="
 echo ""
@@ -33,10 +38,16 @@ echo "This script will:"
 echo "• Stop and remove all containers"
 echo "• Remove all volumes"
 echo "• Clean up temporary files"
+echo "• Clear sensitive environment variables"
+echo "• Clean bash history of private key commands"
+echo "• Restart shell session to clear current session history"
 echo ""
 echo "With --all flag, it will also:"
 echo "• Remove generated content"
 echo "• Perform comprehensive Docker cleanup (removes all unused images, containers, networks, and build cache)"
+echo ""
+echo "⚠️  Note: The script will restart your shell session at the end to ensure"
+echo "   complete history clearing. You'll be in a fresh shell afterward."
 echo ""
 
 # Stop and remove containers
@@ -73,5 +84,8 @@ if [ "${1:-}" = "--all" ]; then
     docker system prune -af 2>/dev/null || true
     log_success "Docker system cleaned"
 fi
+
+# Always perform security cleanup
+secure_cleanup_always
 
 log_success "Cleanup completed!"
