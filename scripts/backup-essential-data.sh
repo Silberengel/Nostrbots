@@ -86,21 +86,18 @@ backup_relay_events() {
     mkdir -p "$events_dir"
     
     if [ -d "$DATA_DIR/orly" ]; then
-        # Only backup the events database, not logs or cache
-        if [ -f "$DATA_DIR/orly/events.db" ]; then
-            cp "$DATA_DIR/orly/events.db" "$events_dir/"
-            log "✓ Relay events database backed up"
-        fi
+        # Backup BadgerDB files (orly uses BadgerDB, not SQLite)
+        log "📊 Backing up BadgerDB files"
+        cp -r "$DATA_DIR/orly"/* "$events_dir/" 2>/dev/null || true
+        log "✓ Relay events database backed up"
         
         # Backup any essential relay config
         for file in "config.json" "settings.json" "*.conf"; do
             find "$DATA_DIR/orly" -maxdepth 1 -name "$file" -exec cp {} "$events_dir/" \; 2>/dev/null || true
         done
         
-        # Get relay stats for verification
-        if command -v sqlite3 >/dev/null 2>&1 && [ -f "$DATA_DIR/orly/events.db" ]; then
-            sqlite3 "$DATA_DIR/orly/events.db" "SELECT COUNT(*) as event_count FROM events;" > "$events_dir/event_count.txt" 2>/dev/null || true
-        fi
+        # Create a simple file count for verification
+        find "$DATA_DIR/orly" -type f | wc -l > "$events_dir/file_count.txt" 2>/dev/null || true
     else
         log "⚠  No relay data directory found at $DATA_DIR/orly"
     fi

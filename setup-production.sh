@@ -99,6 +99,24 @@ setup_user_and_directories() {
     # Set ownership
     chown -R "$SERVICE_USER:$SERVICE_USER" "$PROJECT_DIR"
     
+    # Set specific ownership for Elasticsearch data directory (needs UID 1000)
+    chown -R 1000:0 "$PROJECT_DIR/data/elasticsearch" || true
+    chmod -R 755 "$PROJECT_DIR/data/elasticsearch" || true
+    
+    # Ensure Elasticsearch data directory exists and has correct permissions
+    mkdir -p "$PROJECT_DIR/data/elasticsearch"
+    chown -R 1000:0 "$PROJECT_DIR/data/elasticsearch" || true
+    chmod -R 755 "$PROJECT_DIR/data/elasticsearch" || true
+    
+    # Set ownership for log directory (needs to be writable by nostrbots user)
+    chown -R "$SERVICE_USER:$SERVICE_USER" "/var/log/nostrbots" || true
+    
+    # Set permissions for Elasticsearch data directory
+    chmod -R 755 "$PROJECT_DIR/data/elasticsearch"
+    
+    # Set permissions for log directory
+    chmod -R 755 "/var/log/nostrbots"
+    
     # Create backup file with proper permissions
     touch "$PROJECT_DIR/backup/nostr_bot_key_encrypted.txt"
     chmod 600 "$PROJECT_DIR/backup/nostr_bot_key_encrypted.txt"
@@ -597,6 +615,12 @@ copy_required_files() {
     # Create log directories for services
     mkdir -p "/var/log/nostrbots"
     
+    # Set ownership for log directory (needs to be writable by nostrbots user)
+    chown -R "$SERVICE_USER:$SERVICE_USER" "/var/log/nostrbots" || true
+    
+    # Set permissions for log directory
+    chmod -R 755 "/var/log/nostrbots"
+    
     # Copy essential scripts
     local scripts_to_copy=(
         "scripts/jenkins-setup.groovy"
@@ -718,6 +742,10 @@ copy_required_files() {
     
     # Set proper ownership
     chown -R nostrbots:nostrbots "$PROJECT_DIR"
+    
+    # Ensure Elasticsearch data directory has correct ownership (needs UID 1000)
+    chown -R 1000:0 "$PROJECT_DIR/data/elasticsearch" || true
+    chmod -R 755 "$PROJECT_DIR/data/elasticsearch" || true
     
     log_success "Required files copied successfully"
 }

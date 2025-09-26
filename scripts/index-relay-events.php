@@ -500,9 +500,9 @@ class EventIndexer
         $this->stateFile = '/var/log/nostrbots/event-indexer-state.json';
         
         // Performance settings
-        $this->batchSize = (int)($_ENV['RELAY_BATCH_SIZE'] ?? 3); // Process 3 relays at a time
-        $this->requestDelay = (int)($_ENV['REQUEST_DELAY_MS'] ?? 10000); // 10 seconds between batches
-        $this->connectionTimeout = (int)($_ENV['CONNECTION_TIMEOUT'] ?? 30); // 30 seconds
+        $this->batchSize = (int)($_ENV['RELAY_BATCH_SIZE'] ?? 5); // Process 5 relays at a time
+        $this->requestDelay = (int)($_ENV['REQUEST_DELAY_MS'] ?? 2000); // 2 seconds between batches
+        $this->connectionTimeout = (int)($_ENV['CONNECTION_TIMEOUT'] ?? 15); // 15 seconds
         $this->maxConcurrentConnections = (int)($_ENV['MAX_CONCURRENT_CONNECTIONS'] ?? 3);
         $this->backgroundMode = filter_var($_ENV['BACKGROUND_MODE'] ?? 'true', FILTER_VALIDATE_BOOLEAN);
         
@@ -585,17 +585,17 @@ class EventIndexer
     private function getLastIndexedTimestamp(): int
     {
         if (!file_exists($this->stateFile)) {
-            // First run - start from 7 days ago to catch recent events
-            $timestamp = time() - (7 * 24 * 3600);
-            $this->log("First run detected, starting from 7 days ago");
+            // First run - start from 1 day ago to catch recent events
+            $timestamp = time() - (1 * 24 * 3600);
+            $this->log("First run detected, starting from 1 day ago");
             return $timestamp;
         }
 
         $state = json_decode(file_get_contents($this->stateFile), true);
         if (!$state || !isset($state['last_timestamp'])) {
-            // Corrupted state file - start from 7 days ago
-            $timestamp = time() - (7 * 24 * 3600);
-            $this->log("Corrupted state file, starting from 7 days ago");
+            // Corrupted state file - start from 1 day ago
+            $timestamp = time() - (1 * 24 * 3600);
+            $this->log("Corrupted state file, starting from 1 day ago");
             return $timestamp;
         }
 
