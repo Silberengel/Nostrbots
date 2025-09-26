@@ -222,7 +222,13 @@ services:
       - NOSTR_BOT_KEY_ENCRYPTED_FILE=/run/secrets/nostr_bot_key_encrypted
       - NOSTR_BOT_NPUB_FILE=/run/secrets/nostr_bot_npub
       - ELASTICSEARCH_URL=http://elasticsearch:9200
-      - ORLY_RELAY_URL=http://orly-relay:7777
+      - RELAY_URLS=ws://orly-relay:7777,wss://aggr.nostr.land,wss://nostr.land,wss://orly-relay.imwald.eu,wss://thecitadel.nostr1.com,wss://freelay.sovbit.host,wss://nostr.sovbit.host,wss://theforest.nostr1.com,wss://nostr21.com
+      - RELAY_BATCH_SIZE=3
+      - REQUEST_DELAY_MS=10000
+      - CONNECTION_TIMEOUT=30
+      - MAX_CONCURRENT_CONNECTIONS=3
+      - BACKGROUND_MODE=true
+      - MAX_EVENTS=10000
     volumes:
       - /opt/nostrbots:/workspace
     secrets:
@@ -240,18 +246,16 @@ services:
       sh -c "
         echo 'Event indexer started' &&
         echo '👤 Current user: $$(whoami) $$(id)' &&
-        echo '📦 Installing jq dependency...' &&
-        apk add --no-cache jq curl &&
         echo '📁 Checking workspace contents:' &&
         ls -la /workspace/ &&
         echo '📁 Checking scripts directory:' &&
         ls -la /workspace/scripts/ &&
         echo '🔧 Copying and fixing script permissions...' &&
-        cp /workspace/scripts/index-relay-events.sh /tmp/index-relay-events.sh &&
-        chmod +x /tmp/index-relay-events.sh &&
+        cp /workspace/scripts/index-relay-events.php /tmp/index-relay-events.php &&
+        chmod +x /tmp/index-relay-events.php &&
         echo '⏰ Starting event indexing at $$(date)' &&
-        if [ -f /tmp/index-relay-events.sh ]; then
-          sh /tmp/index-relay-events.sh
+        if [ -f /tmp/index-relay-events.php ]; then
+          php /tmp/index-relay-events.php
         else
           echo '❌ Indexing script not found, creating basic index...'
           echo 'Basic event indexing at $$(date)' > /tmp/index-$$(date +%Y%m%d-%H%M%S).log
