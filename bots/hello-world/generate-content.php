@@ -99,6 +99,14 @@ class HelloWorldGenerator
         }
         
         echo "Content saved to: $filename\n";
+        
+        // Create symlink to latest file for easy access
+        $latestSymlink = $outputDir . '/hello-world-latest.adoc';
+        if (file_exists($latestSymlink)) {
+            unlink($latestSymlink);
+        }
+        symlink($filename, $latestSymlink);
+        echo "Created symlink: hello-world-latest.adoc -> $filename\n";
     }
 }
 

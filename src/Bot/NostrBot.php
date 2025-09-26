@@ -268,9 +268,8 @@ class NostrBot implements BotInterface
      */
     private function signEvent($event): void
     {
-        $envVar = $this->config['environment_variable'];
-
-        $privateKey = $this->keyManager->getPrivateKey($envVar);
+        // Ensure we have a key available (handles encrypted keys, .env files, etc.)
+        $privateKey = $this->keyManager->ensureKeyExists();
         
         $signer = new Sign();
         $signer->signEvent($event, $privateKey);

@@ -1,7 +1,7 @@
 = Simple Nostr Guide
 author: Nostrbots Team
 version: 1.0
-relays: favorite-relays
+relays: document-relays
 auto_update: true
 summary: A simple example guide demonstrating direct document publishing
 type: tutorial

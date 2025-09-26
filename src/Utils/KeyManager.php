@@ -359,4 +359,139 @@ class KeyManager
         $key = $this->getBotKey($envVariable);
         return $key !== null;
     }
+
+    /**
+     * Ensure a Nostr key is available from various sources with fallback mechanisms
+     * 
+     * @return string The private key (hex format)
+     * @throws \Exception If no key can be found or generated
+     */
+    public function ensureKeyExists(): string
+    {
+        $privateKey = null;
+        $keySource = '';
+        
+        // 1. Check Docker secrets first (for containerized environments)
+        $dockerSecretPath = '/run/secrets/nostr_bot_key';
+        if (file_exists($dockerSecretPath)) {
+            $privateKey = trim(file_get_contents($dockerSecretPath));
+            $keySource = 'Docker secret';
+            echo "🔑 Found key in Docker secret\n";
+        }
+        
+        // 2. Check environment variables (NOSTR_BOT_KEY first, then CUSTOM_PRIVATE_KEY)
+        if (!$privateKey && getenv('NOSTR_BOT_KEY') !== false && !empty(getenv('NOSTR_BOT_KEY'))) {
+            $privateKey = getenv('NOSTR_BOT_KEY');
+            $keySource = 'NOSTR_BOT_KEY environment variable';
+            echo "🔑 Found key in NOSTR_BOT_KEY environment variable\n";
+        } elseif (!$privateKey && getenv('CUSTOM_PRIVATE_KEY') !== false && !empty(getenv('CUSTOM_PRIVATE_KEY'))) {
+            $privateKey = getenv('CUSTOM_PRIVATE_KEY');
+            $keySource = 'CUSTOM_PRIVATE_KEY environment variable';
+            echo "🔑 Found key in CUSTOM_PRIVATE_KEY environment variable\n";
+        }
+        
+        // 3. Check for encrypted key in environment (for production setups)
+        if (!$privateKey && getenv('NOSTR_BOT_KEY_ENCRYPTED') !== false && !empty(getenv('NOSTR_BOT_KEY_ENCRYPTED'))) {
+            echo "🔑 Found encrypted key, attempting to decrypt...\n";
+            try {
+                $privateKey = $this->decryptKey(getenv('NOSTR_BOT_KEY_ENCRYPTED'));
+                if ($privateKey) {
+                    $keySource = 'encrypted key';
+                    echo "✅ Successfully decrypted key\n";
+                }
+            } catch (\Exception $e) {
+                echo "⚠️  Failed to decrypt key: " . $e->getMessage() . "\n";
+            }
+        }
+        
+        // 4. Check for encrypted key in .env file
+        if (!$privateKey) {
+            $envFile = __DIR__ . '/../../.env';
+            if (file_exists($envFile)) {
+                $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                foreach ($lines as $line) {
+                    if (strpos($line, '=') !== false && !str_starts_with($line, '#')) {
+                        list($key, $value) = explode('=', $line, 2);
+                        if ($key === 'NOSTR_BOT_KEY_ENCRYPTED' && !empty($value)) {
+                            echo "🔑 Found encrypted key in .env file, attempting to decrypt...\n";
+                            try {
+                                $privateKey = $this->decryptKey($value);
+                                if ($privateKey) {
+                                    $keySource = 'encrypted key from .env';
+                                    echo "✅ Successfully decrypted key from .env\n";
+                                    break;
+                                }
+                            } catch (\Exception $e) {
+                                echo "⚠️  Failed to decrypt key from .env: " . $e->getMessage() . "\n";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 5. Generate new key if none found
+        if (!$privateKey) {
+            echo "🔑 No key found in Docker secrets, environment variables, or encrypted storage\n";
+            echo "   Generating new key...\n";
+            
+            try {
+                // Generate a new key set
+                $keySet = $this->generateNewKeySet();
+                $privateKey = $keySet['hexPrivateKey'];
+                $keySource = 'newly generated';
+                
+                // Set the environment variable for this session
+                putenv('NOSTR_BOT_KEY=' . $privateKey);
+                
+                echo "✅ Generated new key set:\n";
+                echo "   Public Key (npub): " . $keySet['bechPublicKey'] . "\n";
+                echo "   Private Key: " . substr($privateKey, 0, 8) . "...\n";
+                echo "   Environment variable NOSTR_BOT_KEY has been set for this session\n";
+                echo "   To persist this key, run: export NOSTR_BOT_KEY=" . $privateKey . "\n\n";
+                
+            } catch (\Exception $e) {
+                throw new \Exception("Failed to generate key: " . $e->getMessage());
+            }
+        } else {
+            echo "✅ Using existing key from $keySource\n";
+        }
+        
+        // Ensure the key is set in the environment for this session
+        if (!getenv('NOSTR_BOT_KEY')) {
+            putenv('NOSTR_BOT_KEY=' . $privateKey);
+        }
+        
+        // If we found a CUSTOM_PRIVATE_KEY, also set it as NOSTR_BOT_KEY for compatibility
+        if ($keySource === 'CUSTOM_PRIVATE_KEY environment variable' && !getenv('NOSTR_BOT_KEY')) {
+            putenv('NOSTR_BOT_KEY=' . $privateKey);
+            echo "🔧 Set NOSTR_BOT_KEY from CUSTOM_PRIVATE_KEY for compatibility\n";
+        }
+        
+        return $privateKey;
+    }
+
+    /**
+     * Decrypt a key using the decrypt-key.php script
+     * 
+     * @param string $encryptedKey The encrypted key
+     * @return string|null The decrypted key or null if decryption failed
+     */
+    private function decryptKey(string $encryptedKey): ?string
+    {
+        try {
+            // Try to decrypt the key using the decrypt-key.php script
+            $decryptScript = __DIR__ . '/../../decrypt-key.php';
+            if (file_exists($decryptScript)) {
+                $output = shell_exec("php $decryptScript 2>/dev/null");
+                if ($output && !empty(trim($output))) {
+                    return trim($output);
+                }
+            }
+        } catch (\Exception $e) {
+            // Decryption failed, return null
+        }
+        
+        return null;
+    }
 }

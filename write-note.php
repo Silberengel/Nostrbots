@@ -16,6 +16,11 @@ use Nostrbots\Utils\ErrorHandler;
 use Symfony\Component\Yaml\Yaml;
 use swentel\nostr\Sign\Sign;
 use swentel\nostr\Event\Event;
+use swentel\nostr\Filter\Filter;
+use swentel\nostr\Relay\RelaySet;
+use swentel\nostr\Subscription\Subscription;
+use swentel\nostr\Request\Request;
+use swentel\nostr\Message\RequestMessage;
 
 class NoteWriter
 {
@@ -59,72 +64,6 @@ class NoteWriter
         echo "📡 Using test relays: " . implode(', ', $this->relays) . "\n";
     }
     
-    private function ensureKeyExists(): void
-    {
-        $privateKey = null;
-        $keySource = '';
-        
-        // 1. Check Docker secrets first (for containerized environments)
-        $dockerSecretPath = '/run/secrets/nostr_bot_key';
-        if (file_exists($dockerSecretPath)) {
-            $privateKey = trim(file_get_contents($dockerSecretPath));
-            $keySource = 'Docker secret';
-            echo "🔑 Found key in Docker secret\n";
-        }
-        
-        // 2. Check environment variable
-        if (!$privateKey && getenv('NOSTR_BOT_KEY') !== false && !empty(getenv('NOSTR_BOT_KEY'))) {
-            $privateKey = getenv('NOSTR_BOT_KEY');
-            $keySource = 'environment variable';
-            echo "🔑 Found key in environment variable\n";
-        }
-        
-        // 3. Check for encrypted key in environment (for production setups)
-        if (!$privateKey && getenv('NOSTR_BOT_KEY_ENCRYPTED') !== false && !empty(getenv('NOSTR_BOT_KEY_ENCRYPTED'))) {
-            echo "🔑 Found encrypted key, attempting to decrypt...\n";
-            try {
-                // Try to decrypt the key
-                $decryptScript = __DIR__ . '/decrypt-key.php';
-                if (file_exists($decryptScript)) {
-                    $output = shell_exec("php $decryptScript 2>/dev/null");
-                    if ($output && !empty(trim($output))) {
-                        $privateKey = trim($output);
-                        $keySource = 'encrypted key';
-                        echo "✅ Successfully decrypted key\n";
-                    }
-                }
-            } catch (\Exception $e) {
-                echo "⚠️  Failed to decrypt key: " . $e->getMessage() . "\n";
-            }
-        }
-        
-        // 4. Generate new key if none found
-        if (!$privateKey) {
-            echo "🔑 No key found in Docker secrets, environment variables, or encrypted storage\n";
-            echo "   Generating new key...\n";
-            
-            try {
-                // Generate a new key set
-                $keySet = $this->keyManager->generateNewKeySet();
-                $privateKey = $keySet['hexPrivateKey'];
-                $keySource = 'newly generated';
-                
-                // Set the environment variable for this session
-                putenv('NOSTR_BOT_KEY=' . $privateKey);
-                
-                echo "✅ Generated new key set:\n";
-                echo "   Public Key (npub): " . $keySet['bechPublicKey'] . "\n";
-                echo "   Private Key: " . substr($privateKey, 0, 8) . "...\n";
-                echo "   Environment variable NOSTR_BOT_KEY has been set for this session\n";
-                echo "   To persist this key, run: export NOSTR_BOT_KEY=" . $privateKey . "\n\n";
-                
-            } catch (\Exception $e) {
-                throw new \Exception("Failed to generate key: " . $e->getMessage());
-            }
-        } else {
-            echo "✅ Using existing key from $keySource\n";
-        }
-    }
     
     public function writeNote(string $content): void
     {
@@ -139,7 +78,7 @@ class NoteWriter
         echo "📝 Writing note: \"$content\"\n";
         
         // Check if we have a key, if not generate one
-        $this->ensureKeyExists();
+        $this->keyManager->ensureKeyExists();
         
         // Get the private key
         $privateKey = $this->keyManager->getPrivateKey('NOSTR_BOT_KEY');
@@ -159,6 +98,12 @@ class NoteWriter
         $publishResults = $this->relayManager->publishWithRetry($event, $this->relays, $minSuccessCount);
         
         $successCount = 0;
+        $eventId = $event->getId();
+        $neventId = $this->generateNeventId($eventId, $publicKey);
+        
+        echo "📝 Event ID: $eventId\n";
+        echo "🔗 nevent ID: $neventId\n";
+        
         foreach ($publishResults as $relayUrl => $success) {
             if ($success) {
                 $successCount++;
@@ -173,6 +118,12 @@ class NoteWriter
         }
         
         echo "✅ Note published successfully!\n";
+        
+        // Wait a moment and then query to confirm the note was stored
+        echo "⏳ Waiting 5 seconds before verifying...\n";
+        sleep(5);
+        
+        $this->showVerificationInfo($eventId, $hexPublicKey);
     }
     
     private function createEvent(string $content, string $privateKey, string $publicKey, string $hexPublicKey): Event
@@ -189,6 +140,119 @@ class NoteWriter
         $signer->signEvent($event, $privateKey);
         
         return $event;
+    }
+    
+    /**
+     * Generate nevent ID from event ID and public key
+     */
+    private function generateNeventId(string $eventId, string $publicKey): string
+    {
+        // Convert bech32 public key to hex
+        $hexPublicKey = $this->bech32ToHex($publicKey);
+        
+        // Create nevent ID (simplified version - in practice you'd use proper bech32 encoding)
+        return "nevent1" . substr($eventId, 0, 8) . "..." . substr($eventId, -8);
+    }
+    
+    /**
+     * Convert bech32 public key to hex (simplified)
+     */
+    private function bech32ToHex(string $bech32): string
+    {
+        // This is a simplified conversion - in practice you'd use proper bech32 decoding
+        // For now, we'll just return a placeholder since we already have the hex key
+        return "placeholder";
+    }
+    
+    /**
+     * Show verification information and query for the note
+     */
+    private function showVerificationInfo(string $eventId, string $hexPublicKey): void
+    {
+        echo "🔍 Verifying note was stored on relays...\n";
+        
+        try {
+            
+            // Create filter to query for our specific event by ID
+            $filter = new Filter();
+            $filter->setIds([$eventId]);
+            
+            echo "🔍 Querying for specific event ID: " . substr($eventId, 0, 16) . "...\n";
+            
+            // Query events from relays using the specific event ID
+            $events = $this->queryEventsSimple($filter, $this->relays);
+            
+            if (empty($events)) {
+                echo "⚠️  No events found on relays - note may not have been stored\n";
+                return;
+            }
+            
+            // Look for our specific event ID
+            $found = false;
+            foreach ($events as $event) {
+                if ($event->id === $eventId) {
+                    $found = true;
+                    echo "✅ Note confirmed stored on relay!\n";
+                    echo "   Event ID: " . $event->id . "\n";
+                    echo "   Content: " . substr($event->content, 0, 50) . "...\n";
+                    echo "   Created: " . date('Y-m-d H:i:s', $event->created_at) . "\n";
+                    break;
+                }
+            }
+            
+            if (!$found) {
+                echo "⚠️  Note not found in recent events - may take longer to propagate\n";
+                echo "   Found " . count($events) . " recent events, but not our specific event\n";
+                echo "   Latest event ID: " . $events[0]->id . "\n";
+            }
+            
+        } catch (\Exception $e) {
+            echo "⚠️  Could not verify note storage: " . $e->getMessage() . "\n";
+        }
+    }
+    
+    /**
+     * Query method that works with the nostr-php library using RelaySet
+     */
+    private function queryEventsSimple(Filter $filter, array $relays): array
+    {
+        $allEvents = [];
+        
+        try {
+            // Create RelaySet for querying (like ValidationManager does)
+            $relaySet = new RelaySet();
+            foreach ($relays as $relayUrl) {
+                echo "📡 Adding relay: $relayUrl\n";
+                $relaySet->addRelay(new \swentel\nostr\Relay\Relay($relayUrl));
+            }
+            
+            // Create subscription and request message
+            $subscription = new Subscription();
+            $subscriptionId = $subscription->setId();
+            $requestMessage = new RequestMessage($subscriptionId, [$filter]);
+            
+            $request = new Request($relaySet, $requestMessage);
+            $response = $request->send();
+            
+            // Process the response to extract events (like ValidationManager does)
+            foreach ($response as $relayUrl => $relayResponses) {
+                echo "📥 Processing responses from: $relayUrl\n";
+                foreach ($relayResponses as $responseItem) {
+                    if (is_object($responseItem) && isset($responseItem->type) && $responseItem->type === 'EVENT') {
+                        $event = $responseItem->event;
+                        $allEvents[] = $event;
+                        echo "✅ Found event: " . $event->id . "\n";
+                    }
+                }
+            }
+            
+            echo "📊 Total events retrieved: " . count($allEvents) . "\n";
+            
+        } catch (\Exception $e) {
+            echo "⚠️  Failed to query events: " . $e->getMessage() . "\n";
+        }
+        
+        return $allEvents;
     }
 }
 

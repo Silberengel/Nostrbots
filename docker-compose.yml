@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  orly-relay:
+    image: silberengel/next-orly:latest
+    container_name: orly-relay
+    restart: unless-stopped
+    ports:
+      - "3334:7777"  # Map local port 3334 to container port 7777
+    environment:
+      - ORLY_LISTEN=0.0.0.0
+      - ORLY_PORT=7777
+      - ORLY_LOG_LEVEL=info
+      - ORLY_MAX_CONNECTIONS=100
+      - ORLY_ACL_MODE=none
+    volumes:
+      - orly-data:/data
+    networks:
+      - nostrbots-local
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "7777"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  orly-data:
+
+networks:
+  nostrbots-local:
+    driver: bridge

@@ -18,6 +18,12 @@ I'm happy to receive tips: silberengel@minibits.cash
 
 ## 🚀 Quick Start
 
+### Admin Nsec
+You can let Nostrbots generate your nsec, pass it as a parameter to the setup script or set it in your environment variables.
+```bash
+export $CUSTOM_PRIVATE_KEY='10128...'
+```
+
 ### Production Setup (Recommended)
 ```bash
 # Complete setup with monitoring
@@ -40,11 +46,13 @@ php run-tests.php
 
 # Test Hello World bot
 php bots/hello-world/generate-content.php
-php nostrbots.php bots/hello-world/output/hello-world.adoc --dry-run
+php nostrbots.php bots/hello-world/output/hello-world-latest.adoc --dry-run
 
 # Write simple Nostr notes
-./note "Hello, Nostr!" --dry-run
+php write-note.php "Hello, Nostr!"
 ```
+
+**Note:** The setup script automatically loads environment variables. For new shell sessions, run `source .env` first.
 
 ### Using Your Existing Key
 ```bash

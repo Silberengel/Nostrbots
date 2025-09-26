@@ -1,7 +1,7 @@
 = Advanced Nostr Development Guide
 author: Nostr Protocol Experts
 version: 2.0
-relays: favorite-relays
+relays: document-relays
 auto_update: true
 summary: Comprehensive guide to advanced Nostr development with nested hierarchies
 type: documentation

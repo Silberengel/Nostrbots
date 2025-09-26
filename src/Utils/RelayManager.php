@@ -54,10 +54,10 @@ class RelayManager
     /**
      * Get relay list from configuration file
      * 
-     * @param string $category Category name, 'all' for all relays, or 'default' for default-relays
+     * @param string $category Category name, 'all' for all relays, or 'document-relays' for document-relays
      * @return array Array of relay URLs
      */
-    public function getRelayList(string $category = 'default'): array
+    public function getRelayList(string $category = 'document-relays'): array
     {
         if (!file_exists(self::RELAY_CONFIG_FILE)) {
             echo "Relay configuration file not found, using default relay" . PHP_EOL;
@@ -89,11 +89,11 @@ class RelayManager
         }
 
         if ($category === 'default') {
-            // Use default-relays section
-            if (isset($relays['default-relays']) && is_array($relays['default-relays'])) {
-                return $relays['default-relays'];
+            // Use document-relays section
+            if (isset($relays['document-relays']) && is_array($relays['document-relays'])) {
+                return $relays['document-relays'];
             }
-            echo "default-relays section not found, using fallback relay" . PHP_EOL;
+            echo "document-relays section not found, using fallback relay" . PHP_EOL;
             return [self::DEFAULT_RELAY];
         }
 

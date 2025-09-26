@@ -31,10 +31,12 @@ class ValidationManager
     {
         echo "🔍 Validating published event..." . PHP_EOL;
         
+        // Always show event ID
+        echo "📝 Event ID: " . $event->getId() . PHP_EOL;
+        
         // Check if we're in mock mode
         if (getenv('NOSTR_MOCK_PUBLISH') === 'true') {
             echo "🔧 MOCK MODE: Simulating successful event validation" . PHP_EOL;
-            echo "   Event ID: " . $event->getId() . PHP_EOL;
             echo "   Public Key: " . $event->getPublicKey() . PHP_EOL;
             return true;
         }
@@ -42,9 +44,18 @@ class ValidationManager
         echo "⏳ Waiting {$waitSeconds} seconds for event propagation..." . PHP_EOL;
         sleep($waitSeconds);
         
-        return $this->retryManager->execute(function() use ($event) {
+        $validationResult = $this->retryManager->execute(function() use ($event) {
             return $this->fetchAndValidateEvent($event);
         }, "Event validation");
+        
+        // Show verification result
+        if ($validationResult) {
+            echo "✅ Event confirmed stored on relay!" . PHP_EOL;
+        } else {
+            echo "⚠️  Event validation failed - event may not be properly propagated" . PHP_EOL;
+        }
+        
+        return $validationResult;
     }
 
     /**
