@@ -14,6 +14,8 @@ use Nostrbots\Utils\KeyManager;
 use Nostrbots\Utils\RelayManager;
 use Nostrbots\Utils\ErrorHandler;
 use Symfony\Component\Yaml\Yaml;
+use swentel\nostr\Sign\Sign;
+use swentel\nostr\Event\Event;
 
 class NoteWriter
 {
@@ -57,6 +59,73 @@ class NoteWriter
         echo "📡 Using test relays: " . implode(', ', $this->relays) . "\n";
     }
     
+    private function ensureKeyExists(): void
+    {
+        $privateKey = null;
+        $keySource = '';
+        
+        // 1. Check Docker secrets first (for containerized environments)
+        $dockerSecretPath = '/run/secrets/nostr_bot_key';
+        if (file_exists($dockerSecretPath)) {
+            $privateKey = trim(file_get_contents($dockerSecretPath));
+            $keySource = 'Docker secret';
+            echo "🔑 Found key in Docker secret\n";
+        }
+        
+        // 2. Check environment variable
+        if (!$privateKey && getenv('NOSTR_BOT_KEY') !== false && !empty(getenv('NOSTR_BOT_KEY'))) {
+            $privateKey = getenv('NOSTR_BOT_KEY');
+            $keySource = 'environment variable';
+            echo "🔑 Found key in environment variable\n";
+        }
+        
+        // 3. Check for encrypted key in environment (for production setups)
+        if (!$privateKey && getenv('NOSTR_BOT_KEY_ENCRYPTED') !== false && !empty(getenv('NOSTR_BOT_KEY_ENCRYPTED'))) {
+            echo "🔑 Found encrypted key, attempting to decrypt...\n";
+            try {
+                // Try to decrypt the key
+                $decryptScript = __DIR__ . '/decrypt-key.php';
+                if (file_exists($decryptScript)) {
+                    $output = shell_exec("php $decryptScript 2>/dev/null");
+                    if ($output && !empty(trim($output))) {
+                        $privateKey = trim($output);
+                        $keySource = 'encrypted key';
+                        echo "✅ Successfully decrypted key\n";
+                    }
+                }
+            } catch (\Exception $e) {
+                echo "⚠️  Failed to decrypt key: " . $e->getMessage() . "\n";
+            }
+        }
+        
+        // 4. Generate new key if none found
+        if (!$privateKey) {
+            echo "🔑 No key found in Docker secrets, environment variables, or encrypted storage\n";
+            echo "   Generating new key...\n";
+            
+            try {
+                // Generate a new key set
+                $keySet = $this->keyManager->generateNewKeySet();
+                $privateKey = $keySet['hexPrivateKey'];
+                $keySource = 'newly generated';
+                
+                // Set the environment variable for this session
+                putenv('NOSTR_BOT_KEY=' . $privateKey);
+                
+                echo "✅ Generated new key set:\n";
+                echo "   Public Key (npub): " . $keySet['bechPublicKey'] . "\n";
+                echo "   Private Key: " . substr($privateKey, 0, 8) . "...\n";
+                echo "   Environment variable NOSTR_BOT_KEY has been set for this session\n";
+                echo "   To persist this key, run: export NOSTR_BOT_KEY=" . $privateKey . "\n\n";
+                
+            } catch (\Exception $e) {
+                throw new \Exception("Failed to generate key: " . $e->getMessage());
+            }
+        } else {
+            echo "✅ Using existing key from $keySource\n";
+        }
+    }
+    
     public function writeNote(string $content): void
     {
         if (empty(trim($content))) {
@@ -69,120 +138,57 @@ class NoteWriter
         
         echo "📝 Writing note: \"$content\"\n";
         
-        // Get the decrypted private key
-        $privateKey = $this->keyManager->getDecryptedPrivateKey();
-        if (!$privateKey) {
-            throw new \Exception("Failed to get decrypted private key");
-        }
+        // Check if we have a key, if not generate one
+        $this->ensureKeyExists();
         
-        // Get the public key
-        $publicKey = $this->keyManager->getPublicKey();
-        if (!$publicKey) {
-            throw new \Exception("Failed to get public key");
-        }
+        // Get the private key
+        $privateKey = $this->keyManager->getPrivateKey('NOSTR_BOT_KEY');
+        
+        // Get the key set to derive the public key
+        $keySet = $this->keyManager->getKeySet($privateKey);
+        $publicKey = $keySet['bechPublicKey'];
+        $hexPublicKey = $keySet['hexPublicKey'];
         
         echo "🔑 Using public key: $publicKey\n";
         
         // Create the event
-        $event = $this->createEvent($content, $privateKey);
+        $event = $this->createEvent($content, $privateKey, $publicKey, $hexPublicKey);
         
-        // Publish to relays
-        $this->publishToRelays($event);
+        // Publish to relays using RelayManager
+        $minSuccessCount = 1; // At least one relay must succeed
+        $publishResults = $this->relayManager->publishWithRetry($event, $this->relays, $minSuccessCount);
         
-        echo "✅ Note published successfully!\n";
-    }
-    
-    private function createEvent(string $content, string $privateKey): array
-    {
-        $timestamp = time();
-        
-        // Create event data
-        $eventData = [
-            'kind' => 1,
-            'created_at' => $timestamp,
-            'tags' => [],
-            'content' => $content,
-            'pubkey' => $this->keyManager->getPublicKey()
-        ];
-        
-        // Serialize event for signing
-        $serialized = json_encode([
-            0,
-            $eventData['pubkey'],
-            $eventData['created_at'],
-            $eventData['kind'],
-            $eventData['tags'],
-            $eventData['content']
-        ], JSON_UNESCAPED_SLASHES);
-        
-        // Create event hash
-        $eventHash = hash('sha256', $serialized);
-        
-        // Sign the event
-        $signature = $this->signEvent($eventHash, $privateKey);
-        
-        // Add signature to event
-        $eventData['id'] = $eventHash;
-        $eventData['sig'] = $signature;
-        
-        return $eventData;
-    }
-    
-    private function signEvent(string $eventHash, string $privateKey): string
-    {
-        // Convert hex private key to binary
-        $privateKeyBin = hex2bin($privateKey);
-        
-        // Sign the event hash
-        $signature = sodium_crypto_sign_detached($eventHash, $privateKeyBin);
-        
-        // Convert signature to hex
-        return bin2hex($signature);
-    }
-    
-    private function publishToRelays(array $event): void
-    {
         $successCount = 0;
-        $totalRelays = count($this->relays);
-        
-        foreach ($this->relays as $relay) {
-            try {
-                echo "📡 Publishing to $relay... ";
-                
-                // Create WebSocket connection
-                $ws = new WebSocket\Client($relay);
-                
-                // Send event
-                $message = [
-                    'type' => 'EVENT',
-                    'event' => $event
-                ];
-                
-                $ws->send(json_encode($message));
-                
-                // Wait for response
-                $response = $ws->receive();
-                $ws->close();
-                
-                $responseData = json_decode($response, true);
-                
-                if (isset($responseData['type']) && $responseData['type'] === 'OK') {
-                    echo "✅ Success\n";
-                    $successCount++;
-                } else {
-                    echo "❌ Failed: " . ($responseData['message'] ?? 'Unknown error') . "\n";
-                }
-                
-            } catch (Exception $e) {
-                echo "❌ Error: " . $e->getMessage() . "\n";
+        foreach ($publishResults as $relayUrl => $success) {
+            if ($success) {
+                $successCount++;
+                echo "✅ Published to: $relayUrl\n";
+            } else {
+                echo "❌ Failed to publish to: $relayUrl\n";
             }
         }
-        
-        echo "\n📊 Published to $successCount/$totalRelays relays\n";
         
         if ($successCount === 0) {
             throw new \Exception("Failed to publish to any relay");
         }
+        
+        echo "✅ Note published successfully!\n";
+    }
+    
+    private function createEvent(string $content, string $privateKey, string $publicKey, string $hexPublicKey): Event
+    {
+        // Create event using nostr-php Event class
+        $event = new Event();
+        $event->setKind(1); // Kind 1 = regular note
+        $event->setContent($content);
+        $event->setCreatedAt(time());
+        $event->setTags([]);
+        
+        // Sign the event using nostr-php library
+        $signer = new Sign();
+        $signer->signEvent($event, $privateKey);
+        
+        return $event;
     }
 }
 

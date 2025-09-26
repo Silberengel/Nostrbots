@@ -28,3 +28,21 @@ jenkins-data/
 # Orly setup files (NEVER commit these!)
 docker-compose.orly.yml
 orly-data/
+
+# Bot output folders
+bots/*/output/
+**/output/
+
+# Log files and directories
+logs/
+*.log
+/var/log/nostrbots/
+
+# Backup directories
+backups/
+/backups/
+
+# Data directories
+data/
+/data/
+
