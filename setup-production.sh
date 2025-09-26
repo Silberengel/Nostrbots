@@ -55,23 +55,45 @@ install_dependencies() {
     log_info "Installing system dependencies..."
     
     apt-get update
-    apt-get install -y \
-        docker.io \
-        docker-compose \
-        curl \
-        jq \
-        cron \
-        systemd \
-        rsync \
-        sqlite3 \
-        php-cli \
-        php-json \
-        php-mbstring \
-        php-curl
     
-    # Enable and start Docker
-    systemctl enable docker
-    systemctl start docker
+    # Check if Docker is already installed
+    if command -v docker >/dev/null 2>&1; then
+        log_info "Docker is already installed, skipping Docker installation"
+        DOCKER_PACKAGES=""
+    else
+        log_info "Docker not found, will install Docker"
+        DOCKER_PACKAGES="docker.io"
+    fi
+    
+    # Check if docker-compose is already installed
+    if command -v docker-compose >/dev/null 2>&1; then
+        log_info "docker-compose is already installed, skipping"
+        COMPOSE_PACKAGES=""
+    else
+        log_info "docker-compose not found, will install"
+        COMPOSE_PACKAGES="docker-compose"
+    fi
+    
+    # Install packages (only install what's missing)
+    PACKAGES="curl jq cron systemd rsync sqlite3 php-cli php-json php-mbstring php-curl $DOCKER_PACKAGES $COMPOSE_PACKAGES"
+    
+    apt-get install -y $PACKAGES
+    
+    # Handle Docker service
+    if [ -n "$DOCKER_PACKAGES" ]; then
+        # Docker was just installed, start it
+        systemctl enable docker
+        systemctl start docker
+        log_success "Docker installed and started"
+    else
+        # Docker was already installed, just ensure it's running
+        if ! systemctl is-active --quiet docker; then
+            systemctl start docker
+            log_success "Docker started"
+        else
+            log_success "Docker already running"
+        fi
+    fi
     
     log_success "Dependencies installed"
 }
@@ -106,11 +128,31 @@ setup_user_and_directories() {
 init_docker_swarm() {
     log_info "Initializing Docker swarm for secrets..."
     
-    if ! docker info --format '{{.Swarm.LocalNodeState}}' | grep -q "active"; then
-        docker swarm init
-        log_success "Docker swarm initialized"
-    else
+    # Check current swarm state
+    SWARM_STATE=$(docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null || echo "inactive")
+    log_info "Current swarm state: $SWARM_STATE"
+    
+    # Check if swarm is already active
+    if [ "$SWARM_STATE" = "active" ]; then
         log_success "Docker swarm already active"
+        return 0
+    fi
+    
+    # Initialize swarm if not active
+    log_info "Initializing Docker swarm..."
+    if docker swarm init --advertise-addr 127.0.0.1; then
+        log_success "Docker swarm initialized successfully"
+    else
+        log_error "Failed to initialize Docker swarm"
+        exit 1
+    fi
+    
+    # Verify swarm is now active
+    if docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null | grep -q "active"; then
+        log_success "Docker swarm is now active and ready for secrets"
+    else
+        log_error "Docker swarm initialization failed - swarm is not active"
+        exit 1
     fi
 }
 
@@ -131,8 +173,10 @@ generate_keys_to_secrets() {
     # Extract the keys from output
     NOSTR_BOT_KEY_ENCRYPTED=$(echo "$KEY_OUTPUT" | grep "NOSTR_BOT_KEY_ENCRYPTED=" | cut -d'=' -f2)
     NOSTR_BOT_NPUB=$(echo "$KEY_OUTPUT" | grep "NOSTR_BOT_NPUB=" | cut -d'=' -f2)
+    NOSTR_BOT_KEY_HEX=$(echo "$KEY_OUTPUT" | grep "NOSTR_BOT_KEY_HEX=" | cut -d'=' -f2)
+    NOSTR_BOT_NSEC=$(echo "$KEY_OUTPUT" | grep "NOSTR_BOT_NSEC=" | cut -d'=' -f2)
     
-    if [ -z "$NOSTR_BOT_KEY_ENCRYPTED" ] || [ -z "$NOSTR_BOT_NPUB" ]; then
+    if [ -z "$NOSTR_BOT_KEY_ENCRYPTED" ] || [ -z "$NOSTR_BOT_NPUB" ] || [ -z "$NOSTR_BOT_KEY_HEX" ] || [ -z "$NOSTR_BOT_NSEC" ]; then
         log_error "Failed to generate keys"
         exit 1
     fi
@@ -142,30 +186,21 @@ generate_keys_to_secrets() {
     docker secret rm nostr_bot_npub 2>/dev/null || true
     
     # Create Docker secrets directly
-    echo "$NOSTR_BOT_KEY_ENCRYPTED" | docker secret create nostr_bot_key_encrypted -
-    echo "$NOSTR_BOT_NPUB" | docker secret create nostr_bot_npub -
+    echo "$NOSTR_BOT_KEY_ENCRYPTED" | docker secret create nostr_bot_key_encrypted - >/dev/null
+    echo "$NOSTR_BOT_NPUB" | docker secret create nostr_bot_npub - >/dev/null
     
     log_success "Keys generated and stored in Docker secrets"
-    
-    # Decrypt nsec for secure display (temporary, will be cleared)
-    log_info "Decrypting private key for secure display..."
-    DECRYPTED_NSEC=$(php decrypt-key.php 2>/dev/null)
-    if [ -n "$DECRYPTED_NSEC" ]; then
-        log_success "Private key (nsec) decrypted successfully"
-    else
-        log_error "Failed to decrypt private key"
-        exit 1
-    fi
     
     echo ""
     log_success "🔑 PRODUCTION KEYS GENERATED"
     echo "================================"
     echo "Nostr Public Key (npub): $NOSTR_BOT_NPUB"
+    echo "Hex Private Key: ${NOSTR_BOT_KEY_HEX:0:10}..."
     echo "Encrypted Private Key: ${NOSTR_BOT_KEY_ENCRYPTED:0:10}..."
     echo ""
     
-    # Securely display the nsec (this will not be logged)
-    secure_display_nsec "$DECRYPTED_NSEC"
+    # Display the nsec (bech32 private key) for user to copy
+    secure_display_nsec "$NOSTR_BOT_NSEC"
     
     # Create an encrypted key backup
     log_info "Creating encrypted key backup..."
@@ -197,6 +232,8 @@ secure_cleanup() {
     # Clear variables
     unset NOSTR_BOT_KEY_ENCRYPTED
     unset NOSTR_BOT_NPUB
+    unset NOSTR_BOT_KEY_HEX
+    unset NOSTR_BOT_NSEC
     unset DECRYPTED_NSEC
     unset KEY_OUTPUT
     
@@ -209,6 +246,16 @@ secure_cleanup() {
     if [ -n "$NOSTR_BOT_NPUB" ]; then
         NOSTR_BOT_NPUB=$(openssl rand -base64 32)
         unset NOSTR_BOT_NPUB
+    fi
+    
+    if [ -n "$NOSTR_BOT_KEY_HEX" ]; then
+        NOSTR_BOT_KEY_HEX=$(openssl rand -base64 32)
+        unset NOSTR_BOT_KEY_HEX
+    fi
+    
+    if [ -n "$NOSTR_BOT_NSEC" ]; then
+        NOSTR_BOT_NSEC=$(openssl rand -base64 32)
+        unset NOSTR_BOT_NSEC
     fi
     
     if [ -n "$DECRYPTED_NSEC" ]; then

@@ -322,10 +322,13 @@ function main(): void
                 updateEnvFile($encryptedKey, $npub);
                 
                 // Jenkins-specific output
-                if ($quiet) {
-                    echo "NOSTR_BOT_KEY_ENCRYPTED={$encryptedKey}\n";
-                    return;
-                }
+            if ($quiet) {
+                echo "NOSTR_BOT_KEY_ENCRYPTED={$encryptedKey}\n";
+                echo "NOSTR_BOT_NPUB={$npub}\n";
+                echo "NOSTR_BOT_KEY_HEX={$hexPrivateKey}\n";
+                echo "NOSTR_BOT_NSEC={$result['key_set']['bechPrivateKey']}\n";
+                return;
+            }
                 
                 echo "🔐 Jenkins Encrypted Key Setup\n";
                 echo "=============================\n\n";
@@ -397,7 +400,7 @@ function main(): void
         
         echo "📋 Key Information:\n";
         echo "  Environment Variable: {$result['env_variable']}\n";
-        echo "  Hex Private Key:      " . substr($hexPrivateKey, 0, 20) . "...\n";
+        echo "  Hex Private Key:      " . substr($hexPrivateKey, 0, 10) . "...\n";
         echo "  Bech32 Private Key:   " . substr($result['key_set']['bechPrivateKey'], 0, 20) . "...\n";
         echo "  Bech32 Public Key:    {$result['key_set']['bechPublicKey']}\n";
         
