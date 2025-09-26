@@ -576,15 +576,19 @@ main() {
 test_hello_world_note() {
     log_info "Testing hello world note publishing..."
     
-    if [ -f "write-note.php" ]; then
+    # Get the original script location (before any directory changes)
+    local original_script_dir="/home/madmin/Projects/GitCitadel/Nostrbots"
+    local write_note_script="$original_script_dir/write-note.php"
+    
+    if [ -f "$write_note_script" ]; then
         echo "🌍 Publishing test note..."
-        php write-note.php '🌍 Hello World! Published from Nostrbots with ELK Stack - Production setup complete!'
+        php "$write_note_script" '🌍 Hello World! Published from Nostrbots with ELK Stack - Production setup complete!'
         log_success "Hello world note published successfully!"
         echo ""
         echo "💡 You can view your note on any Nostr client connected to ws://localhost:3334"
     else
-        log_warn "write-note.php not found, skipping test"
-        echo "   You can manually test with: php write-note.php 'Your message here'"
+        log_warn "write-note.php not found at $write_note_script, skipping test"
+        echo "   You can manually test with: php $write_note_script 'Your message here'"
     fi
 }
 
