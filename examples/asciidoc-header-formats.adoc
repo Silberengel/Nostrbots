@@ -1,0 +1,36 @@
+= AsciiDoc Header Formats Test
+John Doe <john@example.com>
+v1.0, 2024-01-15, Initial version
+:description: This document tests various AsciiDoc header formats
+:keywords: asciidoc, headers, metadata, nostr
+:auto_update: true
+:type: tutorial
+:lang: en
+:sectanchors:
+:icons: font
+
+This document demonstrates how various AsciiDoc header formats are mapped to standard metadata.
+
+== Standard AsciiDoc Headers
+
+This section shows how standard AsciiDoc headers are processed.
+
+=== Author Information
+
+The author line above shows: John Doe <john@example.com>
+
+=== Revision Information
+
+The revision line shows: v1.0, 2024-01-15, Initial version
+
+=== Attribute Entries
+
+Various attribute entries are defined using the :key: value format.
+
+== Content Structure
+
+This document uses content-level 2 for hierarchical structure.
+
+=== Subsection
+
+This is a subsection under the content structure.

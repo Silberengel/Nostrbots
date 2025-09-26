@@ -1,0 +1,13 @@
+= Default Test Document
+author: Test User
+version: 1.0
+relays: favorite-relays
+summary: A test document with no content-level or content-kind headers.
+
+This is the preamble content.
+
+== Section A
+Content for section A.
+
+== Section B
+Content for section B.

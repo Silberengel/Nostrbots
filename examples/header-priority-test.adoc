@@ -1,0 +1,23 @@
+= Header Priority Test
+author: Test Author
+date: 2024-01-01
+content_level: 1
+content_kind: 30041
+
+This document tests the priority system for content-level and content-kind.
+
+== Introduction
+
+This section should become a content event with 30041 (publication content) kind.
+
+== Getting Started
+
+This section should also become a content event.
+
+=== Prerequisites
+
+This subsection should be included in the Getting Started content.
+
+== Conclusion
+
+This concludes our priority test.
