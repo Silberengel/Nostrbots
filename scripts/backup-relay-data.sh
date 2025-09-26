@@ -13,6 +13,8 @@ BACKUP_RETENTION_DAYS=30
 
 # Logging
 log() {
+    # Ensure log directory exists
+    mkdir -p /var/log/nostrbots
     echo "[$(date -Iseconds)] $1" | tee -a /var/log/nostrbots/backup.log
 }
 

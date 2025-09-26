@@ -14,6 +14,8 @@ MAX_EVENTS=1000
 
 # Logging
 log() {
+    # Ensure log directory exists
+    mkdir -p /var/log/nostrbots
     echo "[$(date -Iseconds)] $1" | tee -a /var/log/nostrbots/event-indexer.log
 }
 

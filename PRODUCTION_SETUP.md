@@ -150,6 +150,65 @@ nostrbots restore
 nostrbots restore /opt/nostrbots/backups/relay-backup-20241225-000000.json.gz
 ```
 
+## 🔧 Manual Script Execution
+
+### Backup Script
+The enhanced backup script provides comprehensive data backup including relay data and Elasticsearch snapshots:
+
+```bash
+# Run the backup script (requires sudo)
+sudo /opt/nostrbots/scripts/backup-relay-data.sh
+```
+
+**What it does:**
+- Backs up relay data files from `/data/orly` to `/backups/`
+- Creates Elasticsearch snapshots for search data
+- Generates encrypted backup archives
+- Verifies backup integrity
+- Cleans up old backups (30-day retention)
+
+**Configuration:**
+- `BACKUP_DIR`: Backup storage location (default: `/backups`)
+- `DATA_DIR`: Source data location (default: `/data`)
+- `ELASTICSEARCH_URL`: Elasticsearch endpoint (default: `http://elasticsearch:9200`)
+- `BACKUP_RETENTION_DAYS`: Retention policy (default: 30 days)
+
+### Event Indexing Script
+The indexing script processes Nostr events from the relay into Elasticsearch for search and analytics:
+
+```bash
+# Run the indexing script (requires sudo)
+sudo /opt/nostrbots/scripts/index-relay-events.sh
+```
+
+**What it does:**
+- Queries the relay for new events since last index
+- Creates Elasticsearch index mappings
+- Bulk indexes events for search
+- Handles incremental updates
+- Provides error handling and logging
+
+**Configuration:**
+- `ELASTICSEARCH_URL`: Elasticsearch endpoint (default: `http://elasticsearch:9200`)
+- `ORLY_RELAY_URL`: Relay endpoint (default: `http://orly-relay:7777`)
+- `INDEX_NAME`: Elasticsearch index name (default: `nostr-events`)
+- `BATCH_SIZE`: Events per batch (default: 100)
+- `MAX_EVENTS`: Maximum events per run (default: 1000)
+
+### Script Logs
+Both scripts log their activities to:
+- `/var/log/nostrbots/backup.log` - Backup operations
+- `/var/log/nostrbots/event-indexer.log` - Indexing operations
+
+### Prerequisites
+Before running the scripts, ensure:
+1. **Elasticsearch is running** (for both scripts)
+2. **Relay data exists** at `/data/orly` (for backup script)
+3. **Proper permissions** - scripts require sudo access
+4. **Network connectivity** to Elasticsearch and relay services
+
+**Note**: The scripts automatically create the `/var/log/nostrbots/` directory if it doesn't exist.
+
 ## 🔍 Monitoring and Health Checks
 
 ### Health Check Components
