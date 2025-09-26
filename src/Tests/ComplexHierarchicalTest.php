@@ -46,7 +46,7 @@ class ComplexHierarchicalTest
         // Set the test key as environment variable
         putenv("NOSTR_BOT_KEY={$this->testKey}");
         
-        echo "🔑 Generated test key: " . substr($this->testKey, 0, 8) . "..." . PHP_EOL;
+        echo "Generated test key: " . substr($this->testKey, 0, 8) . "..." . PHP_EOL;
     }
 
     /**
@@ -75,7 +75,7 @@ class ComplexHierarchicalTest
             $this->testContentLevel4();
             $this->testContentLevel5();
 
-            echo "✅ All complex hierarchical tests completed successfully!" . PHP_EOL;
+            echo "✓ All complex hierarchical tests completed successfully!" . PHP_EOL;
         } finally {
             // Always cleanup the test key
             $this->cleanupTestKey();
@@ -96,7 +96,7 @@ class ComplexHierarchicalTest
         $this->assertEquals(0, $result['index_sections'], "Content level 0 should have 0 index sections");
         $this->assertEquals(1, $result['total_events'], "Content level 0 should have 1 total event");
         
-        echo "  ✅ Content level 0: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content level 0: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
     
     /**
@@ -113,7 +113,7 @@ class ComplexHierarchicalTest
         $this->assertEquals(1, $result['index_sections'], "Content level 1 should have 1 index section");
         $this->assertEquals(2, $result['total_events'], "Content level 1 should have 2 total events");
         
-        echo "  ✅ Content level 1: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content level 1: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
     
     /**
@@ -132,7 +132,7 @@ class ComplexHierarchicalTest
         $this->assertEquals(3, $result['index_sections'], "Content level 2 should have 3 index sections");
         $this->assertEquals(6, $result['total_events'], "Content level 2 should have 6 total events");
         
-        echo "  ✅ Content level 2: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content level 2: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -151,7 +151,7 @@ class ComplexHierarchicalTest
         $this->assertEquals(6, $result['index_sections'], "Content level 3 should have 6 index sections");
         $this->assertEquals(10, $result['total_events'], "Content level 3 should have 10 total events");
         
-        echo "  ✅ Content level 3: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content level 3: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -168,7 +168,7 @@ class ComplexHierarchicalTest
         $this->assertGreaterThan(5, $result['content_sections'], "Content level 4 should have more than 5 content sections");
         $this->assertGreaterThan(5, $result['index_sections'], "Content level 4 should have more than 5 index sections");
         
-        echo "  ✅ Content level 4: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content level 4: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -185,7 +185,7 @@ class ComplexHierarchicalTest
         $this->assertGreaterThan(10, $result['content_sections'], "Content level 5 should have more than 10 content sections");
         $this->assertGreaterThan(10, $result['index_sections'], "Content level 5 should have more than 10 index sections");
         
-        echo "  ✅ Content level 5: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content level 5: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -242,7 +242,7 @@ $test->runTests();
         echo "🎉 All complex hierarchical tests passed successfully!" . PHP_EOL;
         exit(0);
     } catch (\Exception $e) {
-        echo "❌ Test failed: " . $e->getMessage() . PHP_EOL;
+        echo "✗ Test failed: " . $e->getMessage() . PHP_EOL;
         exit(1);
     } finally {
         // Ensure cleanup happens even if tests fail

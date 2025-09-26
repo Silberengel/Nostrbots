@@ -46,7 +46,7 @@ class DirectDocumentPublisher
             $this->displayParseResults($structure);
 
             if ($dryRun) {
-                echo "🔍 DRY RUN MODE - No events will be published" . PHP_EOL;
+                echo "DRY RUN MODE - No events will be published" . PHP_EOL;
                 return $this->buildDryRunResults($structure);
             }
 
@@ -54,7 +54,7 @@ class DirectDocumentPublisher
 
         } catch (\Exception $e) {
             $this->errors[] = $e->getMessage();
-            echo "❌ Error: " . $e->getMessage() . PHP_EOL;
+            echo "✗ Error: " . $e->getMessage() . PHP_EOL;
             return $this->buildErrorResults();
         }
     }
@@ -64,13 +64,13 @@ class DirectDocumentPublisher
      */
     private function parseDocument(string $documentPath, ?int $contentLevel, ?string $contentKind): array
     {
-        echo "🔍 Parsing document structure..." . PHP_EOL;
+        echo "Parsing document structure..." . PHP_EOL;
         $structure = $this->parser->parseDocumentForDirectPublishing($documentPath, $contentLevel, $contentKind);
         
         // Determine relay configuration with proper priority
         $structure['relays'] = $this->determineRelayConfiguration($this->parser->getRelays());
         
-        echo "✅ Document parsed successfully!" . PHP_EOL;
+        echo "✓ Document parsed successfully!" . PHP_EOL;
         return $structure;
     }
     
@@ -84,7 +84,7 @@ class DirectDocumentPublisher
     {
         // If document specifies actual relay URLs, use them
         if (!empty($documentRelays) && $this->isRelayUrl($documentRelays)) {
-            echo "📡 Using document-specified relay URLs: {$documentRelays}" . PHP_EOL;
+            echo "Using document-specified relay URLs: {$documentRelays}" . PHP_EOL;
             $this->currentRelayConfig = $documentRelays;
             return $documentRelays;
         }
@@ -100,7 +100,7 @@ class DirectDocumentPublisher
                 }
                 
                 $relayUrls = implode(',', $relayList);
-                echo "📡 Using relays from category '{$documentRelays}': {$relayUrls}" . PHP_EOL;
+                echo "Using relays from category '{$documentRelays}': {$relayUrls}" . PHP_EOL;
                 $this->currentRelayConfig = $relayUrls;
                 return $relayUrls;
                 
@@ -110,7 +110,7 @@ class DirectDocumentPublisher
         }
         
         // Fallback to default relays
-        echo "📡 Using default relay configuration" . PHP_EOL;
+        echo "Using default relay configuration" . PHP_EOL;
         $this->currentRelayConfig = 'document-relays';
         return 'document-relays';
     }
@@ -155,7 +155,7 @@ class DirectDocumentPublisher
                 if ($result['success']) {
                     $publishedEventIds[$section['d_tag']] = $result['event_id'];
                     $this->publishedEvents[] = $result;
-                    echo "✅ Published: {$result['event_id']}" . PHP_EOL;
+                    echo "✓ Published: {$result['event_id']}" . PHP_EOL;
                 } else {
                     $this->handlePublishError($section['title'], $result['error']);
                 }
@@ -215,7 +215,7 @@ class DirectDocumentPublisher
     {
         $errorMessage = "Failed to publish: {$title} - {$error}";
         $this->errors[] = $errorMessage;
-        echo "❌ {$errorMessage}" . PHP_EOL;
+        echo "✗ {$errorMessage}" . PHP_EOL;
     }
 
     /**

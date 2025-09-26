@@ -150,7 +150,7 @@ class NostrBot implements BotInterface
 
             // Handle dry run vs actual publishing
             if ($dryRun) {
-                echo "🔍 Dry run mode - configuration is valid, no events will be published" . PHP_EOL;
+                echo "Dry run mode - configuration is valid, no events will be published" . PHP_EOL;
                 $result->setSuccess(true);
                 return $result->finalize();
             }
@@ -162,7 +162,7 @@ class NostrBot implements BotInterface
             $relays = $this->getRelays();
             $minSuccessCount = $this->config['min_relay_success'] ?? 1;
             
-            echo "📡 Publishing to " . count($relays) . " relays (minimum {$minSuccessCount} required)..." . PHP_EOL;
+            echo "Publishing to " . count($relays) . " relays (minimum {$minSuccessCount} required)..." . PHP_EOL;
             
             $publishResults = $this->relayManager->publishWithRetry($event, $relays, $minSuccessCount);
             
@@ -188,7 +188,7 @@ class NostrBot implements BotInterface
 
             // Validate the published event if enabled
             if ($this->config['validate_after_publish'] ?? true) {
-                echo "🔍 Validating published event..." . PHP_EOL;
+                echo "Validating published event..." . PHP_EOL;
                 $validationSuccess = $this->validationManager->validateEvent($event);
                 if (!$validationSuccess) {
                     $result->addWarning("Event validation failed - event may not be properly propagated");
@@ -200,7 +200,7 @@ class NostrBot implements BotInterface
             foreach ($additionalEvents as $additionalEvent) {
                 $this->signEvent($additionalEvent);
                 
-                echo "📡 Publishing additional event (kind {$additionalEvent->getKind()})..." . PHP_EOL;
+                echo "Publishing additional event (kind {$additionalEvent->getKind()})..." . PHP_EOL;
                 $additionalResults = $this->relayManager->publishWithRetry($additionalEvent, $relays, $minSuccessCount);
                 
                 foreach ($additionalResults as $relayUrl => $success) {
@@ -368,7 +368,7 @@ class NostrBot implements BotInterface
                     $createdEventIds[$itemId] = $eventId;
                 }
             } else {
-                echo "⚠️  Warning: Item not found in map: {$itemId}" . PHP_EOL;
+                echo "⚠  Warning: Item not found in map: {$itemId}" . PHP_EOL;
             }
         }
         
@@ -486,18 +486,18 @@ class NostrBot implements BotInterface
             $result = $itemBot->run(false); // false = not dry run
             
             if ($result->isSuccess()) {
-                echo "✅ Successfully created: {$itemId}" . PHP_EOL;
+                echo "✓ Successfully created: {$itemId}" . PHP_EOL;
                 // Get the event ID from the published events
                 $publishedEvents = $result->getPublishedEvents();
                 if (!empty($publishedEvents)) {
                     $eventId = $publishedEvents[0]['event_id']; // Get the first published event ID
                     return $eventId;
                 } else {
-                    echo "   ⚠️  Warning: No published events found for {$itemId}" . PHP_EOL;
+                    echo "   ⚠  Warning: No published events found for {$itemId}" . PHP_EOL;
                     return null;
                 }
             } else {
-                echo "❌ Failed to create: {$itemId}" . PHP_EOL;
+                echo "✗ Failed to create: {$itemId}" . PHP_EOL;
                 foreach ($result->getErrors() as $error) {
                     if (is_array($error)) {
                         echo "   Error: " . implode(', ', $error) . PHP_EOL;
@@ -511,7 +511,7 @@ class NostrBot implements BotInterface
                 return null;
             }
         } catch (\Exception $e) {
-            echo "❌ Error creating {$itemId}: " . $e->getMessage() . PHP_EOL;
+            echo "✗ Error creating {$itemId}: " . $e->getMessage() . PHP_EOL;
             return null;
         }
     }
@@ -652,7 +652,7 @@ class NostrBot implements BotInterface
             return;
         }
 
-        echo "🔗 Updating content references with actual event IDs..." . PHP_EOL;
+        echo "Updating content references with actual event IDs..." . PHP_EOL;
         
         $currentPubkey = $this->getCurrentPublicKeyHex();
         
@@ -668,7 +668,7 @@ class NostrBot implements BotInterface
                 $ref['event_id'] = $createdEventIds[$itemId];
                 echo "   ✓ Updated {$ref['d_tag']} with event ID: {$createdEventIds[$itemId]}" . PHP_EOL;
             } else {
-                echo "   ⚠️  No event ID found for {$ref['d_tag']} (item ID: {$itemId})" . PHP_EOL;
+                echo "   ⚠  No event ID found for {$ref['d_tag']} (item ID: {$itemId})" . PHP_EOL;
             }
         }
     }

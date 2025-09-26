@@ -253,7 +253,7 @@ function main(): void
             
             echo "🔓 Decrypted Nostr Key\n";
             echo "=====================\n\n";
-            echo "✅ Successfully decrypted key:\n";
+            echo "✓ Successfully decrypted key:\n";
             echo "  Decrypted Key: " . substr($decryptedKey, 0, 20) . "...\n";
             if (isset($options['password'])) {
                 echo "  Password: <custom_password> (custom)\n";
@@ -342,7 +342,7 @@ function main(): void
                 
                 echo "🔐 Jenkins Encrypted Key Setup\n";
                 echo "=============================\n\n";
-                echo "✅ Generated encrypted key for Jenkins:\n\n";
+                echo "✓ Generated encrypted key for Jenkins:\n\n";
                 echo "📋 Jenkins Environment Variables:\n";
                 echo "  NOSTR_BOT_KEY_ENCRYPTED=<encrypted_key_value>\n";
                 echo "🔒 Security Information:\n";
@@ -371,7 +371,7 @@ function main(): void
             
             echo "🔐 Encrypted Nostr Key\n";
             echo "=====================\n\n";
-            echo "✅ Successfully encrypted key:\n\n";
+            echo "✓ Successfully encrypted key:\n\n";
             echo "📋 Encrypted Information:\n";
             echo "  Encrypted Key: " . substr($encryptedKey, 0, 20) . "...\n";
             if (isset($options['password'])) {
@@ -386,7 +386,7 @@ function main(): void
             
             // Update .env file
             updateEnvFile($encryptedKey, $npub);
-            echo "✅ Updated .env file with new keys\n";
+            echo "✓ Updated .env file with new keys\n";
             return;
         }
         
@@ -403,10 +403,10 @@ function main(): void
         }
         
         // Full output
-        echo "🔑 Nostrbots Key Generator\n";
+        echo "Nostrbots Key Generator\n";
         echo "==========================\n\n";
         
-        echo "✅ Generated new Nostr key set:\n\n";
+        echo "✓ Generated new Nostr key set:\n\n";
         
         echo "📋 Key Information:\n";
         echo "  Environment Variable: {$result['env_variable']}\n";
@@ -449,7 +449,7 @@ function main(): void
         secureClear($hexPrivateKey);
         
     } catch (\Exception $e) {
-        echo "❌ Error: " . $e->getMessage() . "\n";
+        echo "✗ Error: " . $e->getMessage() . "\n";
         exit(1);
     }
 }

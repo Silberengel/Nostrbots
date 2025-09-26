@@ -13,6 +13,56 @@ cd Nostrbots
 sudo ./setup-production.sh
 ```
 
+## 🧹 Cleanup and Testing
+
+### Getting a Blank Slate
+For testing and development, you can easily clean up the entire stack and start fresh:
+
+```bash
+# Clean up existing stack and secrets
+sudo ./setup-production.sh --cleanup
+
+# Start fresh after cleanup
+sudo -E ./setup-production.sh
+```
+
+### What the Cleanup Does
+The `--cleanup` option performs a complete reset:
+
+1. **Removes Docker Stack** - Stops all services and removes the stack
+2. **Removes Docker Secrets** - Cleans up nostr_bot_key_encrypted and nostr_bot_npub secrets
+3. **Removes Remaining Containers** - Cleans up any orphaned containers
+4. **Preserves Data Volumes** - Keeps your data (Jenkins data, Orly data, backups) by default
+
+### Complete Data Cleanup (Optional)
+If you want to remove volumes as well (complete cleanup), you can uncomment the volume removal lines in the cleanup function:
+
+```bash
+# Edit the setup script to enable volume cleanup
+sudo nano setup-production.sh
+
+# Find the cleanup function and uncomment these lines:
+# docker volume rm nostrbots_orly_data >/dev/null 2>&1 || true
+# docker volume rm nostrbots_jenkins_data >/dev/null 2>&1 || true
+# docker volume rm nostrbots_backup_data >/dev/null 2>&1 || true
+```
+
+### Testing Workflow
+```bash
+# 1. Clean slate
+sudo ./setup-production.sh --cleanup
+
+# 2. Fresh installation
+sudo -E ./setup-production.sh
+
+# 3. Verify services
+nostrbots status
+nostrbots monitor
+
+# 4. Test cleanup again
+sudo ./setup-production.sh --cleanup
+```
+
 ## 📋 What the Production Setup Includes
 
 ### 🔧 Core Services
@@ -89,7 +139,21 @@ nostrbots update                 # Update to latest version
 nostrbots help                   # Show all commands
 ```
 
-## 🔑 Key Management
+### Setup Script Options
+
+The setup script also supports additional options:
+
+```bash
+# Basic setup
+sudo ./setup-production.sh                    # Generate new keys and setup
+sudo ./setup-production.sh --private-key KEY  # Use existing private key
+sudo ./setup-production.sh --cleanup          # Clean up for blank slate testing
+
+# Help
+sudo ./setup-production.sh --help             # Show setup script help
+```
+
+## Key Management
 
 ### Generated Keys
 The setup script generates and displays:
@@ -104,7 +168,7 @@ The setup script generates and displays:
 - **Decrypted nsec is NOT saved to files** - only available as environment variable for copying
 
 ### Security Notes
-- ⚠️ **Save your keys securely** - they are displayed only once during setup
+- ⚠ **Save your keys securely** - they are displayed only once during setup
 - 🔒 Private keys are encrypted using AES-256-CBC with PBKDF2
 - 🗂️ Key backups are created automatically with timestamps
 
@@ -209,7 +273,7 @@ Before running the scripts, ensure:
 
 **Note**: The scripts automatically create the `/var/log/nostrbots/` directory if it doesn't exist.
 
-## 🔍 Monitoring and Health Checks
+## Monitoring and Health Checks
 
 ### Health Check Components
 - **Docker Containers**: All containers running and healthy

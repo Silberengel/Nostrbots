@@ -338,11 +338,11 @@ class RelayManager
                 // Handle direct response object (from PatchedRelaySet)
                 if (is_object($relayResponse) && isset($relayResponse->isSuccess)) {
                     if ($relayResponse->isSuccess) {
-                        echo "✅ Published to {$relayUrl}" . PHP_EOL;
+                        echo "✓ Published to {$relayUrl}" . PHP_EOL;
                         echo "   Event ID: " . $relayResponse->eventId . PHP_EOL;
                         return true;
                     } else {
-                        echo "❌ Failed to publish to {$relayUrl}: " . ($relayResponse->message ?? 'Unknown error') . PHP_EOL;
+                        echo "✗ Failed to publish to {$relayUrl}: " . ($relayResponse->message ?? 'Unknown error') . PHP_EOL;
                         return false;
                     }
                 }
@@ -351,11 +351,11 @@ class RelayManager
                     foreach ($relayResponse as $responseItem) {
                         if (is_array($responseItem) && isset($responseItem[0]) && $responseItem[0] === 'ERROR') {
                             $errorMessage = $responseItem[3] ?? 'Unknown error';
-                            echo "❌ Failed to publish to {$relayUrl}: {$errorMessage}" . PHP_EOL;
+                            echo "✗ Failed to publish to {$relayUrl}: {$errorMessage}" . PHP_EOL;
                             return false;
                         }
                         if (is_object($responseItem) && isset($responseItem->isSuccess) && $responseItem->isSuccess) {
-                            echo "✅ Published to {$relayUrl}" . PHP_EOL;
+                            echo "✓ Published to {$relayUrl}" . PHP_EOL;
                             echo "   Event ID: " . ($responseItem->eventId ?? 'Unknown') . PHP_EOL;
                             return true;
                         }
@@ -363,11 +363,11 @@ class RelayManager
                 }
             }
             
-            echo "❌ Failed to publish to {$relayUrl}: No success response" . PHP_EOL;
+            echo "✗ Failed to publish to {$relayUrl}: No success response" . PHP_EOL;
             return false;
             
         } catch (\Exception $e) {
-            echo "❌ Error publishing to {$relayUrl}: " . $e->getMessage() . PHP_EOL;
+            echo "✗ Error publishing to {$relayUrl}: " . $e->getMessage() . PHP_EOL;
             return false;
         }
     }
@@ -395,7 +395,7 @@ class RelayManager
                 
                 $allEvents = array_merge($allEvents, $events);
             } catch (\Exception $e) {
-                echo "⚠️  Failed to query from {$relayUrl}: " . $e->getMessage() . PHP_EOL;
+                echo "⚠  Failed to query from {$relayUrl}: " . $e->getMessage() . PHP_EOL;
             }
         }
 
@@ -430,10 +430,10 @@ class RelayManager
             $events = $relay->query($filters);
             $relay->disconnect();
             
-            echo "📥 Retrieved " . count($events) . " events from {$relayUrl}" . PHP_EOL;
+            echo "Retrieved " . count($events) . " events from {$relayUrl}" . PHP_EOL;
             return $events;
         } catch (\Exception $e) {
-            echo "❌ Error querying from {$relayUrl}: " . $e->getMessage() . PHP_EOL;
+            echo "✗ Error querying from {$relayUrl}: " . $e->getMessage() . PHP_EOL;
             throw $e;
         }
     }

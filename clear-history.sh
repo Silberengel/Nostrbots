@@ -17,7 +17,7 @@ clear_history() {
     echo "History after clearing: $(history | wc -l)"
     echo ""
     
-    echo "✅ Current session history cleared!"
+    echo "✓ Current session history cleared!"
     echo ""
     echo "📋 What was done:"
     echo "• Cleared current shell session history"
@@ -29,7 +29,7 @@ clear_history() {
 
 # If this script is run directly (not sourced), run the function
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    echo "⚠️  NOTE: This script runs in a subshell, so it only clears history within that subshell."
+    echo "⚠  NOTE: This script runs in a subshell, so it only clears history within that subshell."
     echo "   For complete history clearing in your current shell, run:"
     echo "   source ./clear-history.sh && clear_history"
     echo "   Or simply: history -c"

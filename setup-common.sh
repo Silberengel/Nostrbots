@@ -20,32 +20,32 @@ log() {
 }
 
 log_info() {
-    echo -e "${BLUE}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ℹ️  $1"
+    echo -e "${BLUE}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ⓘ$1"
 }
 
 log_success() {
-    echo -e "${GREEN}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ✅ $1"
+    echo -e "${GREEN}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ✓ $1"
 }
 
 log_error() {
-    echo -e "${RED}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ❌ $1"
+    echo -e "${RED}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ✗ $1"
 }
 
 log_warn() {
-    echo -e "${YELLOW}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ⚠️  $1"
+    echo -e "${YELLOW}[$(date '+%Y-%m-%dT%H:%M:%S%z')]${NC} ⚠  $1"
 }
 
 warn() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}⚠  $1${NC}"
 }
 
 error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}✗ $1${NC}"
     exit 1
 }
 
 info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
+    echo -e "${BLUE}ⓘ$1${NC}"
 }
 
 # Check if running as root
@@ -142,6 +142,45 @@ install_system_dependencies() {
     log_success "System dependencies installed"
 }
 
+# Initialize Docker swarm (common function)
+init_docker_swarm() {
+    log_info "Initializing Docker swarm..."
+    
+    # Check if swarm is already active and properly initialized
+    local swarm_state
+    swarm_state=$(docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null || echo "error")
+    
+    if [ "$swarm_state" = "active" ]; then
+        log_info "Docker swarm is already active"
+        return 0
+    elif [ "$swarm_state" = "inactive" ]; then
+        log_info "Docker swarm is inactive, initializing..."
+    elif [ "$swarm_state" = "pending" ]; then
+        log_info "Docker swarm is in pending state, forcing reinitialization..."
+        docker swarm leave --force 2>/dev/null || true
+    else
+        log_info "Docker swarm state unknown ($swarm_state), forcing reinitialization..."
+        docker swarm leave --force 2>/dev/null || true
+    fi
+    
+    # Initialize swarm
+    if docker swarm init --advertise-addr 127.0.0.1; then
+        log_success "Docker swarm initialized successfully"
+    else
+        log_error "Failed to initialize Docker swarm"
+        exit 1
+    fi
+    
+    # Verify swarm is active
+    swarm_state=$(docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null || echo "error")
+    if [ "$swarm_state" = "active" ]; then
+        log_success "Docker swarm is now active"
+    else
+        log_error "Docker swarm initialization failed - state: $swarm_state"
+        exit 1
+    fi
+}
+
 # Setup Nostr keys
 setup_nostr_keys() {
     log "Setting up Nostr keys"
@@ -200,13 +239,56 @@ setup_nostr_keys() {
     echo "NPUB=$npub"
 }
 
+# Display keys for user to save (common function)
+display_keys_for_user() {
+    local encrypted_key="$1"
+    local npub="$2"
+    
+    # Check if custom private key was provided
+    if [ -n "${CUSTOM_PRIVATE_KEY:-}" ]; then
+        echo ""
+        echo "CUSTOM NOSTR KEY CONFIGURED"
+        echo "=============================="
+        echo "✓ CUSTOM_PRIVATE_KEY is set as the admin nsec"
+        echo "Nostr Public Key (npub): $npub"
+        echo "The private key has been encrypted and stored as a Docker secret"
+        echo ""
+        return 0
+    fi
+    
+    # Display keys for user to save (only when generating new keys)
+    echo ""
+    echo "PRODUCTION KEYS GENERATED"
+    echo "================================"
+    echo "Nostr Public Key (npub): $npub"
+    echo "The private key has been encrypted and stored as a Docker secret"
+    echo ""
+    echo "YOUR NOSTR PRIVATE KEY (NSEC)"
+    echo "================================="
+    echo ""
+    echo "⚠  IMPORTANT: Copy this key now - it will not be shown again!"
+    echo ""
+    
+    # Get the nsec for display
+    local nsec_output
+    nsec_output=$(php generate-key.php --jenkins --quiet 2>/dev/null | grep "NOSTR_BOT_NSEC=" | cut -d'=' -f2)
+    echo "Your nsec: $nsec_output"
+    echo ""
+}
+
 # Parse command line arguments
 parse_common_arguments() {
-    while [[ $# -gt 0 ]]; do
-        case $1 in
+    local args=("$@")
+    local i=0
+    while [[ $i -lt ${#args[@]} ]]; do
+        case "${args[$i]}" in
             --private-key)
-                CUSTOM_PRIVATE_KEY="$2"
-                shift 2
+                if [[ $((i+1)) -lt ${#args[@]} ]]; then
+                    CUSTOM_PRIVATE_KEY="${args[$((i+1))]}"
+                    i=$((i+2))
+                else
+                    error "Missing value for --private-key"
+                fi
                 ;;
             --help|-h)
                 show_help
@@ -214,7 +296,7 @@ parse_common_arguments() {
                 ;;
             *)
                 # Unknown option - let the calling script handle it
-                break
+                i=$((i+1))
                 ;;
         esac
     done
@@ -235,12 +317,23 @@ show_common_help() {
     echo "  - Hex: 64-character hexadecimal string (e.g., abc123def456...)"
     echo "  - Nsec: Bech32 encoded private key (e.g., nsec1abc123...)"
     echo ""
-    echo "⚠️  SECURITY WARNING:"
+    echo "⚠  SECURITY WARNING:"
     echo "  Command line arguments may be stored in shell history!"
     echo "  For better security, use environment variables instead:"
     echo "    export CUSTOM_PRIVATE_KEY='your_key_here'"
     echo "    $0"
     echo ""
+}
+
+# Final security cleanup (clears environment variables)
+final_security_cleanup() {
+    # Clear sensitive environment variables at the very end
+    unset CUSTOM_PRIVATE_KEY
+    unset NOSTR_BOT_KEY
+    unset NOSTR_BOT_KEY_ENCRYPTED
+    unset NOSTR_BOT_NPUB
+    unset NOSTR_BOT_KEY_HEX
+    unset NOSTR_BOT_NSEC
 }
 
 # Initialize common setup
@@ -250,4 +343,7 @@ init_common_setup() {
     
     # Parse common arguments
     parse_common_arguments "$@"
+    
+    # Set up final cleanup trap
+    trap 'final_security_cleanup' EXIT
 }

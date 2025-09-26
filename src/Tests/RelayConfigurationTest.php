@@ -29,7 +29,7 @@ class RelayConfigurationTest
         $this->testInvalidRelayCategory();
         $this->testRelayUrlsInContentReferences();
         
-        echo "✅ All relay configuration tests completed!" . PHP_EOL . PHP_EOL;
+        echo "✓ All relay configuration tests completed!" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -49,7 +49,7 @@ class RelayConfigurationTest
         $this->assertStringContains('wss://relay1.example.com', $result['structure']['relays'], "Should use document-specified relay URLs");
         $this->assertStringContains('wss://relay2.example.com', $result['structure']['relays'], "Should use document-specified relay URLs");
         
-        echo "  ✅ Document metadata relays: {$result['structure']['relays']}" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Document metadata relays: {$result['structure']['relays']}" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -68,7 +68,7 @@ class RelayConfigurationTest
         $this->assertTrue(isset($result['structure']['relays']), "Result should contain relay configuration");
         $this->assertStringContains('wss://', $result['structure']['relays'], "Should use relays from category");
         
-        echo "  ✅ Relay category: {$result['structure']['relays']}" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Relay category: {$result['structure']['relays']}" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -87,7 +87,7 @@ class RelayConfigurationTest
         $this->assertTrue(isset($result['structure']['relays']), "Result should contain relay configuration");
         $this->assertStringContains('wss://', $result['structure']['relays'], "Should use default relay configuration (resolved to actual URLs)");
         
-        echo "  ✅ Default fallback: {$result['structure']['relays']}" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Default fallback: {$result['structure']['relays']}" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -106,7 +106,7 @@ class RelayConfigurationTest
         $this->assertTrue(isset($result['structure']['relays']), "Result should contain relay configuration");
         $this->assertStringContains('wss://', $result['structure']['relays'], "Should fall back to default relay configuration");
         
-        echo "  ✅ Invalid relay category fell back to defaults: {$result['structure']['relays']}" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Invalid relay category fell back to defaults: {$result['structure']['relays']}" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -135,7 +135,7 @@ class RelayConfigurationTest
             }
         }
         
-        echo "  ✅ Relay URLs included in content references" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Relay URLs included in content references" . PHP_EOL . PHP_EOL;
     }
 
     /**

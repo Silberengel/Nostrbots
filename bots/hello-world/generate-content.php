@@ -117,7 +117,7 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIP
         $generator = new HelloWorldGenerator($botDir);
         $generator->generateContent();
     } catch (Exception $e) {
-        echo "❌ Error: " . $e->getMessage() . "\n";
+        echo "✗ Error: " . $e->getMessage() . "\n";
         exit(1);
     }
 }

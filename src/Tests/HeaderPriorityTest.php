@@ -46,7 +46,7 @@ class HeaderPriorityTest
         // Set the test key as environment variable
         putenv("NOSTR_BOT_KEY={$this->testKey}");
         
-        echo "🔑 Generated test key: " . substr($this->testKey, 0, 8) . "..." . PHP_EOL;
+        echo "Generated test key: " . substr($this->testKey, 0, 8) . "..." . PHP_EOL;
     }
 
     /**
@@ -75,7 +75,7 @@ class HeaderPriorityTest
             $this->testMarkdownDefaults();
             $this->testConstraints();
 
-            echo "✅ All header priority tests completed successfully!" . PHP_EOL;
+            echo "✓ All header priority tests completed successfully!" . PHP_EOL;
         } finally {
             // Always cleanup the test key
             $this->cleanupTestKey();
@@ -101,7 +101,7 @@ class HeaderPriorityTest
         // Verify event kinds
         $this->verifyEventKinds($result, [], ['30041']); // No index events, content events should be 30041
         
-        echo "  ✅ Defaults: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Defaults: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
     
     /**
@@ -123,7 +123,7 @@ class HeaderPriorityTest
         // Verify event kinds
         $this->verifyEventKinds($result, ['30040'], ['30041']); // 1 index event (30040), 1 content event (30041)
         
-        echo "  ✅ File headers: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ File headers: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
     
     /**
@@ -145,7 +145,7 @@ class HeaderPriorityTest
         // Verify event kinds
         $this->verifyEventKinds($result, ['30040', '30040', '30040'], ['30041', '30041', '30041']); // 3 index events (30040), 3 content events (30041)
         
-        echo "  ✅ File headers (level 2): {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ File headers (level 2): {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
     
     /**
@@ -167,7 +167,7 @@ class HeaderPriorityTest
         // Verify event kinds
         $this->verifyEventKinds($result, ['30040', '30040', '30040', '30040'], ['30023', '30023', '30023', '30023']); // 4 index events (30040), 4 content events (30023)
         
-        echo "  ✅ Command line override: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Command line override: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
     
     /**
@@ -189,7 +189,7 @@ class HeaderPriorityTest
         // Verify event kinds
         $this->verifyEventKinds($result, [], ['30023']); // No index events, content events should be 30023
         
-        echo "  ✅ Markdown defaults: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Markdown defaults: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -204,41 +204,41 @@ class HeaderPriorityTest
         $result = $this->publisher->publishDocument($markdownDocument, 1, null, true);
         $this->assertTrue(!$result['success'], "Markdown with content-level should fail");
         $this->assertTrue(in_array("Markdown files cannot have content-level parameters. They are always flat articles (content-level 0).", $result['errors']), "Should have correct error message");
-        echo "  ✅ Markdown content-level constraint passed" . PHP_EOL;
+        echo "  ✓ Markdown content-level constraint passed" . PHP_EOL;
         
         // Test Markdown with content-kind (should fail)
         $result = $this->publisher->publishDocument($markdownDocument, null, '30041', true);
         $this->assertTrue(!$result['success'], "Markdown with content-kind should fail");
         $this->assertTrue(in_array("Markdown files cannot have content-kind parameters. They always use 30023 (Long-form Content).", $result['errors']), "Should have correct error message");
-        echo "  ✅ Markdown content-kind constraint passed" . PHP_EOL;
+        echo "  ✓ Markdown content-kind constraint passed" . PHP_EOL;
         
         // Test 30023 with content-level 0 (should fail)
         $asciidocDocument = __DIR__ . '/../../examples/simple-guide.adoc';
         $result = $this->publisher->publishDocument($asciidocDocument, 0, '30023', true);
         $this->assertTrue(!$result['success'], "30023 with content-level 0 should fail");
         $this->assertTrue(in_array("30023 (Long-form Content) requires content-level > 0. Use --content-level 1 or higher for hierarchical publications.", $result['errors']), "Should have correct error message");
-        echo "  ✅ 30023 content-level constraint passed" . PHP_EOL;
+        echo "  ✓ 30023 content-level constraint passed" . PHP_EOL;
         
         // Test 30023 with Markdown source (should fail)
         $result = $this->publisher->publishDocument($markdownDocument, 1, '30023', true);
         $this->assertTrue(!$result['success'], "30023 with Markdown source should fail");
         // Should fail on Markdown constraint first (content-level not allowed for Markdown)
         $this->assertTrue(in_array("Markdown files cannot have content-level parameters. They are always flat articles (content-level 0).", $result['errors']), "Should have correct error message");
-        echo "  ✅ 30023 source format constraint passed" . PHP_EOL;
+        echo "  ✓ 30023 source format constraint passed" . PHP_EOL;
         
         // Test 30041 with Markdown source (should fail)
         $result = $this->publisher->publishDocument($markdownDocument, 1, '30041', true);
         $this->assertTrue(!$result['success'], "30041 with Markdown source should fail");
         // Should fail on Markdown constraint first (content-level not allowed for Markdown)
         $this->assertTrue(in_array("Markdown files cannot have content-level parameters. They are always flat articles (content-level 0).", $result['errors']), "Should have correct error message");
-        echo "  ✅ 30041 source format constraint passed" . PHP_EOL;
+        echo "  ✓ 30041 source format constraint passed" . PHP_EOL;
         
         // Test 30818 with Markdown source (should fail)
         $result = $this->publisher->publishDocument($markdownDocument, 1, '30818', true);
         $this->assertTrue(!$result['success'], "30818 with Markdown source should fail");
         // Should fail on Markdown constraint first (content-level not allowed for Markdown)
         $this->assertTrue(in_array("Markdown files cannot have content-level parameters. They are always flat articles (content-level 0).", $result['errors']), "Should have correct error message");
-        echo "  ✅ 30818 source format constraint passed" . PHP_EOL;
+        echo "  ✓ 30818 source format constraint passed" . PHP_EOL;
         
         echo PHP_EOL;
     }
@@ -317,7 +317,7 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIP
         echo "🎉 All header priority tests passed successfully!" . PHP_EOL;
         exit(0);
     } catch (\Exception $e) {
-        echo "❌ Test failed: " . $e->getMessage() . PHP_EOL;
+        echo "✗ Test failed: " . $e->getMessage() . PHP_EOL;
         exit(1);
     } finally {
         // Ensure cleanup happens even if tests fail

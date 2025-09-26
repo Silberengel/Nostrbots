@@ -30,7 +30,7 @@ class SimplifiedEdgeCaseTests
         $this->testInvalidContentLevel();
         $this->testUnicodeContent();
         
-        echo PHP_EOL . "✅ All simplified edge case tests completed!" . PHP_EOL;
+        echo PHP_EOL . "✓ All simplified edge case tests completed!" . PHP_EOL;
     }
 
     private function testValidDocument(): void
@@ -66,7 +66,7 @@ Section 1.1 content.';
             throw new \Exception("Should have index sections");
         }
         
-        echo "  ✅ Valid document parsed successfully" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Valid document parsed successfully" . PHP_EOL . PHP_EOL;
     }
 
     private function testDocumentWithMetadata(): void
@@ -97,7 +97,7 @@ Content here.';
         // This test should verify that relays are accessible via the parser's getRelays() method
         // For now, we'll skip this check since the test structure doesn't have access to the parser instance
         
-        echo "  ✅ Metadata extracted correctly" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Metadata extracted correctly" . PHP_EOL . PHP_EOL;
     }
 
     private function testMultipleDocumentHeaders(): void
@@ -117,7 +117,7 @@ This should fail.';
             throw new \Exception("Should have thrown exception for multiple document headers");
         } catch (\Exception $e) {
             if (strpos($e->getMessage(), 'H1 headers') !== false) {
-                echo "  ✅ Correctly caught multiple document headers" . PHP_EOL . PHP_EOL;
+                echo "  ✓ Correctly caught multiple document headers" . PHP_EOL . PHP_EOL;
             } else {
                 throw new \Exception("Wrong error message: " . $e->getMessage());
             }
@@ -139,7 +139,7 @@ Chapter content.';
             throw new \Exception("Should have thrown exception for missing document title");
         } catch (\Exception $e) {
             if (strpos($e->getMessage(), 'before the H1 header') !== false) {
-                echo "  ✅ Correctly caught missing document title" . PHP_EOL . PHP_EOL;
+                echo "  ✓ Correctly caught missing document title" . PHP_EOL . PHP_EOL;
             } else {
                 throw new \Exception("Wrong error message: " . $e->getMessage());
             }
@@ -159,7 +159,7 @@ Content here.';
             throw new \Exception("Should have thrown exception for invalid content level");
         } catch (\Exception $e) {
             if (strpos($e->getMessage(), 'Content level must be between 0 and 6') !== false) {
-                echo "  ✅ Correctly caught invalid content level" . PHP_EOL . PHP_EOL;
+                echo "  ✓ Correctly caught invalid content level" . PHP_EOL . PHP_EOL;
             } else {
                 throw new \Exception("Wrong error message: " . $e->getMessage());
             }
@@ -183,7 +183,7 @@ Chapter content with unicode characters: 中文, العربية, русский.
 
 === Section 1.1: Unicode Examples
 
-More unicode content: 🚀 📚 ✅.';
+More unicode content: 🚀 📚 ✓.';
 
         $result = $this->parseDocumentWithTempFile($content, 3, '30041');
         
@@ -195,7 +195,7 @@ More unicode content: 🚀 📚 ✅.';
             throw new \Exception("Should have parsed sections with unicode content");
         }
         
-        echo "  ✅ Unicode content handled correctly" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Unicode content handled correctly" . PHP_EOL . PHP_EOL;
     }
 
     private function parseDocumentWithTempFile(string $content, int $contentLevel, string $contentKind): array

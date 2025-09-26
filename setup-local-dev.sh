@@ -58,8 +58,9 @@ NOSTR_BOT_DEBUG=true
 EOF
     
     log_success "Keys generated and saved to .env"
-    log "🔑 Encrypted Private Key: ${encrypted_key:0:20}..."
-    log "🔑 Public Key (npub): $npub"
+    
+    # Display keys for user to save using common function
+    display_keys_for_user "$encrypted_key" "$npub"
 }
 
 # Start Orly relay for local development
@@ -195,13 +196,13 @@ main() {
         echo ""
         echo "📋 What's been set up:"
         echo "======================"
-        echo "✅ PHP dependencies installed"
-        echo "✅ Nostr keys generated and saved to .env"
-        echo "✅ NOSTR_BOT_KEY environment variable configured"
-        echo "✅ CUSTOM_PRIVATE_KEY support enabled (if set)"
-        echo "✅ Docker swarm mode handled for local development"
-        echo "✅ Orly relay running on ws://localhost:3334"
-        echo "✅ Local development environment ready"
+        echo "✓ PHP dependencies installed"
+        echo "✓ Nostr keys generated and saved to .env"
+        echo "✓ NOSTR_BOT_KEY environment variable configured"
+        echo "✓ CUSTOM_PRIVATE_KEY support enabled (if set)"
+        echo "✓ Docker swarm mode handled for local development"
+        echo "✓ Orly relay running on ws://localhost:3334"
+        echo "✓ Local development environment ready"
         echo ""
         echo "🚀 Next steps:"
         echo "=============="
@@ -229,12 +230,12 @@ main() {
             set -a  # automatically export all variables
             source .env
             set +a  # turn off automatic export
-            echo "✅ Environment variables loaded automatically!"
+            echo "✓ Environment variables loaded automatically!"
             echo "   You can now use nostrbots.php and write-note.php directly"
             echo ""
             echo "💡 For future shell sessions, run: source .env"
         else
-            echo "⚠️  .env file not found - please run 'source .env' manually"
+            echo "⚠  .env file not found - please run 'source .env' manually"
         fi
     else
         log_error "Setup failed. Please check the errors above and try again."

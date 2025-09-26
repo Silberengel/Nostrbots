@@ -21,7 +21,15 @@ I'm happy to receive tips: silberengel@minibits.cash
 ### Admin Nsec
 You can let Nostrbots generate your nsec, pass it as a parameter to the setup script or set it in your environment variables.
 ```bash
-export $CUSTOM_PRIVATE_KEY='10128...'
+# for local use
+export CUSTOM_PRIVATE_KEY="your_key_here"
+./setup-local.sh
+
+# for productive use
+sudo CUSTOM_PRIVATE_KEY="your_key_here" ./setup-production.sh
+
+# or just take your environment variables with you
+$ sudo -E ./setup-production-with-elasticsearch.sh
 ```
 
 ### Production Setup (Recommended)

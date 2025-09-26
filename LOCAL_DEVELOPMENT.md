@@ -12,12 +12,12 @@ This guide explains how to set up and use Nostrbots for local development and te
 ```
 
 This will:
-- ✅ Install PHP dependencies
-- ✅ Generate keys for local development
-- ✅ Start Orly relay for testing
-- ✅ Create .env file for local use
-- ✅ Test the setup
-- ✅ Run Hello World bot test
+- ✓ Install PHP dependencies
+- ✓ Generate keys for local development
+- ✓ Start Orly relay for testing
+- ✓ Create .env file for local use
+- ✓ Test the setup
+- ✓ Run Hello World bot test
 
 ### 2. Access Local Services
 
@@ -138,7 +138,7 @@ php run-tests.php
 php run-tests.php --filter AsciiDocHeaderTest
 ```
 
-## 🔑 Key Management
+## Key Management
 
 ### Local Development Keys
 
@@ -291,7 +291,7 @@ php nostrbots.php bots/my-bot/output/my-content.adoc --dry-run
 php nostrbots.php bots/my-bot/output/my-content.adoc
 ```
 
-## 🔍 Debugging
+## Debugging
 
 ### Common Issues
 

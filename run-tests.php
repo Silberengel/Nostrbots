@@ -56,7 +56,7 @@ function runTests(): void
         echo PHP_EOL;
         
         // Run relay configuration tests
-        echo "📡 Running Relay Configuration Tests..." . PHP_EOL;
+        echo "Running Relay Configuration Tests..." . PHP_EOL;
         $relayConfigTest = new \Nostrbots\Tests\RelayConfigurationTest();
         $relayConfigTest->runTests();
         echo PHP_EOL;
@@ -66,10 +66,10 @@ function runTests(): void
         runPerformanceTests();
         echo PHP_EOL;
         
-        echo "✅ All tests completed successfully!" . PHP_EOL;
+        echo "✓ All tests completed successfully!" . PHP_EOL;
         
     } catch (\Exception $e) {
-        echo "❌ Test suite failed: " . $e->getMessage() . PHP_EOL;
+        echo "✗ Test suite failed: " . $e->getMessage() . PHP_EOL;
         exit(1);
     }
 }
@@ -96,15 +96,15 @@ function runPerformanceTests(): void
     $duration = round(($endTime - $startTime) * 1000, 2);
     $memoryUsage = memory_get_peak_usage(true);
     
-    echo "    ✅ Parsed large document in {$duration}ms" . PHP_EOL;
+    echo "    ✓ Parsed large document in {$duration}ms" . PHP_EOL;
     echo "    📊 Peak memory usage: " . formatBytes($memoryUsage) . PHP_EOL;
     echo "    📄 Generated " . count($result['publish_order']) . " events to publish" . PHP_EOL;
     
     // Test memory efficiency
     if ($memoryUsage > 50 * 1024 * 1024) { // 50MB
-        echo "    ⚠️  High memory usage detected" . PHP_EOL;
+        echo "    ⚠  High memory usage detected" . PHP_EOL;
     } else {
-        echo "    ✅ Memory usage within acceptable limits" . PHP_EOL;
+        echo "    ✓ Memory usage within acceptable limits" . PHP_EOL;
     }
 }
 

@@ -376,31 +376,31 @@ class KeyManager
         if (file_exists($dockerSecretPath)) {
             $privateKey = trim(file_get_contents($dockerSecretPath));
             $keySource = 'Docker secret';
-            echo "🔑 Found key in Docker secret\n";
+            echo "Found key in Docker secret\n";
         }
         
         // 2. Check environment variables (NOSTR_BOT_KEY first, then CUSTOM_PRIVATE_KEY)
         if (!$privateKey && getenv('NOSTR_BOT_KEY') !== false && !empty(getenv('NOSTR_BOT_KEY'))) {
             $privateKey = getenv('NOSTR_BOT_KEY');
             $keySource = 'NOSTR_BOT_KEY environment variable';
-            echo "🔑 Found key in NOSTR_BOT_KEY environment variable\n";
+            echo "Found key in NOSTR_BOT_KEY environment variable\n";
         } elseif (!$privateKey && getenv('CUSTOM_PRIVATE_KEY') !== false && !empty(getenv('CUSTOM_PRIVATE_KEY'))) {
             $privateKey = getenv('CUSTOM_PRIVATE_KEY');
             $keySource = 'CUSTOM_PRIVATE_KEY environment variable';
-            echo "🔑 Found key in CUSTOM_PRIVATE_KEY environment variable\n";
+            echo "Found key in CUSTOM_PRIVATE_KEY environment variable\n";
         }
         
         // 3. Check for encrypted key in environment (for production setups)
         if (!$privateKey && getenv('NOSTR_BOT_KEY_ENCRYPTED') !== false && !empty(getenv('NOSTR_BOT_KEY_ENCRYPTED'))) {
-            echo "🔑 Found encrypted key, attempting to decrypt...\n";
+            echo "Found encrypted key, attempting to decrypt...\n";
             try {
                 $privateKey = $this->decryptKey(getenv('NOSTR_BOT_KEY_ENCRYPTED'));
                 if ($privateKey) {
                     $keySource = 'encrypted key';
-                    echo "✅ Successfully decrypted key\n";
+                    echo "✓ Successfully decrypted key\n";
                 }
             } catch (\Exception $e) {
-                echo "⚠️  Failed to decrypt key: " . $e->getMessage() . "\n";
+                echo "⚠  Failed to decrypt key: " . $e->getMessage() . "\n";
             }
         }
         
@@ -413,16 +413,16 @@ class KeyManager
                     if (strpos($line, '=') !== false && !str_starts_with($line, '#')) {
                         list($key, $value) = explode('=', $line, 2);
                         if ($key === 'NOSTR_BOT_KEY_ENCRYPTED' && !empty($value)) {
-                            echo "🔑 Found encrypted key in .env file, attempting to decrypt...\n";
+                            echo "Found encrypted key in .env file, attempting to decrypt...\n";
                             try {
                                 $privateKey = $this->decryptKey($value);
                                 if ($privateKey) {
                                     $keySource = 'encrypted key from .env';
-                                    echo "✅ Successfully decrypted key from .env\n";
+                                    echo "✓ Successfully decrypted key from .env\n";
                                     break;
                                 }
                             } catch (\Exception $e) {
-                                echo "⚠️  Failed to decrypt key from .env: " . $e->getMessage() . "\n";
+                                echo "⚠  Failed to decrypt key from .env: " . $e->getMessage() . "\n";
                             }
                         }
                     }
@@ -432,7 +432,7 @@ class KeyManager
         
         // 5. Generate new key if none found
         if (!$privateKey) {
-            echo "🔑 No key found in Docker secrets, environment variables, or encrypted storage\n";
+            echo "No key found in Docker secrets, environment variables, or encrypted storage\n";
             echo "   Generating new key...\n";
             
             try {
@@ -444,7 +444,7 @@ class KeyManager
                 // Set the environment variable for this session
                 putenv('NOSTR_BOT_KEY=' . $privateKey);
                 
-                echo "✅ Generated new key set:\n";
+                echo "✓ Generated new key set:\n";
                 echo "   Public Key (npub): " . $keySet['bechPublicKey'] . "\n";
                 echo "   Private Key: " . substr($privateKey, 0, 8) . "...\n";
                 echo "   Environment variable NOSTR_BOT_KEY has been set for this session\n";
@@ -454,7 +454,7 @@ class KeyManager
                 throw new \Exception("Failed to generate key: " . $e->getMessage());
             }
         } else {
-            echo "✅ Using existing key from $keySource\n";
+            echo "✓ Using existing key from $keySource\n";
         }
         
         // Ensure the key is set in the environment for this session

@@ -16,19 +16,19 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 log_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
+    echo -e "${BLUE}ⓘ$1${NC}"
 }
 
 log_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}✓ $1${NC}"
 }
 
 log_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}⚠  $1${NC}"
 }
 
 log_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}✗ $1${NC}"
 }
 
 # Check if Docker secrets exist
@@ -96,10 +96,10 @@ secure_display() {
     local nsec="$1"
     
     echo ""
-    echo "🔑 YOUR NOSTR PRIVATE KEY (NSEC)"
+    echo "YOUR NOSTR PRIVATE KEY (NSEC)"
     echo "================================="
     echo ""
-    echo "⚠️  IMPORTANT: Copy this key now - it will not be shown again!"
+    echo "⚠  IMPORTANT: Copy this key now - it will not be shown again!"
     echo ""
     echo "Your nsec: $nsec"
     echo ""
@@ -112,7 +112,7 @@ secure_display() {
     echo "Press ENTER when you have copied and saved the nsec..."
     read -r
     echo ""
-    echo "✅ Thank you! The nsec has been securely handled."
+    echo "✓ Thank you! The nsec has been securely handled."
     echo ""
 }
 

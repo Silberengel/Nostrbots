@@ -2,7 +2,7 @@
 
 This guide explains how to use your existing Nostr private key (nsec) with Nostrbots instead of generating a new one.
 
-## 🔑 Supported Key Formats
+## Supported Key Formats
 
 Nostrbots supports both formats for your private key:
 

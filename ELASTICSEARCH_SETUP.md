@@ -94,7 +94,7 @@ Nostr events from the relay are indexed every 5 minutes:
 - `relay` - Source relay
 - `indexed_at` - Indexing timestamp
 
-## 🔍 Search Capabilities
+## Search Capabilities
 
 ### Event Search Examples
 

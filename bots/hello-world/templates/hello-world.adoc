@@ -33,10 +33,10 @@ This article was automatically generated and published to Nostr using:
 
 If you're seeing this article, it means:
 
-1. ✅ Nostrbots is working correctly
-2. ✅ The bot can connect to Nostr relays
-3. ✅ Content generation is functioning
-4. ✅ Publishing to Nostr is successful
+1. ✓ Nostrbots is working correctly
+2. ✓ The bot can connect to Nostr relays
+3. ✓ Content generation is functioning
+4. ✓ Publishing to Nostr is successful
 
 == Next Steps
 

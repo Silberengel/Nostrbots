@@ -29,7 +29,7 @@ class ValidationManager
      */
     public function validateEvent(\swentel\nostr\Event\Event $event, int $waitSeconds = 10): bool
     {
-        echo "🔍 Validating published event..." . PHP_EOL;
+        echo "Validating published event..." . PHP_EOL;
         
         // Always show event ID
         echo "📝 Event ID: " . $event->getId() . PHP_EOL;
@@ -41,7 +41,7 @@ class ValidationManager
             return true;
         }
         
-        echo "⏳ Waiting {$waitSeconds} seconds for event propagation..." . PHP_EOL;
+        echo "Waiting {$waitSeconds} seconds for event propagation..." . PHP_EOL;
         sleep($waitSeconds);
         
         $validationResult = $this->retryManager->execute(function() use ($event) {
@@ -50,9 +50,9 @@ class ValidationManager
         
         // Show verification result
         if ($validationResult) {
-            echo "✅ Event confirmed stored on relay!" . PHP_EOL;
+            echo "✓ Event confirmed stored on relay!" . PHP_EOL;
         } else {
-            echo "⚠️  Event validation failed - event may not be properly propagated" . PHP_EOL;
+            echo "⚠  Event validation failed - event may not be properly propagated" . PHP_EOL;
         }
         
         return $validationResult;
@@ -63,8 +63,8 @@ class ValidationManager
      */
     public function validateIndexUpdate(Event $indexEvent, array $expectedContentReferences, int $waitSeconds = 10): bool
     {
-        echo "🔍 Validating index update..." . PHP_EOL;
-        echo "⏳ Waiting {$waitSeconds} seconds for index propagation..." . PHP_EOL;
+        echo "Validating index update..." . PHP_EOL;
+        echo "Waiting {$waitSeconds} seconds for index propagation..." . PHP_EOL;
         
         sleep($waitSeconds);
         
@@ -106,20 +106,20 @@ class ValidationManager
                         
                         // Validate key fields
                         if ($this->validateEventFields($expectedEvent, $event)) {
-                            echo "✅ Event validation successful on relay: {$relayUrl}" . PHP_EOL;
+                            echo "✓ Event validation successful on relay: {$relayUrl}" . PHP_EOL;
                             return true;
                         } else {
-                            echo "❌ Event validation failed - content mismatch on relay: {$relayUrl}" . PHP_EOL;
+                            echo "✗ Event validation failed - content mismatch on relay: {$relayUrl}" . PHP_EOL;
                         }
                     }
                 }
             }
             
-            echo "❌ Event not found on any relay" . PHP_EOL;
+            echo "✗ Event not found on any relay" . PHP_EOL;
             return false;
             
         } catch (\Exception $e) {
-            echo "❌ Error validating event: " . $e->getMessage() . PHP_EOL;
+            echo "✗ Error validating event: " . $e->getMessage() . PHP_EOL;
             return false;
         }
     }
@@ -149,23 +149,23 @@ class ValidationManager
                     
                     // Validate index structure
                     if ($this->validateIndexStructure($expectedIndex, $fetchedEvent, $expectedContentReferences)) {
-                        echo "✅ Index validation successful on relay: {$relayUrl}" . PHP_EOL;
+                        echo "✓ Index validation successful on relay: {$relayUrl}" . PHP_EOL;
                         $relay->disconnect();
                         return true;
                     } else {
-                        echo "❌ Index validation failed - structure mismatch on relay: {$relayUrl}" . PHP_EOL;
+                        echo "✗ Index validation failed - structure mismatch on relay: {$relayUrl}" . PHP_EOL;
                     }
                 } else {
-                    echo "⚠️  Index not found on relay: {$relayUrl}" . PHP_EOL;
+                    echo "⚠  Index not found on relay: {$relayUrl}" . PHP_EOL;
                 }
                 
                 $relay->disconnect();
             } catch (\Exception $e) {
-                echo "⚠️  Failed to validate index on relay {$relayUrl}: " . $e->getMessage() . PHP_EOL;
+                echo "⚠  Failed to validate index on relay {$relayUrl}: " . $e->getMessage() . PHP_EOL;
             }
         }
         
-        echo "❌ Index validation failed on all relays" . PHP_EOL;
+        echo "✗ Index validation failed on all relays" . PHP_EOL;
         return false;
     }
 
@@ -185,7 +185,7 @@ class ValidationManager
         $actualTags = $actual->getTags();
         
         if (count($expectedTags) !== count($actualTags)) {
-            echo "❌ Tag count mismatch: expected " . count($expectedTags) . ", got " . count($actualTags) . PHP_EOL;
+            echo "✗ Tag count mismatch: expected " . count($expectedTags) . ", got " . count($actualTags) . PHP_EOL;
             return false;
         }
         
@@ -196,7 +196,7 @@ class ValidationManager
             $actualTag = $this->findTag($actualTags, $tagName);
             
             if ($expectedTag !== $actualTag) {
-                echo "❌ Critical tag '{$tagName}' mismatch" . PHP_EOL;
+                echo "✗ Critical tag '{$tagName}' mismatch" . PHP_EOL;
                 return false;
             }
         }
@@ -204,7 +204,7 @@ class ValidationManager
         $allPassed = array_reduce($checks, fn($carry, $check) => $carry && $check, true);
         
         if (!$allPassed) {
-            echo "❌ Event field validation failed" . PHP_EOL;
+            echo "✗ Event field validation failed" . PHP_EOL;
             foreach ($checks as $field => $passed) {
                 if (!$passed) {
                     echo "   - {$field}: mismatch" . PHP_EOL;
@@ -230,25 +230,25 @@ class ValidationManager
         $actualContentRefs = array_filter($actualTags, fn($tag) => $tag[0] === 'a');
         
         if (count($actualContentRefs) !== count($expectedContentReferences)) {
-            echo "❌ Content reference count mismatch: expected " . count($expectedContentReferences) . ", got " . count($actualContentRefs) . PHP_EOL;
+            echo "✗ Content reference count mismatch: expected " . count($expectedContentReferences) . ", got " . count($actualContentRefs) . PHP_EOL;
             return false;
         }
         
         // Validate each content reference
         foreach ($expectedContentReferences as $index => $expectedRef) {
             if (!isset($actualContentRefs[$index])) {
-                echo "❌ Missing content reference at index {$index}" . PHP_EOL;
+                echo "✗ Missing content reference at index {$index}" . PHP_EOL;
                 return false;
             }
             
             $actualRef = $actualContentRefs[$index];
             if ($actualRef[1] !== $expectedRef) {
-                echo "❌ Content reference mismatch at index {$index}: expected '{$expectedRef}', got '{$actualRef[1]}'" . PHP_EOL;
+                echo "✗ Content reference mismatch at index {$index}: expected '{$expectedRef}', got '{$actualRef[1]}'" . PHP_EOL;
                 return false;
             }
         }
         
-        echo "✅ Index structure validation passed" . PHP_EOL;
+        echo "✓ Index structure validation passed" . PHP_EOL;
         return true;
     }
 

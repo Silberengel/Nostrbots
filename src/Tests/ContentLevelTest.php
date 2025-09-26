@@ -45,7 +45,7 @@ class ContentLevelTest
         // Set the test key as environment variable
         putenv("NOSTR_BOT_KEY={$this->testKey}");
         
-        echo "🔑 Generated test key: " . substr($this->testKey, 0, 8) . "..." . PHP_EOL;
+        echo "Generated test key: " . substr($this->testKey, 0, 8) . "..." . PHP_EOL;
     }
 
     /**
@@ -76,7 +76,7 @@ class ContentLevelTest
             $this->testContentLevel3();
             $this->testContentLevel4();
 
-            echo "✅ All content level tests completed successfully!" . PHP_EOL;
+            echo "✓ All content level tests completed successfully!" . PHP_EOL;
         } finally {
             // Always cleanup the test key
             $this->cleanupTestKey();
@@ -97,7 +97,7 @@ class ContentLevelTest
         $this->assertEquals(0, $result['index_sections'], "Content level 0 should have 0 index sections");
         $this->assertEquals(1, $result['total_events'], "Content level 0 should have 1 total event");
         
-        echo "  ✅ Content level 0: 1 content, 0 indexes, 1 total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content level 0: 1 content, 0 indexes, 1 total" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -114,7 +114,7 @@ class ContentLevelTest
         $this->assertEquals(1, $result['index_sections'], "Content level 1 should have 1 index section");
         $this->assertEquals(2, $result['total_events'], "Content level 1 should have 2 total events");
         
-        echo "  ✅ Content level 1: 1 content, 1 index, 2 total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content level 1: 1 content, 1 index, 2 total" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -131,7 +131,7 @@ class ContentLevelTest
         $this->assertEquals(3, $result['index_sections'], "Content level 2 should have 3 index sections");
         $this->assertEquals(6, $result['total_events'], "Content level 2 should have 6 total events");
         
-        echo "  ✅ Content level 2: 3 content, 3 indexes, 6 total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content level 2: 3 content, 3 indexes, 6 total" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -148,7 +148,7 @@ class ContentLevelTest
         $this->assertEquals(7, $result['index_sections'], "Content level 3 should have 7 index sections");
         $this->assertEquals(14, $result['total_events'], "Content level 3 should have 14 total events");
         
-        echo "  ✅ Content level 3: 7 content, 7 indexes, 14 total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content level 3: 7 content, 7 indexes, 14 total" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -165,7 +165,7 @@ class ContentLevelTest
         $this->assertEquals(9, $result['index_sections'], "Content level 4 should have 9 index sections");
         $this->assertEquals(18, $result['total_events'], "Content level 4 should have 18 total events");
         
-        echo "  ✅ Content level 4: 9 content, 9 indexes, 18 total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content level 4: 9 content, 9 indexes, 18 total" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -186,7 +186,7 @@ class ContentLevelTest
         $this->assertGreaterThan(0, count($structure['index_sections']), "Should have index sections");
         $this->assertNotNull($structure['main_index'], "Should have a main index");
         
-        echo "  ✅ Document structure parsing works correctly" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Document structure parsing works correctly" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -212,7 +212,7 @@ class ContentLevelTest
             }
         }
         
-        echo "  ✅ Content event structure is correct" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Content event structure is correct" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -239,7 +239,7 @@ class ContentLevelTest
         $this->assertEquals(30040, $structure['main_index']['event_kind'], "Main index should be kind 30040");
         $this->assertIsArray($structure['main_index']['content_references'], "Main index should have content references");
         
-        echo "  ✅ Index event structure is correct" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Index event structure is correct" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -263,7 +263,7 @@ class ContentLevelTest
             $this->assertContains($ref['kind'], [30040, 30041], "Reference kind should be valid");
         }
         
-        echo "  ✅ Hierarchical references are correct" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Hierarchical references are correct" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -374,7 +374,7 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIP
         echo "🎉 All tests passed successfully!" . PHP_EOL;
         exit(0);
     } catch (\Exception $e) {
-        echo "❌ Test failed: " . $e->getMessage() . PHP_EOL;
+        echo "✗ Test failed: " . $e->getMessage() . PHP_EOL;
         exit(1);
     } finally {
         // Ensure cleanup happens even if tests fail

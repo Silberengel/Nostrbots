@@ -18,15 +18,15 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 log_info() {
-    echo -e "${YELLOW}ℹ️  $1${NC}"
+    echo -e "${YELLOW}ⓘ$1${NC}"
 }
 
 log_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}✓ $1${NC}"
 }
 
 log_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}✗ $1${NC}"
 }
 
 # Security cleanup function is now in security-utils.sh
@@ -46,7 +46,7 @@ echo "With --all flag, it will also:"
 echo "• Remove generated content"
 echo "• Perform comprehensive Docker cleanup (removes all unused images, containers, networks, and build cache)"
 echo ""
-echo "⚠️  Note: The script will restart your shell session at the end to ensure"
+echo "⚠  Note: The script will restart your shell session at the end to ensure"
 echo "   complete history clearing. You'll be in a fresh shell afterward."
 echo ""
 

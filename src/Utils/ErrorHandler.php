@@ -46,7 +46,7 @@ class ErrorHandler
         $this->log($error);
 
         if ($this->verbose) {
-            echo "❌ Error: {$message} in {$file} on line {$line}" . PHP_EOL;
+            echo "✗ Error: {$message} in {$file} on line {$line}" . PHP_EOL;
         }
 
         // Don't execute PHP internal error handler
@@ -123,7 +123,7 @@ class ErrorHandler
         $this->log($error);
 
         if ($this->verbose) {
-            echo "❌ Error: {$message}" . PHP_EOL;
+            echo "✗ Error: {$message}" . PHP_EOL;
         }
     }
 
@@ -143,7 +143,7 @@ class ErrorHandler
         $this->log($warning);
 
         if ($this->verbose) {
-            echo "⚠️  Warning: {$message}" . PHP_EOL;
+            echo "⚠  Warning: {$message}" . PHP_EOL;
         }
     }
 
@@ -163,7 +163,7 @@ class ErrorHandler
         $this->log($info);
 
         if ($this->verbose) {
-            echo "ℹ️  Info: {$message}" . PHP_EOL;
+            echo "ⓘInfo: {$message}" . PHP_EOL;
         }
     }
 
@@ -242,15 +242,15 @@ class ErrorHandler
         $summary = $this->getErrorSummary();
         
         if ($summary['error_count'] > 0) {
-            echo "❌ Errors: {$summary['error_count']}" . PHP_EOL;
+            echo "✗ Errors: {$summary['error_count']}" . PHP_EOL;
         }
         
         if ($summary['warning_count'] > 0) {
-            echo "⚠️  Warnings: {$summary['warning_count']}" . PHP_EOL;
+            echo "⚠  Warnings: {$summary['warning_count']}" . PHP_EOL;
         }
         
         if ($summary['info_count'] > 0) {
-            echo "ℹ️  Info messages: {$summary['info_count']}" . PHP_EOL;
+            echo "ⓘInfo messages: {$summary['info_count']}" . PHP_EOL;
         }
     }
 

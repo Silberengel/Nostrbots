@@ -177,11 +177,11 @@ function displayResults(array $result, bool $verbose): void
     echo "═══════════════════════════════════════════════════════════════════════════════" . PHP_EOL;
     
     if ($result['success']) {
-        echo "Status: ✅ Success" . PHP_EOL;
+        echo "Status: ✓ Success" . PHP_EOL;
         echo "Document: {$result['document_title']}" . PHP_EOL;
         
         if (isset($result['dry_run'])) {
-            echo "Mode: 🔍 Dry Run (No events published)" . PHP_EOL;
+            echo "Mode: Dry Run (No events published)" . PHP_EOL;
             echo "Content Sections: {$result['content_sections']}" . PHP_EOL;
             echo "Index Sections: {$result['index_sections']}" . PHP_EOL;
             echo "Total Events: {$result['total_events']}" . PHP_EOL;
@@ -196,7 +196,7 @@ function displayResults(array $result, bool $verbose): void
             }
         }
     } else {
-        echo "Status: ❌ Failed" . PHP_EOL;
+        echo "Status: ✗ Failed" . PHP_EOL;
         echo "Published Events: {$result['total_published']}/{$result['total_expected']}" . PHP_EOL;
     }
     
@@ -204,7 +204,7 @@ function displayResults(array $result, bool $verbose): void
     if (!empty($result['errors'])) {
         echo PHP_EOL . "Errors:" . PHP_EOL;
         foreach ($result['errors'] as $error) {
-            echo "  ❌ {$error}" . PHP_EOL;
+            echo "  ✗ {$error}" . PHP_EOL;
         }
     }
     

@@ -25,7 +25,7 @@ check_elasticsearch() {
         log "ERROR: Elasticsearch is not available at $ELASTICSEARCH_URL"
         return 1
     fi
-    log "✅ Elasticsearch is available"
+    log "✓ Elasticsearch is available"
 }
 
 # Create index mapping if it doesn't exist
@@ -54,7 +54,7 @@ create_index_mapping() {
         curl -s -X PUT "$ELASTICSEARCH_URL/$INDEX_NAME" \
             -H "Content-Type: application/json" \
             -d "$mapping" > /dev/null
-        log "✅ Index mapping created"
+        log "✓ Index mapping created"
     else
         log "Index $INDEX_NAME already exists"
     fi
@@ -127,7 +127,7 @@ EOF
         return 1
     fi
     
-    log "✅ Successfully indexed $count events"
+    log "✓ Successfully indexed $count events"
 }
 
 # Get last indexed timestamp
@@ -146,7 +146,7 @@ get_last_indexed_timestamp() {
 
 # Main indexing function
 main() {
-    log "🔍 Starting event indexing process"
+    log "Starting event indexing process"
     
     # Check prerequisites
     check_elasticsearch || exit 1
@@ -160,7 +160,7 @@ main() {
     local events=$(get_events_from_relay "$since" "$MAX_EVENTS")
     index_events "$events"
     
-    log "✅ Event indexing completed"
+    log "✓ Event indexing completed"
 }
 
 # Run main function

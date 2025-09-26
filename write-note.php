@@ -61,7 +61,7 @@ class NoteWriter
             throw new \Exception("No test relays configured");
         }
         
-        echo "📡 Using test relays: " . implode(', ', $this->relays) . "\n";
+        echo "Using test relays: " . implode(', ', $this->relays) . "\n";
     }
     
     
@@ -72,10 +72,10 @@ class NoteWriter
         }
         
         if (strlen($content) > 280) {
-            echo "⚠️  Warning: Note is longer than 280 characters (" . strlen($content) . " chars)\n";
+            echo "Warning: Note is longer than 280 characters (" . strlen($content) . " chars)\n";
         }
         
-        echo "📝 Writing note: \"$content\"\n";
+        echo "Writing note: \"$content\"\n";
         
         // Check if we have a key, if not generate one
         $this->keyManager->ensureKeyExists();
@@ -88,7 +88,7 @@ class NoteWriter
         $publicKey = $keySet['bechPublicKey'];
         $hexPublicKey = $keySet['hexPublicKey'];
         
-        echo "🔑 Using public key: $publicKey\n";
+        echo "Using public key: $publicKey\n";
         
         // Create the event
         $event = $this->createEvent($content, $privateKey, $publicKey, $hexPublicKey);
@@ -101,15 +101,15 @@ class NoteWriter
         $eventId = $event->getId();
         $neventId = $this->generateNeventId($eventId, $publicKey);
         
-        echo "📝 Event ID: $eventId\n";
-        echo "🔗 nevent ID: $neventId\n";
+        echo "Event ID: $eventId\n";
+        echo "Nevent ID: $neventId\n";
         
         foreach ($publishResults as $relayUrl => $success) {
             if ($success) {
                 $successCount++;
-                echo "✅ Published to: $relayUrl\n";
+                echo "✓ Published to: $relayUrl\n";
             } else {
-                echo "❌ Failed to publish to: $relayUrl\n";
+                echo "✗ Failed to publish to: $relayUrl\n";
             }
         }
         
@@ -117,10 +117,10 @@ class NoteWriter
             throw new \Exception("Failed to publish to any relay");
         }
         
-        echo "✅ Note published successfully!\n";
+        echo "✓ Note published successfully!\n";
         
         // Wait a moment and then query to confirm the note was stored
-        echo "⏳ Waiting 5 seconds before verifying...\n";
+        echo "Waiting 5 seconds before verifying...\n";
         sleep(5);
         
         $this->showVerificationInfo($eventId, $hexPublicKey);
@@ -169,7 +169,7 @@ class NoteWriter
      */
     private function showVerificationInfo(string $eventId, string $hexPublicKey): void
     {
-        echo "🔍 Verifying note was stored on relays...\n";
+        echo "Verifying note was stored on relays...\n";
         
         try {
             
@@ -177,13 +177,13 @@ class NoteWriter
             $filter = new Filter();
             $filter->setIds([$eventId]);
             
-            echo "🔍 Querying for specific event ID: " . substr($eventId, 0, 16) . "...\n";
+            echo "Querying for specific event ID: " . substr($eventId, 0, 16) . "...\n";
             
             // Query events from relays using the specific event ID
             $events = $this->queryEventsSimple($filter, $this->relays);
             
             if (empty($events)) {
-                echo "⚠️  No events found on relays - note may not have been stored\n";
+                echo "No events found on relays - note may not have been stored\n";
                 return;
             }
             
@@ -192,7 +192,7 @@ class NoteWriter
             foreach ($events as $event) {
                 if ($event->id === $eventId) {
                     $found = true;
-                    echo "✅ Note confirmed stored on relay!\n";
+                    echo "✓ Note confirmed stored on relay!\n";
                     echo "   Event ID: " . $event->id . "\n";
                     echo "   Content: " . substr($event->content, 0, 50) . "...\n";
                     echo "   Created: " . date('Y-m-d H:i:s', $event->created_at) . "\n";
@@ -201,13 +201,13 @@ class NoteWriter
             }
             
             if (!$found) {
-                echo "⚠️  Note not found in recent events - may take longer to propagate\n";
+                echo "✗ Note not found in recent events - may take longer to propagate\n";
                 echo "   Found " . count($events) . " recent events, but not our specific event\n";
                 echo "   Latest event ID: " . $events[0]->id . "\n";
             }
             
         } catch (\Exception $e) {
-            echo "⚠️  Could not verify note storage: " . $e->getMessage() . "\n";
+            echo "✗ Could not verify note storage: " . $e->getMessage() . "\n";
         }
     }
     
@@ -222,7 +222,7 @@ class NoteWriter
             // Create RelaySet for querying (like ValidationManager does)
             $relaySet = new RelaySet();
             foreach ($relays as $relayUrl) {
-                echo "📡 Adding relay: $relayUrl\n";
+                echo "Adding relay: $relayUrl\n";
                 $relaySet->addRelay(new \swentel\nostr\Relay\Relay($relayUrl));
             }
             
@@ -236,20 +236,20 @@ class NoteWriter
             
             // Process the response to extract events (like ValidationManager does)
             foreach ($response as $relayUrl => $relayResponses) {
-                echo "📥 Processing responses from: $relayUrl\n";
+                echo "Processing responses from: $relayUrl\n";
                 foreach ($relayResponses as $responseItem) {
                     if (is_object($responseItem) && isset($responseItem->type) && $responseItem->type === 'EVENT') {
                         $event = $responseItem->event;
                         $allEvents[] = $event;
-                        echo "✅ Found event: " . $event->id . "\n";
+                        echo "✓ Found event: " . $event->id . "\n";
                     }
                 }
             }
             
-            echo "📊 Total events retrieved: " . count($allEvents) . "\n";
+            echo "Total events retrieved: " . count($allEvents) . "\n";
             
         } catch (\Exception $e) {
-            echo "⚠️  Failed to query events: " . $e->getMessage() . "\n";
+            echo "⚠  Failed to query events: " . $e->getMessage() . "\n";
         }
         
         return $allEvents;
@@ -276,21 +276,21 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIP
         $dryRun = false;
         if (isset($argv[2]) && $argv[2] === '--dry-run') {
             $dryRun = true;
-            echo "🧪 DRY RUN MODE - No actual publishing will occur\n";
+            echo "DRY RUN MODE - No actual publishing will occur\n";
         }
         
         $writer = new NoteWriter();
         
         if ($dryRun) {
-            echo "📝 Would write note: \"$content\"\n";
-            echo "📡 Would publish to test relays\n";
-            echo "✅ Dry run completed successfully!\n";
+            echo "Would write note: \"$content\"\n";
+            echo "Would publish to test relays\n";
+            echo "✓ Dry run completed successfully!\n";
         } else {
             $writer->writeNote($content);
         }
         
     } catch (Exception $e) {
-        echo "❌ Error: " . $e->getMessage() . "\n";
+        echo "✗ Error: " . $e->getMessage() . "\n";
         exit(1);
     }
 }

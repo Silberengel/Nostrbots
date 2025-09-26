@@ -41,12 +41,12 @@ class RetryManager
                 $lastException = $e;
                 
                 if ($attempt === $this->maxRetries) {
-                    echo "❌ {$operationName} failed after {$this->maxRetries} retries: " . $e->getMessage() . PHP_EOL;
+                    echo "✗ {$operationName} failed after {$this->maxRetries} retries: " . $e->getMessage() . PHP_EOL;
                     throw $e;
                 }
                 
                 $delay = $this->calculateDelay($attempt);
-                echo "⚠️  {$operationName} failed (attempt " . ($attempt + 1) . "/" . ($this->maxRetries + 1) . "): " . $e->getMessage() . PHP_EOL;
+                echo "⚠  {$operationName} failed (attempt " . ($attempt + 1) . "/" . ($this->maxRetries + 1) . "): " . $e->getMessage() . PHP_EOL;
                 echo "🔄 Retrying in {$delay}ms..." . PHP_EOL;
                 
                 usleep($delay * 1000); // Convert to microseconds

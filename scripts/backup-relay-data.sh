@@ -34,9 +34,9 @@ backup_relay_files() {
     
     if [ -d "$DATA_DIR/orly" ]; then
         cp -r "$DATA_DIR/orly" "$backup_path/"
-        log "✅ Relay data files backed up"
+        log "✓ Relay data files backed up"
     else
-        log "⚠️  No relay data directory found at $DATA_DIR/orly"
+        log "⚠  No relay data directory found at $DATA_DIR/orly"
     fi
 }
 
@@ -44,7 +44,7 @@ backup_relay_files() {
 backup_to_elasticsearch() {
     local backup_path="$1"
     
-    log "🔍 Creating Elasticsearch backup"
+    log "Creating Elasticsearch backup"
     
     # Create snapshot repository
     local repo_config='{
@@ -70,7 +70,7 @@ backup_to_elasticsearch() {
         -H "Content-Type: application/json" \
         -d "$snapshot_config" > /dev/null
     
-    log "✅ Elasticsearch snapshot created: $snapshot_name"
+    log "✓ Elasticsearch snapshot created: $snapshot_name"
 }
 
 # Create encrypted backup archive
@@ -90,7 +90,7 @@ create_encrypted_archive() {
     # Remove unencrypted archive
     rm "$archive_path"
     
-    log "✅ Encrypted backup created: $archive_name.gpg"
+    log "✓ Encrypted backup created: $archive_name.gpg"
 }
 
 # Cleanup old backups
@@ -100,30 +100,30 @@ cleanup_old_backups() {
     find "$BACKUP_DIR" -type d -name "20*" -mtime +$BACKUP_RETENTION_DAYS -exec rm -rf {} + 2>/dev/null || true
     find "$BACKUP_DIR" -name "*.gpg" -mtime +$BACKUP_RETENTION_DAYS -delete 2>/dev/null || true
     
-    log "✅ Old backups cleaned up"
+    log "✓ Old backups cleaned up"
 }
 
 # Verify backup integrity
 verify_backup() {
     local backup_path="$1"
     
-    log "🔍 Verifying backup integrity"
+    log "Verifying backup integrity"
     
     # Check if backup directory exists and has content
     if [ ! -d "$backup_path" ] || [ -z "$(ls -A "$backup_path" 2>/dev/null)" ]; then
-        log "❌ Backup verification failed: empty or missing backup directory"
+        log "✗ Backup verification failed: empty or missing backup directory"
         return 1
     fi
     
     # Check Elasticsearch snapshot
     local snapshot_status=$(curl -s "$ELASTICSEARCH_URL/_snapshot/backup_repo/_all" | jq -r '.snapshots[0].state // "MISSING"')
     if [ "$snapshot_status" != "SUCCESS" ]; then
-        log "⚠️  Elasticsearch snapshot status: $snapshot_status"
+        log "⚠  Elasticsearch snapshot status: $snapshot_status"
     else
-        log "✅ Elasticsearch snapshot verified"
+        log "✓ Elasticsearch snapshot verified"
     fi
     
-    log "✅ Backup verification completed"
+    log "✓ Backup verification completed"
 }
 
 # Main backup function
@@ -143,7 +143,7 @@ main() {
     verify_backup "$backup_path"
     cleanup_old_backups
     
-    log "✅ Backup process completed successfully"
+    log "✓ Backup process completed successfully"
 }
 
 # Run main function

@@ -67,7 +67,7 @@ class DailyOfficeGenerator
         // Save to output directory
         $this->saveContent($content, $date, $time, $officeType);
         
-        echo "✅ Daily Office content generated successfully\n";
+        echo "✓ Daily Office content generated successfully\n";
     }
     
     private function getLiturgicalInfo(DateTime $date): array
@@ -331,7 +331,7 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIP
         $generator = new DailyOfficeGenerator($botDir);
         $generator->generateContent();
     } catch (Exception $e) {
-        echo "❌ Error: " . $e->getMessage() . "\n";
+        echo "✗ Error: " . $e->getMessage() . "\n";
         exit(1);
     }
 }

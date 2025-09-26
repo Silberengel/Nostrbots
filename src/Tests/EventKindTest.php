@@ -44,7 +44,7 @@ class EventKindTest
         // Set the test key as environment variable
         putenv("NOSTR_BOT_KEY={$this->testKey}");
         
-        echo "🔑 Generated test key: " . substr($this->testKey, 0, 8) . "..." . PHP_EOL;
+        echo "Generated test key: " . substr($this->testKey, 0, 8) . "..." . PHP_EOL;
     }
 
     /**
@@ -71,7 +71,7 @@ class EventKindTest
             $this->testAsciiDocWiki();
             $this->testAllEventKinds();
 
-            echo "✅ All event kind tests completed successfully!" . PHP_EOL;
+            echo "✓ All event kind tests completed successfully!" . PHP_EOL;
         } finally {
             // Always cleanup the test key
             $this->cleanupTestKey();
@@ -95,7 +95,7 @@ class EventKindTest
         $this->assertEquals(5, $result['index_sections'], "No preamble document should have 5 index sections");
         $this->assertEquals(9, $result['total_events'], "No preamble document should have 9 total events");
         
-        echo "  ✅ No preamble: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ No preamble: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
     
     /**
@@ -118,7 +118,7 @@ class EventKindTest
         // Verify event kinds
         $this->verifyEventKinds($result, [], ['30023']); // No index events, content events should be 30023
         
-        echo "  ✅ Markdown longform: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Markdown longform: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
     
     /**
@@ -141,7 +141,7 @@ class EventKindTest
         // Verify event kinds
         $this->verifyEventKinds($result, [], ['30818']); // No index events, content events should be 30818
         
-        echo "  ✅ AsciiDoc wiki: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
+        echo "  ✓ AsciiDoc wiki: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL . PHP_EOL;
     }
     
     /**
@@ -167,7 +167,7 @@ class EventKindTest
             // Verify event kinds
             $this->verifyEventKinds($result, ['30040', '30040', '30040'], [$eventKind, $eventKind, $eventKind]);
             
-            echo "  ✅ Event kind {$eventKind}: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL;
+            echo "  ✓ Event kind {$eventKind}: {$result['content_sections']} content, {$result['index_sections']} indexes, {$result['total_events']} total" . PHP_EOL;
         }
         
         echo PHP_EOL;
@@ -247,7 +247,7 @@ if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIP
         echo "🎉 All event kind tests passed successfully!" . PHP_EOL;
         exit(0);
     } catch (\Exception $e) {
-        echo "❌ Test failed: " . $e->getMessage() . PHP_EOL;
+        echo "✗ Test failed: " . $e->getMessage() . PHP_EOL;
         exit(1);
     } finally {
         // Ensure cleanup happens even if tests fail

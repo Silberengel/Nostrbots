@@ -22,7 +22,27 @@ show_help() {
     echo ""
     echo "Usage: sudo $0 [OPTIONS]"
     echo ""
-    show_common_help
+    echo "Options:"
+    echo "  --cleanup           Clean up existing stack and secrets for blank slate testing"
+    echo "  --private-key KEY   Use your existing Nostr private key (hex or nsec format)"
+    echo "  --help, -h          Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0                                    # Generate new keys and setup"
+    echo "  $0 --private-key abc123...           # Use hex private key"
+    echo "  $0 --private-key nsec1abc123...      # Use nsec private key"
+    echo "  $0 --cleanup                         # Clean up for blank slate testing"
+    echo ""
+    echo "Private Key Formats:"
+    echo "  - Hex: 64-character hexadecimal string (e.g., abc123def456...)"
+    echo "  - Nsec: Bech32 encoded private key (e.g., nsec1abc123...)"
+    echo ""
+    echo "⚠  SECURITY WARNING:"
+    echo "  Command line arguments may be stored in shell history!"
+    echo "  For better security, use environment variables instead:"
+    echo "    export CUSTOM_PRIVATE_KEY='your_key_here'"
+    echo "    $0"
+    echo ""
 }
 
 # Setup user and directories
@@ -49,26 +69,47 @@ setup_user_and_directories() {
     log_success "User and directories set up"
 }
 
-# Initialize Docker swarm
-init_docker_swarm() {
-    log_info "Initializing Docker swarm..."
+# Docker swarm initialization is now handled by setup-common.sh
+
+# Cleanup function for blank slate testing
+cleanup_stack() {
+    log_info "Cleaning up Nostrbots stack for blank slate testing..."
     
-    # Check if swarm is already active
-    if docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null | grep -q "active"; then
-        log_info "Docker swarm is already active"
-        return 0
-    fi
-    
-    # Initialize swarm
-    docker swarm init --advertise-addr 127.0.0.1
-    
-    # Verify swarm is active
-    if docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null | grep -q "active"; then
-        log_success "Docker swarm initialized successfully"
+    # Remove the Docker stack
+    if docker stack ls --format "{{.Name}}" | grep -q "nostrbots"; then
+        log_info "Removing Docker stack..."
+        docker stack rm nostrbots
+        sleep 10
+        log_success "Docker stack removed"
     else
-        log_error "Failed to initialize Docker swarm"
-        exit 1
+        log_info "No Docker stack found"
     fi
+    
+    # Remove Docker secrets
+    if docker secret ls --format "{{.Name}}" | grep -q "nostr_bot_key_encrypted"; then
+        log_info "Removing Docker secrets..."
+        docker secret rm nostr_bot_key_encrypted >/dev/null 2>&1 || true
+        docker secret rm nostr_bot_npub >/dev/null 2>&1 || true
+        log_success "Docker secrets removed"
+    else
+        log_info "No Docker secrets found"
+    fi
+    
+    # Remove Docker volumes (optional - uncomment if you want to remove data)
+    # log_info "Removing Docker volumes..."
+    # docker volume rm nostrbots_orly_data >/dev/null 2>&1 || true
+    # docker volume rm nostrbots_jenkins_data >/dev/null 2>&1 || true
+    # docker volume rm nostrbots_backup_data >/dev/null 2>&1 || true
+    # log_success "Docker volumes removed"
+    
+    # Remove any remaining containers
+    log_info "Removing any remaining containers..."
+    docker container prune -f >/dev/null 2>&1 || true
+    
+    log_success "🎉 Cleanup completed! You now have a blank slate for testing."
+    echo ""
+    echo "To start fresh, run: sudo -E ./setup-production.sh"
+    echo ""
 }
 
 # Generate keys and store as Docker secrets
@@ -83,34 +124,35 @@ generate_keys_to_secrets() {
     local encrypted_key=$(echo "$key_result" | grep "ENCRYPTED_KEY=" | cut -d'=' -f2)
     local npub=$(echo "$key_result" | grep "NPUB=" | cut -d'=' -f2)
     
-    # Create Docker secrets
-    echo "$encrypted_key" | docker secret create nostr_bot_key_encrypted - >/dev/null
-    echo "$npub" | docker secret create nostr_bot_npub - >/dev/null
+    # Create Docker secrets (handle existing secrets properly)
+    if docker secret ls --format "{{.Name}}" | grep -q "nostr_bot_key_encrypted"; then
+        log_info "Docker secret nostr_bot_key_encrypted already exists, skipping creation"
+    else
+        echo "$encrypted_key" | docker secret create nostr_bot_key_encrypted - >/dev/null
+        log_success "Created nostr_bot_key_encrypted secret"
+    fi
+    
+    if docker secret ls --format "{{.Name}}" | grep -q "nostr_bot_npub"; then
+        log_info "Docker secret nostr_bot_npub already exists, skipping creation"
+    else
+        echo "$npub" | docker secret create nostr_bot_npub - >/dev/null
+        log_success "Created nostr_bot_npub secret"
+    fi
     
     log_success "Keys stored as Docker secrets"
     
-    # Display keys for user to save
-    echo ""
-    echo "🔑 PRODUCTION KEYS GENERATED"
-    echo "================================"
-    echo "Nostr Public Key (npub): $npub"
-    echo "Encrypted Private Key: ${encrypted_key:0:20}..."
-    echo ""
-    echo "🔑 YOUR NOSTR PRIVATE KEY (NSEC)"
-    echo "================================="
-    echo ""
-    echo "⚠️  IMPORTANT: Copy this key now - it will not be shown again!"
-    echo ""
-    
-    # Get the nsec for display
-    local nsec_output
-    nsec_output=$(php generate-key.php --key "$CUSTOM_PRIVATE_KEY" --jenkins --quiet 2>/dev/null | grep "NOSTR_BOT_NSEC=" | cut -d'=' -f2)
-    echo "Your nsec: $nsec_output"
-    echo ""
+    # Display keys for user to save using common function
+    display_keys_for_user "$encrypted_key" "$npub"
 }
 
 # Create production Docker Compose file
 create_docker_compose() {
+    # Skip if Docker Compose file already exists
+    if [ -f "$COMPOSE_FILE" ]; then
+        log_info "Docker Compose file already exists, skipping creation"
+        return 0
+    fi
+    
     log_info "Creating production Docker Compose configuration with secrets..."
     
     cat > "$COMPOSE_FILE" << 'EOF'
@@ -118,15 +160,22 @@ version: '3.8'
 
 services:
   orly-relay:
-    image: ghcr.io/silberengel/orly:latest
+    image: silberengel/next-orly:latest
     container_name: nostrbots-orly-relay
     ports:
-      - "3334:3334"
+      - "3334:7777"
+    environment:
+      - ORLY_LISTEN=0.0.0.0
+      - ORLY_PORT=7777
+      - ORLY_LOG_LEVEL=info
+      - ORLY_MAX_CONNECTIONS=1000
+      - ORLY_ACL_MODE=none
     volumes:
-      - orly_data:/app/data
+      - orly_data:/data
     networks:
-      - nostrbots
+      - nostrbots-network
     restart: unless-stopped
+    user: "1000:1000"
 
   jenkins:
     image: jenkins/jenkins:lts
@@ -140,12 +189,12 @@ services:
       - JENKINS_ADMIN_PASSWORD=${JENKINS_ADMIN_PASSWORD:-admin}
     volumes:
       - jenkins_data:/var/jenkins_home
-      - /opt/nostrbots/scripts/jenkins-setup.groovy:/usr/share/jenkins/ref/init.groovy.d/setup.groovy
+      - $PROJECT_DIR/scripts/jenkins-setup.groovy:/usr/share/jenkins/ref/init.groovy.d/setup.groovy
     secrets:
       - nostr_bot_key_encrypted
       - nostr_bot_npub
     networks:
-      - nostrbots
+      - nostrbots-network
     restart: unless-stopped
     user: "1000:1000"
     working_dir: /var/jenkins_home/workspace
@@ -160,7 +209,7 @@ services:
       - nostr_bot_key_encrypted
       - nostr_bot_npub
     networks:
-      - nostrbots
+      - nostrbots-network
     restart: unless-stopped
     depends_on:
       - orly-relay
@@ -184,7 +233,7 @@ services:
       - nostr_bot_key_encrypted
       - nostr_bot_npub
     networks:
-      - nostrbots
+      - nostrbots-network
     restart: unless-stopped
     command: >
       sh -c "
@@ -207,7 +256,7 @@ secrets:
     external: true
 
 networks:
-  nostrbots:
+  nostrbots-network:
     driver: overlay
     attachable: true
 EOF
@@ -300,6 +349,12 @@ deploy_stack() {
 
 # Main function
 main() {
+    # Check for cleanup option
+    if [[ "$*" == *"--cleanup"* ]]; then
+        cleanup_stack
+        exit 0
+    fi
+    
     echo "🚀 Nostrbots Production Setup (Secrets Only)"
     echo "============================================="
     echo ""
@@ -318,12 +373,12 @@ main() {
     echo ""
     echo "📋 What's been set up:"
     echo "======================"
-    echo "✅ System dependencies installed"
-    echo "✅ Docker swarm initialized"
-    echo "✅ Nostr keys generated and stored as Docker secrets"
-    echo "✅ Production Docker Compose configuration created"
-    echo "✅ Systemd services created and enabled"
-    echo "✅ Nostrbots stack deployed"
+    echo "✓ System dependencies installed"
+    echo "✓ Docker swarm initialized"
+    echo "✓ Nostr keys generated and stored as Docker secrets"
+    echo "✓ Production Docker Compose configuration created"
+    echo "✓ Systemd services created and enabled"
+    echo "✓ Nostrbots stack deployed"
     echo ""
     echo "🌐 Access Points:"
     echo "================="
@@ -337,9 +392,9 @@ main() {
     echo "docker service ls"
     echo "docker service logs nostrbots_jenkins"
     echo ""
-    log_warn "⚠️  Remember to retrieve and save your nsec securely!"
-    log_warn "⚠️  Keys are stored securely in Docker secrets (no files)"
-    log_warn "⚠️  The system will auto-start on boot"
+    log_warn "⚠  Remember to retrieve and save your nsec securely!"
+    log_warn "⚠  Keys are stored securely in Docker secrets (no files)"
+    log_warn "⚠  The system will auto-start on boot"
 }
 
 # Initialize and run

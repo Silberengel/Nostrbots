@@ -16,19 +16,19 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 log_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
+    echo -e "${BLUE}ⓘ$1${NC}"
 }
 
 log_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}✓ $1${NC}"
 }
 
 log_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}⚠  $1${NC}"
 }
 
 log_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}✗ $1${NC}"
 }
 
 # Check if running as root
@@ -377,12 +377,12 @@ main() {
     echo ""
     echo "📋 Security measures implemented:"
     echo "================================"
-    echo "✅ Firewall configured (UFW)"
-    echo "✅ Intrusion prevention (fail2ban)"
-    echo "✅ Comprehensive logging"
-    echo "✅ Automatic security updates"
-    echo "✅ System hardening"
-    echo "✅ Security monitoring"
+    echo "✓ Firewall configured (UFW)"
+    echo "✓ Intrusion prevention (fail2ban)"
+    echo "✓ Comprehensive logging"
+    echo "✓ Automatic security updates"
+    echo "✓ System hardening"
+    echo "✓ Security monitoring"
     echo ""
     echo "🔧 Management commands:"
     echo "======================"
@@ -391,8 +391,8 @@ main() {
     echo "tail -f /var/log/nostrbots/audit.log  # View audit logs"
     echo "tail -f /var/log/nostrbots/security-monitor.log  # View security monitor logs"
     echo ""
-    log_warning "⚠️  Remember to test your setup after hardening!"
-    log_warning "⚠️  Some services may need to be restarted"
+    log_warning "⚠  Remember to test your setup after hardening!"
+    log_warning "⚠  Some services may need to be restarted"
 }
 
 # Handle command line arguments

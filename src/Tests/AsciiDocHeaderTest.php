@@ -33,7 +33,7 @@ class AsciiDocHeaderTest
         $keySet = $keyManager->generateNewKeySet();
         $this->testKey = $keySet['hexPrivateKey'];
         putenv("NOSTR_BOT_KEY={$this->testKey}");
-        echo "🔑 Generated test key: " . substr($this->testKey, 0, 8) . "..." . PHP_EOL;
+        echo "Generated test key: " . substr($this->testKey, 0, 8) . "..." . PHP_EOL;
     }
 
     public function cleanupTestKey(): void
@@ -58,7 +58,7 @@ class AsciiDocHeaderTest
             $this->testRevisionLineParsing();
             $this->testKeywordsParsing();
 
-            echo "✅ All AsciiDoc header format tests completed successfully!" . PHP_EOL;
+            echo "✓ All AsciiDoc header format tests completed successfully!" . PHP_EOL;
         } finally {
             $this->cleanupTestKey();
         }
@@ -99,7 +99,7 @@ class AsciiDocHeaderTest
         $this->assertTrue($metadata['sectanchors'], "Section anchors should be true");
         $this->assertEquals('font', $metadata['icons'], "Icons should be extracted");
         
-        echo "  ✅ Standard AsciiDoc headers parsed correctly" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Standard AsciiDoc headers parsed correctly" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -127,7 +127,7 @@ class AsciiDocHeaderTest
         $this->assertEquals('This document tests multiple authors and keywords', $metadata['summary'], "Description should be extracted");
         $this->assertEquals('en', $metadata['l'], "Language should be mapped to l tag");
         
-        echo "  ✅ Multiple authors parsed correctly" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Multiple authors parsed correctly" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -192,7 +192,7 @@ class AsciiDocHeaderTest
             'compat_mode' => 'compat-mode'
         ];
         
-        echo "  ✅ Attribute mapping test cases defined (" . count($testCases) . " mappings)" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Attribute mapping test cases defined (" . count($testCases) . " mappings)" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -210,7 +210,7 @@ class AsciiDocHeaderTest
             'Mary Jane Watson' => ['author' => 'Mary Jane Watson', 'firstname' => 'Mary', 'lastname' => 'Watson', 'middlename' => 'Jane']
         ];
         
-        echo "  ✅ Author line parsing test cases defined (" . count($testCases) . " formats)" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Author line parsing test cases defined (" . count($testCases) . " formats)" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -228,7 +228,7 @@ class AsciiDocHeaderTest
             '1.0.0, 2024-03-01, Major update' => ['version' => '1.0.0', 'revdate' => '2024-03-01', 'revremark' => 'Major update']
         ];
         
-        echo "  ✅ Revision line parsing test cases defined (" . count($testCases) . " formats)" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Revision line parsing test cases defined (" . count($testCases) . " formats)" . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -246,7 +246,7 @@ class AsciiDocHeaderTest
             'tag1, tag2, tag3, tag4' => ['t' => ['tag1', 'tag2', 'tag3', 'tag4']]
         ];
         
-        echo "  ✅ Keywords/tags parsing test cases defined (" . count($testCases) . " formats)" . PHP_EOL . PHP_EOL;
+        echo "  ✓ Keywords/tags parsing test cases defined (" . count($testCases) . " formats)" . PHP_EOL . PHP_EOL;
     }
 
     /**
