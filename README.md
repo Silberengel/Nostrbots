@@ -70,6 +70,119 @@ php generate-key.php --key YOUR_NSEC_OR_HEX_KEY --encrypt
 # See [Manual NSEC Setup](MANUAL_NSEC_SETUP.md) for detailed instructions
 ```
 
+## 🔑 Multi-Key Support
+
+Nostrbots supports multiple nsec keys, allowing you to run different bots with different identities. This is useful for:
+- **Brand separation**: Different bots for different purposes
+- **Security isolation**: Separate keys for different environments
+- **Identity management**: Multiple Nostr identities from one system
+
+### Supported Environment Variables
+- `NOSTR_BOT_KEY` (default)
+- `NOSTR_BOT_KEY1` through `NOSTR_BOT_KEY10` (numbered slots)
+- `CUSTOM_PRIVATE_KEY` (fallback when `NOSTR_BOT_KEY` is not set)
+
+### Setting Up Multiple Keys
+
+1. **Generate keys for different bots:**
+```bash
+# Generate key for bot 1
+php generate-key.php --slot 1
+
+# Generate key for bot 2  
+php generate-key.php --slot 2
+
+# Generate key for bot 3
+php generate-key.php --slot 3
+```
+
+2. **Set environment variables:**
+```bash
+# Set different keys for different bots
+export NOSTR_BOT_KEY1="your_first_nsec_or_hex_key"
+export NOSTR_BOT_KEY2="your_second_nsec_or_hex_key" 
+export NOSTR_BOT_KEY3="your_third_nsec_or_hex_key"
+```
+
+3. **Configure each bot to use its specific key:**
+```json
+{
+  "name": "Hello World Bot",
+  "environment_variable": "NOSTR_BOT_KEY1",
+  "relays": ["wss://freelay.sovbit.host"],
+  "content_kind": 30041
+}
+```
+
+```json
+{
+  "name": "Daily Office Bot", 
+  "environment_variable": "NOSTR_BOT_KEY2",
+  "relays": ["wss://thecitadel.nostr1.com"],
+  "content_kind": 30023
+}
+```
+
+### Running Bots with Different Keys
+```bash
+# Run hello-world bot (uses NOSTR_BOT_KEY1)
+php nostrbots.php run-bot --bot hello-world
+
+# Run daily-office bot (uses NOSTR_BOT_KEY2)  
+php nostrbots.php run-bot --bot daily-office
+```
+
+### Key Management Commands
+```bash
+# List all configured keys
+php generate-key.php --list-keys
+
+# Generate new key for specific slot
+php generate-key.php --slot 3 --encrypt
+
+# Validate a specific key
+php generate-key.php --validate --slot 2
+```
+
+### Docker Multi-Key Setup
+```yaml
+services:
+  bot1:
+    environment:
+      - NOSTR_BOT_KEY1=your_first_key
+      
+  bot2:
+    environment:
+      - NOSTR_BOT_KEY2=your_second_key
+```
+
+### Key Priority Order
+
+The system checks for keys in this order:
+1. **Docker secrets** (`/run/secrets/nostr_bot_key`)
+2. **NOSTR_BOT_KEY** environment variable
+3. **CUSTOM_PRIVATE_KEY** environment variable (fallback)
+4. **NOSTR_BOT_KEY_ENCRYPTED** (encrypted key)
+5. **Generate new key** if none found
+
+### Using CUSTOM_PRIVATE_KEY
+
+The `CUSTOM_PRIVATE_KEY` environment variable serves as a fallback when `NOSTR_BOT_KEY` is not set. This is useful for:
+- **Setup scripts**: Pass your existing key during installation
+- **Legacy compatibility**: Support for existing deployments
+- **Quick testing**: Temporary key assignment
+
+```bash
+# Use during setup
+export CUSTOM_PRIVATE_KEY="your_nsec_or_hex_key"
+./setup-local-dev.sh
+
+# Or pass directly to setup script
+sudo CUSTOM_PRIVATE_KEY="your_key" ./setup-production.sh
+```
+
+**Note:** Each bot must specify its `environment_variable` in its `config.json` to use the correct key. If not specified, it defaults to `NOSTR_BOT_KEY`. The `CUSTOM_PRIVATE_KEY` is automatically used as a fallback and will be set as `NOSTR_BOT_KEY` for compatibility.
+
 ## 🌐 Access Points
 
 ### Production Services
